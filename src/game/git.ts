@@ -107,6 +107,14 @@ export function statusReport(repo: Repo): StatusLine[] {
   ];
   const base = h ? h.snapshot : null;
   if (!base) {
+    lines.push({ text: "Current ship state:", kind: "info" });
+    lines.push({ text: `  Hull ${Math.round(repo.working.ship.hull)}%`, kind: "info" });
+    lines.push({ text: `  Armor ${Math.round(repo.working.ship.armor)}%`, kind: "info" });
+    lines.push({ text: `  Energy ${Math.round(repo.working.ship.energy)}%`, kind: "info" });
+    lines.push({ text: `  Fuel ${Math.round(repo.working.ship.fuel)}%`, kind: "info" });
+    lines.push({ text: `  Ammo ${Math.round(repo.working.ship.ammo)}%`, kind: "info" });
+    lines.push({ text: `  Upgrades: ${repo.working.ship.upgrades.join(", ") || "none"}`, kind: "info" });
+    lines.push({ text: `  Mission score ${repo.working.score}`, kind: "info" });
     if (repo.staged) {
       lines.push({ text: "Changes staged for first checkpoint:", kind: "staged" });
       for (const l of diffSnapshot(repo.working, repo.staged).length

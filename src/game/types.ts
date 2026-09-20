@@ -13,7 +13,7 @@ export interface ShipState {
 export interface GameSnapshot {
   ship: ShipState;
   score: number;
-  stage: number; // 1..5 story stage
+  stage: number; // 1..7 story stage
   stepId: string; // story step this snapshot belongs to
   flags: Record<string, boolean>;
 }

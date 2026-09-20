@@ -20,6 +20,7 @@ export interface TerminalTask {
   briefing: string;
   help: HelpLevel;
   hint: string; // shown for full/partial
+  hintSteps?: { after?: "status" | "add"; text: string }[];
   requires: ("init" | "status" | "add" | "commit" | "log" | "reset" | "revert")[];
   advanceLabel: string;
   requireCommit?: boolean; // advance only after a NEW commit in this session
@@ -143,7 +144,7 @@ export const STEPS: Step[] = [
         { label: "\"Let's do it!\"", response: "Right! Remember: staging alone protects NOTHING. Only the commit creates the checkpoint." },
       ]},
       { speaker: "komm", text: "One more thing about the commit: the -m means \"message\". Whatever you type in quotes after it becomes the checkpoint's label — like a note in the ship's log.", choices: [
-        { label: "\"Why does the message matter?\"", response: "Weeks from now, the hash won't tell you anything. A message like \"Repaired hull after asteroid field\" lets you find the exact checkpoint you need. Lazy messages like \"stuff\" are useless — the terminal will reject them!" },
+        { label: "\"Why does the message matter?\"", response: "The message tells you what was saved at that checkpoint. A clear label like \"Repaired hull after asteroid field\" helps you choose the right checkpoint later. Lazy messages like \"stuff\" are useless — the terminal will reject them!" },
         { label: "\"Got it.\"", response: "Then describe what actually changed. Something like: git commit -m \"Repaired and refueled after the Shatter Field\"" },
       ]},
     ],
@@ -153,9 +154,13 @@ export const STEPS: Step[] = [
     id: "t_commit",
     task: {
       title: "Create Your First Checkpoint",
-      briefing: "KOMM: This takes two commands. Type git add . and press Enter. Then type git commit -m followed by your message in quotes — the message is your note about what changed. Press Enter to save the checkpoint.",
+      briefing: "KOMM: Creating a checkpoint is one two-step process. Complete the first command, then I will show you the second.",
       help: "full",
-      hint: '1. Type git add . and press Enter.  2. Type git commit -m "Repaired and refueled after the Shatter Field" and press Enter. The quoted text is your message — describe what changed.',
+      hint: "",
+      hintSteps: [
+        { text: "Type git add . and press Enter. This prepares the ship's current state." },
+        { after: "add", text: 'Now type git commit -m "Repaired and refueled after the Shatter Field" and press Enter. The quoted words are the checkpoint message.' },
+      ],
       requires: ["add", "commit"],
       advanceLabel: "Enter Sector 2",
     },
@@ -180,6 +185,8 @@ export const STEPS: Step[] = [
       asteroids: 2,
       killTarget: 5,
       spawnUpgradeAtKills: { id: "Shield Booster", kills: 3 },
+      beacon: { x: 1160, y: 380, r: 52 },
+      exitAfterKills: true,
     },
   },
   {
@@ -198,12 +205,72 @@ export const STEPS: Step[] = [
     id: "t_stage2",
     task: {
       title: "Secure Your Progress",
-      briefing: "KOMM: Inspect the ship's state, then stage and commit your progress. Partial hint: the commands are git status, git add . and git commit -m \"...\"",
+      briefing: "KOMM: Securing progress is one three-step process. Complete each command and I will reveal the next one.",
       help: "partial",
-      hint: "git status → git add . → git commit -m \"your message\"",
+      hint: "",
+      hintSteps: [
+        { text: "First, type git status and press Enter to inspect the ship." },
+        { after: "status", text: "Next, type git add . and press Enter to stage everything you inspected." },
+        { after: "add", text: 'Finally, type git commit -m "Secured Drone Hive supplies" and press Enter. The message describes this checkpoint.' },
+      ],
       requires: ["status", "add", "commit"],
       requireCommit: true,
       advanceLabel: "Continue",
+    },
+  },
+  {
+    kind: "dialogue",
+    id: "d_stage3_combat",
+    lines: [
+      { speaker: "narrator", text: "Sector 3: The Relay Gauntlet. A drone squadron has seized the navigation relays ahead." },
+      { speaker: "komm", text: "Clear six drones in escalating waves. Their supply pods may keep us fighting. When the extraction beacon appears, collect what you need before leaving." },
+    ],
+  },
+  {
+    kind: "action",
+    id: "a_relay_gauntlet",
+    stage: 3,
+    spec: {
+      mode: "combat",
+      title: "Sector 3 — The Relay Gauntlet",
+      objective: "Destroy 6 drones, collect supplies, then enter the extraction beacon.",
+      drones: 2,
+      asteroids: 3,
+      killTarget: 6,
+      pickups: [
+        { kind: "ammo", x: 520, y: 170 },
+        { kind: "repair", x: 760, y: 600 },
+      ],
+      beacon: { x: 1160, y: 180, r: 52 },
+      exitAfterKills: true,
+    },
+  },
+  {
+    kind: "dialogue",
+    id: "d_stage4_combat",
+    lines: [
+      { speaker: "narrator", text: "Sector 4: The Iron Ring. Armored drones guard a volatile belt of wreckage." },
+      { speaker: "komm", text: "One more battle before the midpoint station. Destroy seven drones and recover the Rapid Cycler. The extraction beacon will wait while you gather the remaining power-ups." },
+    ],
+  },
+  {
+    kind: "action",
+    id: "a_iron_ring",
+    stage: 4,
+    spec: {
+      mode: "combat",
+      title: "Sector 4 — The Iron Ring",
+      objective: "Destroy 7 drones, recover the Rapid Cycler, then extract.",
+      drones: 3,
+      asteroids: 5,
+      killTarget: 7,
+      spawnUpgradeAtKills: { id: "Rapid Cycler", kills: 5 },
+      pickups: [
+        { kind: "energy", x: 470, y: 590 },
+        { kind: "fuel", x: 820, y: 150 },
+      ],
+      beacon: { x: 1160, y: 600, r: 52 },
+      exitAfterKills: true,
     },
   },
   {
@@ -215,10 +282,10 @@ export const STEPS: Step[] = [
     kind: "dialogue",
     id: "d_stage3",
     lines: [
-      { speaker: "narrator", text: "Sector 3: The Crimson Nebula. Clouds of ionized plasma eat through hull plating. The only safe path threads between them." },
+      { speaker: "narrator", text: "Sector 5: The Crimson Nebula. Clouds of ionized plasma eat through hull plating. The only safe path threads between them." },
       { speaker: "komm", text: "Oscar, we've made several checkpoints now. If things go badly, we can ask Git for our checkpoint history — every commit we've ever made — with git log --oneline." },
-      { speaker: "komm", text: "When the log appears, look at the left of each line. That short code of letters and numbers — like a3f9c21 — is the checkpoint's hash." },
-      { speaker: "komm", text: "Think of a hash as the checkpoint's license plate. Git gives every commit its own unique one, so instead of guessing which save we mean, we point at it exactly: git reset --hard a3f9c21." },
+      { speaker: "komm", text: "A hash is a unique short code that identifies one exact checkpoint. In git log --oneline, it appears at the far left of each checkpoint — for example, a3f9c21." },
+      { speaker: "komm", text: "When a command shows <hash>, replace <hash> with the short code beside the checkpoint you want. For example: git reset --hard a3f9c21." },
       { speaker: "komm", text: "You don't need to memorize or fully type the long version — the short hash from git log --oneline is enough. Copy it exactly as shown." },
       { speaker: "komm", text: "And here's the powerful part: git reset --hard <hash> can move our whole timeline BACK to an earlier checkpoint. Dangerous but powerful — it discards everything after that point." },
     ],
@@ -238,10 +305,10 @@ export const STEPS: Step[] = [
   {
     kind: "action",
     id: "a_nebula",
-    stage: 3,
+    stage: 5,
     spec: {
       mode: "nebula",
-      title: "Sector 3 — The Crimson Nebula",
+      title: "Sector 5 — The Crimson Nebula",
       objective: "Thread the nebula clouds and reach the beacon. Plasma clouds damage your hull!",
       asteroids: 2,
       drones: 1,
@@ -270,10 +337,10 @@ export const STEPS: Step[] = [
   {
     kind: "action",
     id: "a_nebula2",
-    stage: 3,
+    stage: 5,
     spec: {
       mode: "nebula",
-      title: "Sector 3 — Nebula's Edge",
+      title: "Sector 5 — Nebula's Edge",
       objective: "Final stretch — reach the far beacon!",
       asteroids: 2,
       drones: 2,
@@ -289,7 +356,7 @@ export const STEPS: Step[] = [
     kind: "dialogue",
     id: "d_turbo",
     lines: [
-      { speaker: "narrator", text: "Sector 4: The wreck of the UNS Commit. Its experimental Turbo Core still hums with power." },
+      { speaker: "narrator", text: "Sector 6: The wreck of the UNS Commit. Its experimental Turbo Core still hums with power." },
       { speaker: "komm", text: "That Turbo Core would boost our engines... My scans show a minor firmware instability, but the efficiency gains look worth it. Shall we take it?", choices: [
         { label: "\"Take it — speed wins missions.\"", response: "Agreed! We'll grab it ahead. And afterwards we should commit — if it works, that checkpoint captures our upgrade." },
         { label: "\"Instability? Risky...\"", response: "True — but remember, we have Git now. If we commit carefully, we always have a way to deal with a bad change. Let's take it." },
@@ -299,10 +366,10 @@ export const STEPS: Step[] = [
   {
     kind: "action",
     id: "a_turbo",
-    stage: 4,
+    stage: 6,
     spec: {
       mode: "asteroids",
-      title: "Sector 4 — The Wreck",
+      title: "Sector 6 — The Wreck",
       objective: "Collect the Turbo Core, then dock at the beacon.",
       asteroids: 4,
       drones: 0,
@@ -337,10 +404,10 @@ export const STEPS: Step[] = [
   {
     kind: "action",
     id: "a_corrupt",
-    stage: 4,
+    stage: 6,
     spec: {
       mode: "corrupt",
-      title: "Sector 4 — System Corruption",
+      title: "Sector 6 — System Corruption",
       objective: "SURVIVE: energy is draining! Reach the emergency dock beacon to access the terminal.",
       asteroids: 3,
       drones: 0,
@@ -364,7 +431,7 @@ export const STEPS: Step[] = [
     kind: "dialogue",
     id: "d_final",
     lines: [
-      { speaker: "narrator", text: "Sector 5: The Void Gate. Its guardian — the dread warship MERGE CONFLICT — blocks the way." },
+      { speaker: "narrator", text: "Sector 7: The Void Gate. Its guardian — the dread warship MERGE CONFLICT — blocks the way." },
       { speaker: "komm", text: "This is it, Oscar. Everything you've learned: check your status, stage what matters, commit often, read your history. I'll be here if you need help — but the flying is all you.", choices: [
         { label: "\"For every commit we've made!\"", response: "That's the spirit. One more thing: commit BEFORE the big fight. If we fall, we rise again at that checkpoint." },
         { label: "\"Let's end this.\"", response: "Right behind you. And remember — a checkpoint before the battle is a pilot's best friend." },
@@ -387,10 +454,10 @@ export const STEPS: Step[] = [
   {
     kind: "action",
     id: "a_boss",
-    stage: 5,
+    stage: 7,
     spec: {
       mode: "boss",
-      title: "Sector 5 — The Void Gate",
+      title: "Sector 7 — The Void Gate",
       objective: "Destroy the MERGE CONFLICT!",
       boss: true,
       drones: 0,
