@@ -23,9 +23,13 @@ interface Props {
   commits: number;
   kills?: number | undefined;
   killTarget?: number | undefined;
+  bombs?: number;
+  shield?: boolean;
+  boostReady?: boolean;
+  shieldReady?: boolean;
 }
 
-export function HUD({ ship, objective, stageTitle, score, staged, commits, kills, killTarget }: Props) {
+export function HUD({ ship, objective, stageTitle, score, staged, commits, kills, killTarget, bombs = 0, shield = false, boostReady = true, shieldReady = true }: Props) {
   return (
     <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-3 md:p-5">
       <div className="flex items-start justify-between gap-4">
@@ -56,6 +60,13 @@ export function HUD({ ship, objective, stageTitle, score, staged, commits, kills
                 Kills {kills ?? 0}/{killTarget}
               </div>
             )}
+            <div className="mt-1 flex items-center justify-end gap-2 font-mono text-[11px]">
+              <span className={`rounded px-1.5 py-0.5 ${bombs > 0 ? "bg-reward/20 text-reward" : "bg-muted/30 text-muted-foreground"}`} title="Smart bombs (right click)">
+                ✸ {bombs} bomb{bombs === 1 ? "" : "s"}
+              </span>
+              <span className={`rounded px-1.5 py-0.5 ${boostReady ? "bg-primary/20 text-primary" : "bg-muted/30 text-muted-foreground"}`}>A boost</span>
+              <span className={`rounded px-1.5 py-0.5 ${shield ? "bg-terminal-green/30 text-terminal-green" : shieldReady ? "bg-terminal-green/20 text-terminal-green" : "bg-muted/30 text-muted-foreground"}`}>F shield</span>
+            </div>
             <div className="mt-1 flex items-center gap-2 font-mono text-[11px]">
               <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 ${commits ? "bg-terminal-green/20 text-terminal-green" : "bg-destructive/20 text-destructive"}`}>
                 ● {commits} checkpoint{commits === 1 ? "" : "s"}
@@ -75,7 +86,7 @@ export function HUD({ ship, objective, stageTitle, score, staged, commits, kills
           <div className="text-xs font-semibold text-foreground md:text-sm">{objective}</div>
         </div>
         <div className="arcade-panel hidden px-3 py-2 text-xs font-bold text-muted-foreground md:block">
-          MOUSE STEER · SPACE THRUST · CLICK FIRE · WASD / ARROWS ALSO WORK · SHIFT BOOST
+          MOUSE AIM · SPACE THRUST · LEFT CLICK FIRE · RIGHT CLICK SMART BOMB · A BOOST · F SHIELD
         </div>
       </div>
     </div>
