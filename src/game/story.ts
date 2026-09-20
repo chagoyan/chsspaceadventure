@@ -153,9 +153,9 @@ export const STEPS: Step[] = [
     id: "t_commit",
     task: {
       title: "Create Your First Checkpoint",
-      briefing: "KOMM: This takes two commands. Type git add . and press Enter. When it finishes, type the git commit command and press Enter again.",
+      briefing: "KOMM: This takes two commands. Type git add . and press Enter. Then type git commit -m followed by your message in quotes — the message is your note about what changed. Press Enter to save the checkpoint.",
       help: "full",
-      hint: '1. Type git add . and press Enter.  2. Type git commit -m "Repaired and refueled after the Shatter Field" and press Enter.',
+      hint: '1. Type git add . and press Enter.  2. Type git commit -m "Repaired and refueled after the Shatter Field" and press Enter. The quoted text is your message — describe what changed.',
       requires: ["add", "commit"],
       advanceLabel: "Enter Sector 2",
     },
