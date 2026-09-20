@@ -1,7 +1,7 @@
 // Ship terminal overlay: parses real git commands against the simulated repo.
 import { useEffect, useRef, useState } from "react";
 import type { Repo } from "../../game/types";
-import { execCommand, applyResult, type StatusLine, type ExecResult } from "../../game/git";
+import { execCommand, applyResult, normalizeCommandInput, type StatusLine, type ExecResult } from "../../game/git";
 import { sfx } from "../../game/audio";
 import type { TerminalTask } from "../../game/story";
 
@@ -85,8 +85,7 @@ export function Terminal({ repo, task, commitsAtOpen, onRepoChange, onAdvance, s
   }
 
   function run(rawInput: string, resetConfirmed = false) {
-    // Normalize smart dashes here too, so every entry point is safe.
-    const raw = rawInput.replace(/[–—]/g, "--").replace(/−/g, "-");
+    const raw = normalizeCommandInput(rawInput);
     const blockedLines = lessonBlock(raw);
     if (blockedLines) {
       setHistory((h) => [...h, { text: `git@ship:~$ ${raw}`, kind: "echo" }, ...blockedLines]);
@@ -106,7 +105,11 @@ export function Terminal({ repo, task, commitsAtOpen, onRepoChange, onAdvance, s
     setPendingReset(null);
 
     const echo: StatusLine = { text: `git@ship:~$ ${raw}`, kind: "echo" };
-    const newLines = [echo, ...result.lines];
+    const successfulLog = result.ok && raw.trim().startsWith("git log") && result.lines.length > 0;
+    const explanationLines: StatusLine[] = successfulLog
+      ? (task.logExplanation ?? []).map((text) => ({ text, kind: "clean" as const }))
+      : [];
+    const newLines = [echo, ...result.lines, ...explanationLines];
 
     if (result.ok) {
       if (result.didInit) setDone((d) => new Set(d).add("init"));
@@ -118,7 +121,7 @@ export function Terminal({ repo, task, commitsAtOpen, onRepoChange, onAdvance, s
         setCommittedHere(true);
         sfx.commit();
       }
-      if (result.lines.length > 1 && raw.trim().startsWith("git log")) setDone((d) => new Set(d).add("log"));
+      if (successfulLog) setDone((d) => new Set(d).add("log"));
       if (result.didReset) setDone((d) => new Set(d).add("reset"));
       if (result.didRevert) setDone((d) => new Set(d).add("revert"));
       if (result.didInit || result.didStage || result.commit || result.didReset || result.didRevert) {
@@ -133,8 +136,7 @@ export function Terminal({ repo, task, commitsAtOpen, onRepoChange, onAdvance, s
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!input.trim()) return;
-    // Normalize smart dashes (macOS/iOS autocorrect turns -- into –/—)
-    const cmd = input.replace(/[–—]/g, "--").replace(/−/g, "-");
+    const cmd = normalizeCommandInput(input);
     setInput("");
     setCmdHistory((c) => [...c, cmd]);
     setHistIdx(-1);
@@ -255,7 +257,7 @@ git revert <hash>             undo one checkpoint, safely`}
             ref={inputRef}
             value={input}
             onChange={(e) => {
-              setInput(e.target.value);
+              setInput(normalizeCommandInput(e.target.value));
               if (e.target.value.length % 3 === 0) sfx.typing();
             }}
             onKeyDown={handleKey}

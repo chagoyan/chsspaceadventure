@@ -237,6 +237,8 @@
   border: 2px solid var(--color-border);
   background: oklch(0.14 0.03 265);
   box-shadow: 0 0 60px oklch(0.5 0.15 155 / 0.15);
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "clig" 0, "calt" 0;
 }
 
 .terminal-titlebar {

@@ -27,3 +27,6 @@
 - [x] Restrict commands to lessons and require diagnostics before the first checkpoint
 - [x] Show complete color-coded diagnostics before and after staging
 - [x] Verify literal double-minus commands and the revised terminal flow
+- [x] Hide staging instructions from the first diagnostics terminal
+- [x] Explain checkpoint hashes only after the first successful log
+- [x] Normalize and visibly preserve double-minus log and reset options
