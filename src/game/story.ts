@@ -138,7 +138,7 @@ export const STEPS: Step[] = [
     id: "d_commit",
     lines: [
       { speaker: "komm", text: "Repairs done, tanks topped up. THIS is a moment worth keeping. If disaster strikes later, wouldn't it be nice to return to exactly this condition?" },
-      { speaker: "komm", text: "In Git, that's a two-step dance. First we STAGE everything with git add . — that prepares the changes. Then we COMMIT with a message — that records a permanent checkpoint.", choices: [
+      { speaker: "komm", text: "In Git, that's a two-step process. First we STAGE everything with git add . — that prepares the changes. Then we COMMIT with a message — that records a permanent checkpoint.", choices: [
         { label: "\"Why two steps?\"", response: "Staging lets you choose exactly what goes into the checkpoint. For now, git add . stages everything — but committing is what actually protects it." },
         { label: "\"Let's do it!\"", response: "Right! Remember: staging alone protects NOTHING. Only the commit creates the checkpoint." },
       ]},
@@ -149,9 +149,9 @@ export const STEPS: Step[] = [
     id: "t_commit",
     task: {
       title: "Create Your First Checkpoint",
-      briefing: "KOMM: Two commands, in order. First stage all changes: git add . — then commit them with a meaningful message describing what changed.",
+      briefing: "KOMM: This takes two commands. Type git add . and press Enter. When it finishes, type the git commit command and press Enter again.",
       help: "full",
-      hint: 'First: git add .   — then: git commit -m "Repaired and refueled after the Shatter Field"',
+      hint: '1. Type git add . and press Enter.  2. Type git commit -m "Repaired and refueled after the Shatter Field" and press Enter.',
       requires: ["add", "commit"],
       advanceLabel: "Enter Sector 2",
     },

@@ -215,7 +215,6 @@ git revert <hash>             undo one checkpoint, safely`}
             }}
             onKeyDown={handleKey}
             className="terminal-input"
-            placeholder='type a command, e.g. git status'
             aria-label="Terminal command input"
             autoComplete="off"
             spellCheck={false}

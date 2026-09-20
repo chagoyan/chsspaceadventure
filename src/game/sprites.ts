@@ -42,6 +42,7 @@ export function drawSprite(
   y: number,
   width: number,
   angle = 0,
+  flipX = false,
 ): void {
   const image = getImage(sprite.src);
   if (!image?.complete || image.naturalWidth === 0) return;
@@ -49,6 +50,7 @@ export function drawSprite(
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(angle);
+  if (flipX) ctx.scale(-1, 1);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
   ctx.drawImage(image, -width / 2, -height / 2, width, height);

@@ -68,6 +68,7 @@ export class GameEngine {
   private pvx = 0;
   private pvy = 0;
   private shipAngle = 0;
+  private shipFlipped = false;
   private aimAngle = 0;
   private fireCd = 0;
   private invuln = 0;
@@ -293,7 +294,14 @@ export class GameEngine {
     this.thrusting = thrusting;
     if (thrusting) {
       const len = Math.hypot(ax, ay);
-      this.shipAngle = Math.atan2(ay, ax);
+      const movementAngle = Math.atan2(ay, ax);
+      if (ax < 0) this.shipFlipped = true;
+      if (ax > 0) this.shipFlipped = false;
+      this.shipAngle = this.shipFlipped
+        ? movementAngle >= 0
+          ? movementAngle - Math.PI
+          : movementAngle + Math.PI
+        : movementAngle;
       this.pvx += (ax / len) * ACCEL * dt;
       this.pvy += (ay / len) * ACCEL * dt;
       s.fuel = Math.max(0, s.fuel - (boost ? 5 : 2.2) * dt);
@@ -487,6 +495,14 @@ export class GameEngine {
       }
     }
     for (const e of remove) this.ents.splice(this.ents.indexOf(e), 1);
+
+    // Combat stages arrive in manageable waves until the full target is available.
+    if (this.spec.mode === "combat" && this.spec.killTarget && this.kills < this.spec.killTarget) {
+      const activeDrones = this.ents.filter((e) => e.kind === "drone").length;
+      const remaining = this.spec.killTarget - this.kills;
+      const waveSize = Math.min(this.spec.drones ?? 1, remaining);
+      for (let i = activeDrones; i < waveSize; i++) this.spawnDrone();
+    }
 
     // spawn scripted upgrade mid-stage
     const sup = this.spec.spawnUpgradeAtKills;
@@ -710,7 +726,7 @@ export class GameEngine {
     // player ship
     const blink = this.invuln > 0 && Math.floor(t * 12) % 2 === 0;
     if (!blink) {
-      drawSprite(ctx, SHIP, this.px, this.py, 112, this.shipAngle);
+      drawSprite(ctx, SHIP, this.px, this.py, 112, this.shipAngle, this.shipFlipped);
     }
     if (this.spec.drain) {
       // corruption glitch overlay
