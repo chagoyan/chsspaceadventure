@@ -12,4 +12,4 @@
 
 - [x] Replace alien computer portrait and enlarge centered communications
 - [x] Match the ship to the supplied reference and align its heading with movement
-- [ ] Verify dialogue and flight controls on desktop and compact viewports
+- [x] Verify dialogue and flight controls on desktop and compact viewports
