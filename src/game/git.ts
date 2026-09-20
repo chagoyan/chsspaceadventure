@@ -1,5 +1,5 @@
 // Simulated Git engine: parsing, status, staging, commits, log, reset --hard, revert.
-import type { Commit, GameSnapshot, Repo, ShipState } from "./types";
+import { DEFAULT_SHIP, type Commit, type GameSnapshot, type Repo, type ShipState } from "./types";
 
 export function cloneSnapshot(s: GameSnapshot): GameSnapshot {
   return {
@@ -51,7 +51,43 @@ export function findCommit(repo: Repo, hash: string): Commit | null {
 
 export interface StatusLine {
   text: string;
-  kind: "staged" | "unstaged" | "clean" | "info";
+  kind: "staged" | "unstaged" | "clean" | "info" | "stat" | "changed" | "echo";
+}
+
+function initialSnapshot(stepId: string): GameSnapshot {
+  return {
+    ship: { ...DEFAULT_SHIP, upgrades: [] },
+    score: 0,
+    stage: 1,
+    stepId,
+    flags: {},
+  };
+}
+
+function shipStateLines(current: GameSnapshot, comparison: GameSnapshot): StatusLine[] {
+  const stat = (label: string, value: number, changed: boolean): StatusLine => ({
+    text: `  ${label} ${Math.round(value)}%`,
+    kind: changed ? "changed" : "stat",
+  });
+  const upgradesChanged =
+    current.ship.upgrades.length !== comparison.ship.upgrades.length ||
+    current.ship.upgrades.some((upgrade) => !comparison.ship.upgrades.includes(upgrade));
+
+  return [
+    stat("Hull", current.ship.hull, current.ship.hull !== comparison.ship.hull),
+    stat("Armor", current.ship.armor, current.ship.armor !== comparison.ship.armor),
+    stat("Energy", current.ship.energy, current.ship.energy !== comparison.ship.energy),
+    stat("Fuel", current.ship.fuel, current.ship.fuel !== comparison.ship.fuel),
+    stat("Ammo", current.ship.ammo, current.ship.ammo !== comparison.ship.ammo),
+    {
+      text: `  Upgrades: ${current.ship.upgrades.join(", ") || "none"}`,
+      kind: upgradesChanged ? "changed" : "stat",
+    },
+    {
+      text: `  Mission score ${current.score}`,
+      kind: current.score !== comparison.score ? "changed" : "stat",
+    },
+  ];
 }
 
 function diffShip(base: ShipState, cur: ShipState): string[] {
@@ -105,20 +141,15 @@ export function statusReport(repo: Repo): StatusLine[] {
       kind: "info",
     },
   ];
-  const base = h ? h.snapshot : null;
-  if (!base) {
-    lines.push({ text: "Current ship state:", kind: "info" });
-    lines.push({ text: `  Hull ${Math.round(repo.working.ship.hull)}%`, kind: "info" });
-    lines.push({ text: `  Armor ${Math.round(repo.working.ship.armor)}%`, kind: "info" });
-    lines.push({ text: `  Energy ${Math.round(repo.working.ship.energy)}%`, kind: "info" });
-    lines.push({ text: `  Fuel ${Math.round(repo.working.ship.fuel)}%`, kind: "info" });
-    lines.push({ text: `  Ammo ${Math.round(repo.working.ship.ammo)}%`, kind: "info" });
-    lines.push({ text: `  Upgrades: ${repo.working.ship.upgrades.join(", ") || "none"}`, kind: "info" });
-    lines.push({ text: `  Mission score ${repo.working.score}`, kind: "info" });
+  const base = h?.snapshot ?? initialSnapshot(repo.working.stepId);
+  const statComparison = repo.staged ?? base;
+  lines.push({ text: "Current ship state:", kind: "info" });
+  lines.push(...shipStateLines(repo.working, statComparison));
+  if (!h) {
     if (repo.staged) {
       lines.push({ text: "Changes staged for first checkpoint:", kind: "staged" });
-      for (const l of diffSnapshot(repo.working, repo.staged).length
-        ? diffSnapshot(repo.working, repo.staged)
+      for (const l of diffSnapshot(base, repo.staged).length
+        ? diffSnapshot(base, repo.staged)
         : ["Initial mission configuration"]) {
         lines.push({ text: `  ${l}`, kind: "staged" });
       }

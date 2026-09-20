@@ -60,7 +60,7 @@ export function Dialogue({ lines, onDone }: { lines: DialogueLine[]; onDone: () 
         <div className="flex flex-col items-center gap-5 px-5 pb-6 sm:flex-row sm:items-start sm:gap-7 sm:px-8 sm:pb-8">
           <Portrait who={line.speaker} />
           <div className="min-h-28 w-full flex-1">
-            <p className={`text-center text-xl leading-relaxed sm:text-left sm:text-2xl ${line.speaker === "narrator" ? "italic text-muted-foreground" : "text-foreground"}`}>
+            <p className={`dialogue-copy text-center text-xl leading-relaxed sm:text-left sm:text-2xl ${line.speaker === "narrator" ? "italic text-muted-foreground" : "text-foreground"}`}>
               {chosen ?? line.text}
             </p>
             {line.choices && !chosen ? (

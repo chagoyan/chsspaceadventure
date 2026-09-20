@@ -24,3 +24,6 @@
 - [x] Add combat-focused Sectors 3 and 4 before the midpoint certificate
 - [x] Renumber the later sectors and certificate milestones
 - [x] Verify the revised first-half flow and terminal guidance
+- [ ] Restrict commands to lessons and require diagnostics before the first checkpoint
+- [ ] Show complete color-coded diagnostics before and after staging
+- [ ] Verify literal double-minus commands and the revised terminal flow
