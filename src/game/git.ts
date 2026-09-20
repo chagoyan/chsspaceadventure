@@ -54,6 +54,16 @@ export interface StatusLine {
   kind: "staged" | "unstaged" | "clean" | "info" | "stat" | "changed" | "echo";
 }
 
+export function normalizeCommandInput(value: string): string {
+  const normalizedDashes = value
+    .replace(/[–—]/g, "--")
+    .replace(/[‐‑‒―−﹘﹣－]/g, "-");
+
+  return normalizedDashes
+    .replace(/\s-+oneline\b/gi, " --oneline")
+    .replace(/\s-+hard\b/gi, " --hard");
+}
+
 function initialSnapshot(stepId: string): GameSnapshot {
   return {
     ship: { ...DEFAULT_SHIP, upgrades: [] },
@@ -154,10 +164,7 @@ export function statusReport(repo: Repo): StatusLine[] {
         lines.push({ text: `  ${l}`, kind: "staged" });
       }
     } else {
-      lines.push({
-        text: "Untracked mission state — stage it with: git add .",
-        kind: "unstaged",
-      });
+      lines.push({ text: "Mission state has changed since tracking began.", kind: "unstaged" });
     }
     return lines;
   }
@@ -210,7 +217,7 @@ function tokenize(input: string): string[] {
 const LAME_MESSAGES = new Set(["stuff", "asdf", "test", "x", "ok", "idk", "commit", "save", "a", "hi"]);
 
 export function execCommand(repo: Repo, rawInput: string, opts?: { resetConfirmed?: boolean }): ExecResult {
-  const input = rawInput.trim();
+  const input = normalizeCommandInput(rawInput).trim();
   const tokens = tokenize(input);
   if (!tokens.length) return { ok: true, lines: [] };
 

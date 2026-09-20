@@ -26,6 +26,7 @@ export interface TerminalTask {
   advanceLabel: string;
   requireCommit?: boolean; // advance only after a NEW commit in this session
   freeForm?: boolean; // optional terminal, no required commands
+  logExplanation?: string[]; // shown only after a successful git log
 }
 
 export interface TerminalStep {
@@ -290,10 +291,6 @@ export const STEPS: Step[] = [
     lines: [
       { speaker: "narrator", text: "Sector 5: The Crimson Nebula. Clouds of ionized plasma eat through hull plating. The only safe path threads between them." },
       { speaker: "komm", text: "Oscar, we've made several checkpoints now. Use git log --oneline to ask Git for our checkpoint history. It lists every commit we've made." },
-      { speaker: "komm", text: "A hash is a unique short code that identifies one exact checkpoint. In git log --oneline, it appears at the far left of each checkpoint — for example, a3f9c21." },
-      { speaker: "komm", text: "When a command shows <hash>, replace <hash> with the short code beside the checkpoint you want. For example: git reset --hard a3f9c21." },
-      { speaker: "komm", text: "You don't need to memorize or fully type the long version — the short hash from git log --oneline is enough. Copy it exactly as shown." },
-      { speaker: "komm", text: "And here's the powerful part: git reset --hard <hash> can move our whole timeline BACK to an earlier checkpoint. Dangerous but powerful — it discards everything after that point." },
     ],
   },
   {
@@ -306,6 +303,10 @@ export const STEPS: Step[] = [
       hint: "git log --oneline",
       requires: ["log"],
       allowedCommands: ["init", "status", "add", "commit", "log"],
+      logExplanation: [
+        "KOMM: The seven-character code at the left of each line is that checkpoint's hash.",
+        "Copy the hash beside the checkpoint you want. Later, replace <hash> with that code.",
+      ],
       advanceLabel: "Enter the Nebula",
     },
   },
