@@ -10,6 +10,6 @@
 - [x] Reuse fitting music and the brighter color treatment from the earlier games
 - [x] Verify the refreshed game on desktop and mobile-sized viewports
 
-- [ ] Replace alien computer portrait and enlarge centered communications
-- [ ] Match the ship to the supplied reference and align its heading with movement
+- [x] Replace alien computer portrait and enlarge centered communications
+- [x] Match the ship to the supplied reference and align its heading with movement
 - [ ] Verify dialogue and flight controls on desktop and compact viewports

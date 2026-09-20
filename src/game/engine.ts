@@ -67,7 +67,8 @@ export class GameEngine {
   private py = WORLD_H / 2;
   private pvx = 0;
   private pvy = 0;
-  private angle = 0;
+  private shipAngle = 0;
+  private aimAngle = 0;
   private fireCd = 0;
   private invuln = 0;
   private ents: Ent[] = [];
@@ -292,6 +293,7 @@ export class GameEngine {
     this.thrusting = thrusting;
     if (thrusting) {
       const len = Math.hypot(ax, ay);
+      this.shipAngle = Math.atan2(ay, ax);
       this.pvx += (ax / len) * ACCEL * dt;
       this.pvy += (ay / len) * ACCEL * dt;
       s.fuel = Math.max(0, s.fuel - (boost ? 5 : 2.2) * dt);
@@ -309,11 +311,11 @@ export class GameEngine {
     if (this.keys.has("arrowleft")) aimX -= 1;
     if (this.keys.has("arrowright")) aimX += 1;
     const arrowFiring = aimX !== 0 || aimY !== 0;
-    if (arrowFiring) this.angle = Math.atan2(aimY, aimX);
-    else if (this.mouseActive) this.angle = Math.atan2(this.mouse.y - this.py, this.mouse.x - this.px);
+    if (arrowFiring) this.aimAngle = Math.atan2(aimY, aimX);
+    else if (this.mouseActive) this.aimAngle = Math.atan2(this.mouse.y - this.py, this.mouse.x - this.px);
     else {
       const target = this.nearestThreat();
-      if (target) this.angle = Math.atan2(target.y - this.py, target.x - this.px);
+      this.aimAngle = target ? Math.atan2(target.y - this.py, target.x - this.px) : this.shipAngle;
     }
 
     // energy regen / corruption drain
@@ -333,10 +335,10 @@ export class GameEngine {
       const spread = 0.04;
       this.ents.push({
         kind: "bullet",
-        x: this.px + Math.cos(this.angle) * 26,
-        y: this.py + Math.sin(this.angle) * 26,
-        vx: Math.cos(this.angle + rand(-spread, spread)) * 640,
-        vy: Math.sin(this.angle + rand(-spread, spread)) * 640,
+        x: this.px + Math.cos(this.aimAngle) * 38,
+        y: this.py + Math.sin(this.aimAngle) * 38,
+        vx: Math.cos(this.aimAngle + rand(-spread, spread)) * 640,
+        vy: Math.sin(this.aimAngle + rand(-spread, spread)) * 640,
         r: 4,
         hp: 1,
       });
@@ -708,16 +710,7 @@ export class GameEngine {
     // player ship
     const blink = this.invuln > 0 && Math.floor(t * 12) % 2 === 0;
     if (!blink) {
-      if (this.thrusting) {
-        const flame = 16 + Math.sin(t * 30) * 5;
-        ctx.fillStyle = "#ffd166";
-        ctx.beginPath();
-        ctx.moveTo(this.px - Math.cos(this.angle) * 27, this.py - Math.sin(this.angle) * 27);
-        ctx.lineTo(this.px - Math.cos(this.angle) * (27 + flame) + Math.sin(this.angle) * 6, this.py - Math.sin(this.angle) * (27 + flame) - Math.cos(this.angle) * 6);
-        ctx.lineTo(this.px - Math.cos(this.angle) * (27 + flame) - Math.sin(this.angle) * 6, this.py - Math.sin(this.angle) * (27 + flame) + Math.cos(this.angle) * 6);
-        ctx.fill();
-      }
-      drawSprite(ctx, SHIP, this.px, this.py, 76, this.angle);
+      drawSprite(ctx, SHIP, this.px, this.py, 112, this.shipAngle);
     }
     if (this.spec.drain) {
       // corruption glitch overlay

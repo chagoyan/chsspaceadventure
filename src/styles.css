@@ -203,6 +203,21 @@
   font-size: 0.875rem;
 }
 
+.communication-panel {
+  background-image: linear-gradient(135deg, color-mix(in oklab, var(--color-primary) 7%, transparent), transparent 42%);
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--color-reward) 18%, transparent),
+    0 20px 70px color-mix(in oklab, var(--color-background) 72%, transparent);
+}
+
+.komm-display {
+  background-image:
+    linear-gradient(color-mix(in oklab, var(--color-terminal-green) 8%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, var(--color-terminal-green) 8%, transparent) 1px, transparent 1px);
+  background-size: 12px 12px;
+  box-shadow: inset 0 0 28px color-mix(in oklab, var(--color-terminal-green) 15%, transparent);
+}
+
 /* Force the dark space theme as the default look */
 @layer base {
   :root {
