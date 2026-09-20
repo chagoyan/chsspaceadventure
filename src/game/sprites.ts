@@ -38,7 +38,7 @@ export function spriteSize(sprite: Sprite, scale: number): { w: number; h: numbe
 }
 
 // Solar Arcade sprites use bold ink outlines, two-tone shading, and bright highlights.
-// Git's ship points right (angle 0 = facing +x).
+// Oscar's ship points right (angle 0 = facing +x).
 export const SHIP: Sprite = {
   rows: [
     "......KK........",

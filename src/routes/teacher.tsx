@@ -3,9 +3,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 export const Route = createFileRoute("/teacher")({
   head: () => ({
     meta: [
-      { title: "Teacher Concept Map — Git Space Adventure" },
-      { name: "description", content: "How each Git Space Adventure game mechanic maps to a real Git concept, for educators." },
-      { property: "og:title", content: "Teacher Concept Map — Git Space Adventure" },
+      { title: "Teacher Concept Map — Oscar's Git Space Adventure" },
+      { name: "description", content: "How each Oscar's Git Space Adventure mechanic maps to Git concepts, for educators." },
+      { property: "og:title", content: "Teacher Concept Map — Oscar's Git Space Adventure" },
       { property: "og:description", content: "How each game mechanic maps to a real Git concept." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -71,9 +71,9 @@ function TeacherPage() {
         </Link>
         <h1 className="mt-4 font-pixel text-lg text-primary">TEACHER CONCEPT MAP</h1>
         <p className="mt-3 text-sm text-muted-foreground">
-          Git Space Adventure teaches the working-tree → staging → commit → history → reversal mental
-          model through arcade gameplay. Each mechanic below maps to the real Git concept it builds.
-          Students type real commands in a simulated ship terminal; no Git installation is required.
+          Oscar's Git Space Adventure teaches the working-tree → staging → commit → history → reversal
+          model through arcade gameplay. Each mechanic below maps to the Git concept it builds.
+          Students type Git commands in a simulated ship terminal; no Git installation is required.
           Scope intentionally excludes branches, remotes, and merging (Version 1).
         </p>
         <div className="mt-6 overflow-x-auto rounded-lg border border-border">
