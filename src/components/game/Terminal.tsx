@@ -109,7 +109,11 @@ export function Terminal({ repo, task, commitsAtOpen, onRepoChange, onAdvance, s
     const explanationLines: StatusLine[] = successfulLog
       ? (task.logExplanation ?? []).map((text) => ({ text, kind: "clean" as const }))
       : [];
-    const newLines = [echo, ...result.lines, ...explanationLines];
+    // While KOMM explains hashes, make the hash at the start of each log line flash.
+    const resultLines = successfulLog && explanationLines.length > 0
+      ? result.lines.map((l) => ({ ...l, hashFlash: /^[0-9a-f]{7}\s/.test(l.text) }))
+      : result.lines;
+    const newLines = [echo, ...resultLines, ...explanationLines];
 
     if (result.ok) {
       if (result.didInit) setDone((d) => new Set(d).add("init"));
@@ -227,7 +231,14 @@ git revert <hash>             undo one checkpoint, safely`}
         <div ref={scrollRef} className="terminal-scroll" aria-live="polite">
           {history.map((l, i) => (
             <div key={i} className={`terminal-line terminal-${l.kind}`}>
-              {l.text}
+              {l.hashFlash ? (
+                <>
+                  <span className="hash-flash">{l.text.slice(0, 7)}</span>
+                  {l.text.slice(7)}
+                </>
+              ) : (
+                l.text
+              )}
             </div>
           ))}
           {pendingReset && (
