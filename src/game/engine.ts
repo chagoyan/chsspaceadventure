@@ -357,27 +357,20 @@ export class GameEngine {
     this.fireCd = Math.max(0, this.fireCd - dt);
 
     // --- movement ---
-    // Mouse steers, space thrusts, click fires. WASD still thrusts directly.
-    const boost = this.keys.has("shift") && s.fuel > 0;
+    // Mouse steers, space thrusts, left click fires, A boosts, F raises the shield.
+    this.boostTimer = Math.max(0, this.boostTimer - dt);
+    this.boostCd = Math.max(0, this.boostCd - dt);
+    this.shieldTimer = Math.max(0, this.shieldTimer - dt);
+    this.shieldCd = Math.max(0, this.shieldCd - dt);
+    const boosting = this.boostTimer > 0 && s.fuel > 0;
     // Empty tank never soft-locks the player: reserve thrusters still limp along.
-    const ACCEL = s.fuel <= 0 ? 320 : boost ? 1250 : 900;
-    let ax = 0;
-    let ay = 0;
-    if (this.keys.has("w")) ay -= 1;
-    if (this.keys.has("s")) ay += 1;
-    if (this.keys.has("a")) ax -= 1;
-    if (this.keys.has("d")) ax += 1;
+    const ACCEL = s.fuel <= 0 ? 320 : boosting ? 2100 : 900;
     const mouseAngle = this.mouseActive
       ? Math.atan2(this.mouse.y - this.py, this.mouse.x - this.px)
       : null;
-    const spaceThrust = this.keys.has(" ") && mouseAngle !== null;
-    if (ax === 0 && ay === 0 && spaceThrust) {
-      ax = Math.cos(mouseAngle!);
-      ay = Math.sin(mouseAngle!);
-    }
-    const thrusting = ax !== 0 || ay !== 0;
+    const headingAngle = mouseAngle ?? this.shipAngle;
+    const thrusting = this.keys.has(" ") || boosting;
     this.thrusting = thrusting;
-    const headingAngle = mouseAngle ?? (thrusting ? Math.atan2(ay, ax) : this.aimAngle);
     this.shipFlipped = Math.cos(headingAngle) < 0;
     this.shipAngle = this.shipFlipped
       ? headingAngle >= 0
@@ -385,10 +378,9 @@ export class GameEngine {
         : headingAngle + Math.PI
       : headingAngle;
     if (thrusting) {
-      const len = Math.hypot(ax, ay);
-      this.pvx += (ax / len) * ACCEL * dt;
-      this.pvy += (ay / len) * ACCEL * dt;
-      s.fuel = Math.max(0, s.fuel - (boost ? 5 : 2.2) * dt);
+      this.pvx += Math.cos(headingAngle) * ACCEL * dt;
+      this.pvy += Math.sin(headingAngle) * ACCEL * dt;
+      s.fuel = Math.max(0, s.fuel - (boosting ? 5 : 2.2) * dt);
     }
     // exp damping
     const damp = Math.exp(-3.2 * dt);
@@ -396,15 +388,7 @@ export class GameEngine {
     this.pvy *= damp;
     this.px = Math.max(24, Math.min(WORLD_W - 24, this.px + this.pvx * dt));
     this.py = Math.max(24, Math.min(WORLD_H - 24, this.py + this.pvy * dt));
-    let aimX = 0;
-    let aimY = 0;
-    if (this.keys.has("arrowup")) aimY -= 1;
-    if (this.keys.has("arrowdown")) aimY += 1;
-    if (this.keys.has("arrowleft")) aimX -= 1;
-    if (this.keys.has("arrowright")) aimX += 1;
-    const arrowFiring = aimX !== 0 || aimY !== 0;
-    if (arrowFiring) this.aimAngle = Math.atan2(aimY, aimX);
-    else if (mouseAngle !== null) this.aimAngle = mouseAngle;
+    if (mouseAngle !== null) this.aimAngle = mouseAngle;
     else {
       const target = this.nearestThreat();
       this.aimAngle = target ? Math.atan2(target.y - this.py, target.x - this.px) : this.shipAngle;
@@ -419,7 +403,7 @@ export class GameEngine {
     }
 
     // --- shooting ---
-    const wantFire = (this.firing || this.keys.has("f") || arrowFiring) && this.fireCd <= 0;
+    const wantFire = this.firing && this.fireCd <= 0;
     if (wantFire && s.ammo >= 1 && s.energy >= 4) {
       s.ammo -= 1;
       s.energy -= 4;
