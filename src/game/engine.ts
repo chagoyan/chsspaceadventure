@@ -424,6 +424,20 @@ export class GameEngine {
     this.pvy *= damp;
     this.px = Math.max(24, Math.min(WORLD_W - 24, this.px + this.pvx * dt));
     this.py = Math.max(24, Math.min(WORLD_H - 24, this.py + this.pvy * dt));
+    // Barriers are solid cover: slide the ship out instead of damaging it.
+    for (const b of this.ents) {
+      if (b.kind !== "barrier") continue;
+      const dx = this.px - b.x;
+      const dy = this.py - b.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      const min = b.r + 24;
+      if (dist < min) {
+        this.px = b.x + (dx / dist) * min;
+        this.py = b.y + (dy / dist) * min;
+        this.pvx *= 0.3;
+        this.pvy *= 0.3;
+      }
+    }
     if (mouseAngle !== null) this.aimAngle = mouseAngle;
     else {
       const target = this.nearestThreat();
