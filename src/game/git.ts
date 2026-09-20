@@ -350,7 +350,7 @@ export function execCommand(repo: Repo, rawInput: string, opts?: { resetConfirme
 
     case "revert": {
       if (!repo.initialized) return err("fatal: not a git repository", "Run git init first.");
-      const hashArg = tokens[2];
+      const hashArg = (tokens[2] ?? "").replace(/[^0-9a-f]/gi, "").toLowerCase();
       if (!hashArg) {
         return err("error: missing commit hash", "Use git log --oneline to find the harmful checkpoint, then: git revert <hash>");
       }
