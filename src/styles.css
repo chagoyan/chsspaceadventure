@@ -332,7 +332,8 @@ kbd,
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .terminal-hint-label {
+  .terminal-hint-label,
+  .hash-flash {
     animation: none;
     color: var(--color-reward);
   }
