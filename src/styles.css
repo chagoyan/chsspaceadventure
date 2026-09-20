@@ -331,9 +331,16 @@ kbd,
   animation: hash-flash 0.6s ease-in-out 4;
 }
 
+.hash-recommended {
+  color: var(--color-reward);
+  font-weight: 700;
+  animation: hash-flash 0.7s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .terminal-hint-label,
-  .hash-flash {
+  .hash-flash,
+  .hash-recommended {
     animation: none;
     color: var(--color-reward);
   }

@@ -275,6 +275,31 @@ export class GameEngine {
     }
   }
 
+  private plasmaDamage(amount: number) {
+    let remaining = amount;
+    if (this.ship.armor > 0) {
+      const absorbed = Math.min(this.ship.armor, amount * 0.6);
+      this.ship.armor -= absorbed;
+      remaining -= absorbed;
+    }
+    this.ship.hull = Math.max(0, this.ship.hull - remaining);
+    this.hitFlash = Math.max(this.hitFlash, 0.08);
+    if (this.ship.hull <= 0) {
+      sfx.explosion();
+      this.events.onEvent({ type: "destroyed" });
+      this.stop();
+    }
+  }
+
+  private nebulaState(n: { x: number; y: number; r: number }, index: number, t: number) {
+    if (this.reducedMotion) return n;
+    return {
+      x: n.x + Math.sin(t * 0.42 + index * 1.7) * 34,
+      y: n.y + Math.cos(t * 0.35 + index * 1.3) * 26,
+      r: n.r * (0.82 + 0.22 * (0.5 + 0.5 * Math.sin(t * 0.75 + index * 2.1))),
+    };
+  }
+
   private update(dt: number) {
     const s = this.ship;
     this.invuln = Math.max(0, this.invuln - dt);
@@ -363,9 +388,10 @@ export class GameEngine {
     }
 
     // --- nebula damage ---
-    for (const n of this.spec.nebulae ?? []) {
+    for (const [index, nebula] of (this.spec.nebulae ?? []).entries()) {
+      const n = this.nebulaState(nebula, index, performance.now() / 1000);
       const d = Math.hypot(this.px - n.x, this.py - n.y);
-      if (d < n.r) this.damage(8 * dt + 0); // continuous
+      if (d < n.r) this.plasmaDamage(16 * dt);
     }
     // invuln would block continuous nebula damage; nebula uses raw application:
     // (kept simple: invuln mainly for impacts)
@@ -641,7 +667,8 @@ export class GameEngine {
       ctx.fillRect(sx, st.y, st.s, st.s);
     }
     // nebulae
-    for (const n of this.spec.nebulae ?? []) {
+    for (const [index, nebula] of (this.spec.nebulae ?? []).entries()) {
+      const n = this.nebulaState(nebula, index, t);
       const g = ctx.createRadialGradient(n.x, n.y, 10, n.x, n.y, n.r);
       g.addColorStop(0, "rgba(255,80,120,0.35)");
       g.addColorStop(1, "rgba(255,80,120,0.02)");

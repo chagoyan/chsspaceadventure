@@ -90,7 +90,7 @@ export function Menu({ save, onNewGame, onContinue, onViewLog, onViewArchive, on
             {latest && (
               <>
                 <br />
-                Latest checkpoint: <span className="font-mono text-terminal-green">{latest.hash}</span> "{latest.message}"
+                Latest checkpoint: <span className="hash-flash font-mono text-terminal-green">{latest.hash}</span> "{latest.message}"
               </>
             )}
           </p>
