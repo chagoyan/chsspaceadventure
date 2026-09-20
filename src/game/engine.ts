@@ -1,7 +1,7 @@
 // Top-down arcade engine: movement, shooting, asteroids, drones, pickups,
 // nebula hazards, beacon goals, boss. Delta-time, frame-rate independent.
 import type { ShipState } from "./types";
-import { drawSprite, SHIP, DRONE, BOSS, ASTEROID, PICKUP_SPRITES, type Sprite } from "./sprites";
+import { drawSprite, preloadSprites, SHIP, DRONE, BOSS, ASTEROIDS, PICKUP_SPRITES, type Sprite } from "./sprites";
 import { sfx } from "./audio";
 
 export const WORLD_W = 1280;
@@ -103,6 +103,7 @@ export class GameEngine {
     for (let i = 0; i < 140; i++) {
       this.stars.push({ x: rand(0, WORLD_W), y: rand(0, WORLD_H), s: rand(0.5, 2.2) });
     }
+    preloadSprites();
     this.populate();
     this.attach();
   }
@@ -118,6 +119,7 @@ export class GameEngine {
         vy: rand(-20, 20),
         r: rand(16, 30),
         hp: 2,
+        sprite: ASTEROIDS[i % ASTEROIDS.length],
         rot: rand(0, 6),
         rotSpd: rand(-1, 1),
       });
@@ -648,11 +650,11 @@ export class GameEngine {
     // entities
     for (const e of this.ents) {
       if (e.kind === "asteroid") {
-        drawSprite(ctx, ASTEROID, e.x, e.y, e.r / 5, e.rot ?? 0);
+        if (e.sprite) drawSprite(ctx, e.sprite, e.x, e.y, e.r * 2.45, e.rot ?? 0);
       } else if (e.kind === "drone") {
-        drawSprite(ctx, DRONE, e.x, e.y, 3, Math.atan2(this.py - e.y, this.px - e.x));
+        drawSprite(ctx, DRONE, e.x, e.y, 58, Math.atan2(this.py - e.y, this.px - e.x));
       } else if (e.kind === "boss") {
-        drawSprite(ctx, BOSS, e.x, e.y, 6, Math.PI);
+        drawSprite(ctx, BOSS, e.x, e.y, 178, Math.PI);
         // boss hp bar
         ctx.fillStyle = "#31122e";
         ctx.fillRect(e.x - 60, e.y - 70, 120, 8);
@@ -670,9 +672,12 @@ export class GameEngine {
         ctx.fill();
       } else if (e.kind === "pickup" && e.sprite) {
         const bob = this.reducedMotion ? 0 : Math.sin(t * 3 + e.x) * 3;
-        drawSprite(ctx, e.sprite, e.x, e.y + bob, 4);
-        ctx.strokeStyle = "rgba(255,209,102,0.45)";
-        ctx.strokeRect(e.x - 18, e.y + bob - 18, 36, 36);
+        const pickupWidth = e.pickup?.startsWith("upgrade:") ? 50 : 40;
+        ctx.save();
+        ctx.shadowColor = "rgba(255,183,67,0.7)";
+        ctx.shadowBlur = 14;
+        drawSprite(ctx, e.sprite, e.x, e.y + bob, pickupWidth);
+        ctx.restore();
       } else if (e.kind === "spark") {
         ctx.globalAlpha = Math.min(1, (e.life ?? 0) * 3);
         ctx.fillStyle = e.color ?? "#ffd166";
@@ -692,7 +697,7 @@ export class GameEngine {
         ctx.lineTo(this.px - Math.cos(this.angle) * (27 + flame) - Math.sin(this.angle) * 6, this.py - Math.sin(this.angle) * (27 + flame) + Math.cos(this.angle) * 6);
         ctx.fill();
       }
-      drawSprite(ctx, SHIP, this.px, this.py, 4, this.angle);
+      drawSprite(ctx, SHIP, this.px, this.py, 76, this.angle);
     }
     if (this.spec.drain) {
       // corruption glitch overlay
