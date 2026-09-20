@@ -77,12 +77,6 @@ export function Dialogue({ lines, onDone }: { lines: DialogueLine[]; onDone: () 
                     onClick={() => {
                       sfx.pickup();
                       setChosen(c.response);
-                      setTimeout(() => {
-                        if (idx < lines.length - 1) {
-                          setIdx(idx + 1);
-                          setChosen(null);
-                        } else onDone();
-                      }, 1600);
                     }}
                     className="rounded border border-border bg-background px-3 py-2 text-left text-sm text-accent-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
                   >
@@ -91,13 +85,27 @@ export function Dialogue({ lines, onDone }: { lines: DialogueLine[]; onDone: () 
                 ))}
               </div>
             ) : (
-              <button
-                type="button"
-                onClick={advance}
-                className="mt-4 rounded bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:opacity-90"
-              >
-                {idx < lines.length - 1 ? "Next ▸" : "Continue ▸"}
-              </button>
+              <div className="mt-4 flex items-center gap-2">
+                {idx > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIdx(idx - 1);
+                      setChosen(null);
+                    }}
+                    className="rounded border border-border px-3 py-2 text-sm text-foreground hover:bg-accent"
+                  >
+                    ◂ Read again
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={advance}
+                  className="rounded bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:opacity-90"
+                >
+                  {idx < lines.length - 1 ? "Next ▸" : "Continue ▸"}
+                </button>
+              </div>
             )}
           </div>
         </div>
