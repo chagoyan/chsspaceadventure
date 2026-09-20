@@ -5,7 +5,7 @@ import type { CertificateData, Repo, SaveData, ShipState } from "../game/types";
 import { freshRepo } from "../game/types";
 import { loadSave, storeSave, clearSave, makeVerificationCode } from "../game/save";
 import { cloneSnapshot, head } from "../game/git";
-import { STEPS, stepById, nextStepId, type ActionStep, type DialogueStep, type TerminalStep, type CertificateStep } from "../game/story";
+import { STEPS, stepById, nextStepId, type ActionStep, type DialogueStep, type TerminalStep, type CertificateStep, type TerminalTask } from "../game/story";
 import { GameEngine, WORLD_W, WORLD_H, type EngineEvent } from "../game/engine";
 import { setMuted, startMusic, stopMusic, sfx } from "../game/audio";
 import { Terminal } from "./game/Terminal";
@@ -317,28 +317,48 @@ export function Game() {
   }
 
   if (mode === "log" && save) {
+    const recommendedTimelineCheckpoint = save.repo.commits.slice(0, -1).reduce<(typeof save.repo.commits)[number] | null>((best, commit) => {
+      if (!best) return commit;
+      const score = commit.snapshot.ship.hull + commit.snapshot.ship.armor + commit.snapshot.ship.energy + commit.snapshot.ship.fuel + commit.snapshot.ship.ammo;
+      const bestScore = best.snapshot.ship.hull + best.snapshot.ship.armor + best.snapshot.ship.energy + best.snapshot.ship.fuel + best.snapshot.ship.ammo;
+      return score > bestScore ? commit : best;
+    }, null);
+    const timelineTask: TerminalTask = {
+      title: "Checkpoint Navigator",
+      briefing: "Use git log --oneline to review checkpoints. To continue from an earlier one, type git reset --hard <hash> and confirm.",
+      help: "panel" as const,
+      hint: "git log --oneline",
+      requires: [],
+      allowedCommands: ["init", "status", "add", "commit", "log", "reset", "revert"],
+      advanceLabel: "Back to Main Menu",
+      freeForm: true,
+      recommendHealthyCheckpoint: true,
+    };
     return (
       <div className="flex min-h-screen flex-col items-center bg-background p-6 text-foreground">
-        <div className="w-full max-w-2xl">
+        <div className="w-full max-w-3xl">
           <h1 className="font-pixel text-sm text-primary">MISSION TIMELINE — git log --oneline</h1>
           <div className="mt-4 rounded border border-border bg-card p-4 font-mono text-sm">
             {save.repo.commits.length === 0 && <p className="text-muted-foreground">No checkpoints yet.</p>}
             {[...save.repo.commits].reverse().map((c, i) => (
               <div key={c.hash} className="py-1">
-                <span className="text-terminal-green">{c.hash}</span>
+                <span className={c.hash === recommendedTimelineCheckpoint?.hash ? "hash-recommended text-terminal-green" : "hash-flash text-terminal-green"}>{c.hash}</span>
                 {i === 0 && <span className="text-muted-foreground"> (HEAD -&gt; main)</span>}{" "}
                 <span className="text-foreground">{c.message}</span>
                 <span className="ml-2 text-xs text-muted-foreground">{new Date(c.timestamp).toLocaleString()}</span>
               </div>
             ))}
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">
-            To return to an older checkpoint, continue the mission and type git reset --hard &lt;hash&gt; in the ship
-            terminal.
-          </p>
-          <button type="button" onClick={() => setMode("menu")} className="mt-4 rounded border border-border px-4 py-2 text-sm hover:bg-accent">
-            ← Back
-          </button>
+          <div className="mt-5">
+            <Terminal
+              embedded
+              repo={save.repo}
+              task={timelineTask}
+              commitsAtOpen={save.repo.commits.length}
+              onRepoChange={updateRepo}
+              onAdvance={() => setMode("menu")}
+            />
+          </div>
         </div>
       </div>
     );
@@ -436,7 +456,7 @@ export function Game() {
             ) : (
               <p className="mt-3 text-sm text-foreground">
                 Restoring your most recent checkpoint:{" "}
-                <span className="font-mono text-terminal-green">{destroyed.hash}</span> "{destroyed.message}".
+                <span className="hash-flash font-mono text-terminal-green">{destroyed.hash}</span> "{destroyed.message}".
                 <br />
                 <span className="text-muted-foreground">
                   Exactly that committed state returns — including its weaknesses. Anything staged but never committed

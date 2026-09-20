@@ -69,7 +69,7 @@ export function CertificateView({ cert }: { cert: CertificateData }) {
             <dd className="font-mono">
               {cert.commitEvidence.map((c) => (
                 <div key={c.hash}>
-                  {c.hash} — {c.message}
+                  <span className="hash-flash">{c.hash}</span> — {c.message}
                 </div>
               ))}
             </dd>
