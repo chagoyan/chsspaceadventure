@@ -217,6 +217,9 @@ export const STEPS: Step[] = [
     lines: [
       { speaker: "narrator", text: "Sector 3: The Crimson Nebula. Clouds of ionized plasma eat through hull plating. The only safe path threads between them." },
       { speaker: "komm", text: "Oscar, we've made several checkpoints now. If things go badly, we can ask Git for our checkpoint history — every commit we've ever made — with git log --oneline." },
+      { speaker: "komm", text: "When the log appears, look at the left of each line. That short code of letters and numbers — like a3f9c21 — is the checkpoint's hash." },
+      { speaker: "komm", text: "Think of a hash as the checkpoint's license plate. Git gives every commit its own unique one, so instead of guessing which save we mean, we point at it exactly: git reset --hard a3f9c21." },
+      { speaker: "komm", text: "You don't need to memorize or fully type the long version — the short hash from git log --oneline is enough. Copy it exactly as shown." },
       { speaker: "komm", text: "And here's the powerful part: git reset --hard <hash> can move our whole timeline BACK to an earlier checkpoint. Dangerous but powerful — it discards everything after that point." },
     ],
   },

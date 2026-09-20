@@ -317,7 +317,8 @@ export function execCommand(repo: Repo, rawInput: string, opts?: { resetConfirme
 
     case "reset": {
       if (!repo.initialized) return err("fatal: not a git repository", "Run git init first.");
-      const hashArg = tokens[tokens.length - 1] ?? "";
+      // Strip anything that isn't a hex char — smart quotes/dashes can sneak into pasted hashes.
+      const hashArg = (tokens[tokens.length - 1] ?? "").replace(/[^0-9a-f]/gi, "").toLowerCase();
       if (!tokens.includes("--hard")) {
         return err(
           "error: this ship terminal requires --hard for reset",
