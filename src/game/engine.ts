@@ -620,8 +620,19 @@ export class GameEngine {
     const now = performance.now();
     if (now - this.lastSync > 200) {
       this.lastSync = now;
-      this.events.onShip(this.getShip(), { kills: this.kills, score: this.score });
+      this.events.onShip(this.getShip(), this.extras());
     }
+  }
+
+  private extras() {
+    return {
+      kills: this.kills,
+      score: this.score,
+      bombs: this.bombs,
+      shield: this.shieldTimer > 0,
+      boostReady: this.boostCd <= 0,
+      shieldReady: this.shieldCd <= 0 && this.ship.energy >= 15,
+    };
   }
 
   private dropPickup(x: number, y: number) {
@@ -694,7 +705,7 @@ export class GameEngine {
         this.ship.fuel = Math.min(100, this.ship.fuel + 20);
       }
       this.events.onEvent({ type: "upgrade", id });
-      this.events.onShip(this.getShip(), { kills: this.kills, score: this.score });
+      this.events.onShip(this.getShip(), this.extras());
       return;
     }
     if (p === "repair") this.ship.hull = Math.min(100, this.ship.hull + 20);
