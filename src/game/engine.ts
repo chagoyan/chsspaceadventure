@@ -19,6 +19,7 @@ export interface StageSpec {
   boss?: boolean;
   drain?: boolean; // turbo corruption: constant energy drain
   upgradePickup?: { id: string; x: number; y: number };
+  pickups?: { kind: "repair" | "fuel" | "ammo" | "energy"; x: number; y: number }[];
   spawnUpgradeAtKills?: { id: string; kills: number };
   safeZone?: { x: number; y: number; r: number }; // terminal beacon
 }
@@ -128,6 +129,19 @@ export class GameEngine {
         r: 46,
         hp: 60,
         fireCd: 1.5,
+      });
+    }
+    for (const p of s.pickups ?? []) {
+      this.ents.push({
+        kind: "pickup",
+        x: p.x,
+        y: p.y,
+        vx: 0,
+        vy: 0,
+        r: 13,
+        hp: 1,
+        sprite: PICKUP_SPRITES[p.kind]!,
+        pickup: p.kind,
       });
     }
     if (s.upgradePickup) {
@@ -257,14 +271,15 @@ export class GameEngine {
 
     // --- movement ---
     const boost = this.keys.has("shift") && s.fuel > 0;
-    const ACCEL = boost ? 620 : 380;
+    // Empty tank never soft-locks the player: reserve thrusters still limp along.
+    const ACCEL = s.fuel <= 0 ? 110 : boost ? 620 : 380;
     let ax = 0;
     let ay = 0;
     if (this.keys.has("w") || this.keys.has("arrowup")) ay -= 1;
     if (this.keys.has("s") || this.keys.has("arrowdown")) ay += 1;
     if (this.keys.has("a") || this.keys.has("arrowleft")) ax -= 1;
     if (this.keys.has("d") || this.keys.has("arrowright")) ax += 1;
-    const thrusting = (ax !== 0 || ay !== 0) && s.fuel > 0;
+    const thrusting = ax !== 0 || ay !== 0;
     if (thrusting) {
       const len = Math.hypot(ax, ay);
       this.pvx += (ax / len) * ACCEL * dt;

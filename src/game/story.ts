@@ -124,8 +124,13 @@ export const STEPS: Step[] = [
       objective: "Reach the supply beacon. Collect the supply caches on the way!",
       asteroids: 5,
       drones: 0,
+      pickups: [
+        { kind: "repair", x: 480, y: 300 },
+        { kind: "fuel", x: 700, y: 500 },
+        { kind: "ammo", x: 900, y: 280 },
+        { kind: "energy", x: 820, y: 620 },
+      ],
       beacon: { x: 1180, y: 200, r: 46 },
-      upgradePickup: undefined,
     },
   },
   {
@@ -248,12 +253,11 @@ export const STEPS: Step[] = [
     id: "t_reset",
     task: {
       title: "Rewind to Safety (Optional but wise)",
-      briefing: "KOMM: That nebula chewed us up. You could push on in this battered state... or use git log --oneline to find an earlier, healthier checkpoint and move the timeline back with git reset --hard <hash>. Your call, pilot.",
+      briefing: "KOMM: That nebula chewed us up. Our hull is in bad shape for the final stretch. Use git log --oneline to find an earlier, healthier checkpoint, then move the timeline back with git reset --hard <hash>. Read the warning carefully before confirming.",
       help: "partial",
       hint: "git log --oneline, then git reset --hard <hash>",
-      requires: [],
+      requires: ["reset"],
       advanceLabel: "Fly On",
-      freeForm: true,
     },
   },
   {
@@ -322,6 +326,20 @@ export const STEPS: Step[] = [
         { label: "\"Help! What do we do?\"", response: "Stay calm. Find the commit where we installed the Turbo Core — then git revert <hash> will create a new checkpoint that undoes exactly that change, without erasing our history." },
       ]},
     ],
+  },
+  {
+    kind: "action",
+    id: "a_corrupt",
+    stage: 4,
+    spec: {
+      mode: "corrupt",
+      title: "Sector 4 — System Corruption",
+      objective: "SURVIVE: energy is draining! Reach the emergency dock beacon to access the terminal.",
+      asteroids: 3,
+      drones: 0,
+      drain: true,
+      beacon: { x: 1100, y: 600, r: 50 },
+    },
   },
   {
     kind: "terminal",
