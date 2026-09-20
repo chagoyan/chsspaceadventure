@@ -40,7 +40,7 @@ export interface EngineEvents {
 }
 
 interface Ent {
-  kind: "asteroid" | "drone" | "pickup" | "bullet" | "ebullet" | "boss" | "spark" | "effect";
+  kind: "asteroid" | "drone" | "pickup" | "bullet" | "ebullet" | "boss" | "spark" | "effect" | "barrier";
   x: number;
   y: number;
   vx: number;
