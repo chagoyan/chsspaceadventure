@@ -517,11 +517,31 @@ export class GameEngine {
         }
       } else if (e.kind === "drone") {
         const d = Math.hypot(this.px - e.x, this.py - e.y) || 1;
-        const speed = 64;
-        e.vx = ((this.px - e.x) / d) * speed;
-        e.vy = ((this.py - e.y) / d) * speed;
+        const shielded = this.shieldTimer > 0;
+        if (shielded && d < 72 + e.r) {
+          // Force field shoves attackers away instead of letting them touch the hull.
+          const push = 320;
+          e.vx = ((e.x - this.px) / d) * push;
+          e.vy = ((e.y - this.py) / d) * push;
+        } else {
+          const speed = 64;
+          e.vx = ((this.px - e.x) / d) * speed;
+          e.vy = ((this.py - e.y) / d) * speed;
+        }
         e.x += e.vx * dt;
         e.y += e.vy * dt;
+        // Barriers are solid: drones slide around them instead of flying through.
+        for (const b of this.ents) {
+          if (b.kind !== "barrier") continue;
+          const bx = e.x - b.x;
+          const by = e.y - b.y;
+          const bd = Math.hypot(bx, by) || 1;
+          const min = b.r + e.r;
+          if (bd < min) {
+            e.x = b.x + (bx / bd) * min;
+            e.y = b.y + (by / bd) * min;
+          }
+        }
         e.fireCd = (e.fireCd ?? 1) - dt;
         if (e.fireCd <= 0 && d < 520) {
           e.fireCd = rand(2.4, 3.5);
@@ -535,7 +555,7 @@ export class GameEngine {
             hp: 1,
           });
         }
-        if (d < e.r + 18) {
+        if (d < e.r + 18 && !shielded) {
           this.damage(9);
           e.hp = 0;
         }
