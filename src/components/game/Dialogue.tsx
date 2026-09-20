@@ -26,6 +26,10 @@ export function Dialogue({ lines, onDone }: { lines: DialogueLine[]; onDone: () 
   const line = lines[idx];
 
   useEffect(() => {
+    if (line?.text.trim().toUpperCase().startsWith("ALERT")) sfx.alarm();
+  }, [line?.text]);
+
+  useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.key === "Enter" || e.key === " ") && !(line?.choices && !chosen)) {
         e.preventDefault();

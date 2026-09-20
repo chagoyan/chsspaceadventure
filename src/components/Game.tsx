@@ -26,6 +26,7 @@ export function Game() {
   const [hudShip, setHudShip] = useState<ShipState | null>(null);
   const [hudKills, setHudKills] = useState(0);
   const [hudScore, setHudScore] = useState(0);
+  const [hudPower, setHudPower] = useState({ bombs: 2, shield: false, boostReady: true, shieldReady: true });
   const [controlsSeen, setControlsSeen] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
