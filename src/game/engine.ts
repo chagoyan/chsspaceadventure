@@ -571,6 +571,14 @@ export class GameEngine {
         e.x += e.vx * dt;
         e.y += e.vy * dt;
         if (e.x < 0 || e.x > WORLD_W || e.y < 0 || e.y > WORLD_H) remove.add(e);
+        for (const t of this.ents) {
+          if (t.kind !== "barrier") continue;
+          if (Math.hypot(e.x - t.x, e.y - t.y) < t.r) {
+            remove.add(e);
+            this.burst(e.x, e.y, "#ff6b6b", 3);
+            break;
+          }
+        }
         if (Math.hypot(e.x - this.px, e.y - this.py) < e.r + 16) {
           remove.add(e);
           this.damage(e.r > 5 ? 7 : 4);
