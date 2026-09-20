@@ -9,6 +9,7 @@ import fuelUrl from "../assets/game-art/fuel.png";
 import energyUrl from "../assets/game-art/energy.png";
 import ammoUrl from "../assets/game-art/ammo.png";
 import upgradeUrl from "../assets/game-art/upgrade.png";
+import bombUrl from "../assets/game-art/bomb.png";
 import impactUrl from "../assets/game-art/impact.png";
 import explosionUrl from "../assets/game-art/explosion.png";
 
@@ -74,4 +75,5 @@ export const PICKUP_SPRITES: Record<string, Sprite> = {
   energy: { src: energyUrl, aspect: 240 / 270 },
   ammo: { src: ammoUrl, aspect: 240 / 270 },
   upgrade: { src: upgradeUrl, aspect: 285 / 370 },
+  bomb: { src: bombUrl, aspect: 512 / 576 },
 };

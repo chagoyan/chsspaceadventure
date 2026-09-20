@@ -26,6 +26,7 @@ export function Game() {
   const [hudShip, setHudShip] = useState<ShipState | null>(null);
   const [hudKills, setHudKills] = useState(0);
   const [hudScore, setHudScore] = useState(0);
+  const [hudPower, setHudPower] = useState({ bombs: 2, shield: false, boostReady: true, shieldReady: true });
   const [controlsSeen, setControlsSeen] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
@@ -165,6 +166,7 @@ export function Game() {
     setHudShip(working.ship);
     setHudKills(0);
     setHudScore(working.score);
+    startMusic(((Math.max(1, working.stage) - 1) % 3) + 1);
     const engine = new GameEngine(
       canvasRef.current,
       working.ship,
@@ -175,6 +177,7 @@ export function Game() {
           setHudShip(ship);
           setHudKills(extras.kills);
           setHudScore(extras.score);
+          setHudPower({ bombs: extras.bombs, shield: extras.shield, boostReady: extras.boostReady, shieldReady: extras.shieldReady });
         },
         onEvent: (e: EngineEvent) => handleEngineEvent(e, actionStep),
       },
@@ -409,6 +412,10 @@ export function Game() {
                 commits={save?.repo.commits.length ?? 0}
                 kills={hudKills}
                 killTarget={visibleActionStep.spec.killTarget}
+                bombs={hudPower.bombs}
+                shield={hudPower.shield}
+                boostReady={hudPower.boostReady}
+                shieldReady={hudPower.shieldReady}
               />
             )}
           </div>
@@ -423,10 +430,12 @@ export function Game() {
             <div className="mt-6 grid gap-3 text-left sm:grid-cols-2">
               <div className="control-tile"><kbd>MOUSE</kbd><span>Point where the ship should face</span></div>
               <div className="control-tile"><kbd>SPACE</kbd><span>Thrust toward the pointer</span></div>
-              <div className="control-tile"><kbd>CLICK</kbd><span>Fire</span></div>
-              <div className="control-tile"><kbd>SHIFT</kbd><span>Boost out of danger</span></div>
+              <div className="control-tile"><kbd>LEFT CLICK</kbd><span>Fire</span></div>
+              <div className="control-tile"><kbd>RIGHT CLICK</kbd><span>Smart bomb in all directions (limited)</span></div>
+              <div className="control-tile"><kbd>A</kbd><span>Short speed burst</span></div>
+              <div className="control-tile"><kbd>F</kbd><span>Force field for a few seconds</span></div>
             </div>
-            <p className="mt-5 text-sm text-muted-foreground">Prefer keys? W A S D still fly, the arrow keys aim and fire, and F fires straight ahead.</p>
+            <p className="mt-5 text-sm text-muted-foreground">Left hand rests on A and F, thumb on the spacebar, right hand on the mouse. Collect bomb canisters to restock smart bombs.</p>
             <Button className="mt-6 h-12 w-full font-heading text-xl" onClick={() => setControlsSeen(true)}>START FLYING</Button>
           </div>
         </div>

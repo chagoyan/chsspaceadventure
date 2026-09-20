@@ -36,3 +36,5 @@
 - [x] Reassure players during the guided reset confirmation
 - [x] Apply the requested hint buttons to the three late checkpoint terminals
 - [x] Verify the revised timeline, reset lesson, and nebula encounter
+- [x] New control scheme: space thrust, left click fire, right click smart bomb, A boost, F force field; WASD/arrow movement removed
+- [x] Alarm sound on ALERT dialogue lines; music track varies by sector

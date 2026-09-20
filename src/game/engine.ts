@@ -32,7 +32,10 @@ export type EngineEvent =
   | { type: "safeZone" };
 
 export interface EngineEvents {
-  onShip: (ship: ShipState, extras: { kills: number; score: number }) => void;
+  onShip: (
+    ship: ShipState,
+    extras: { kills: number; score: number; bombs: number; shield: boolean; boostReady: boolean; shieldReady: boolean },
+  ) => void;
   onEvent: (e: EngineEvent) => void;
 }
 
@@ -89,6 +92,11 @@ export class GameEngine {
   private hitFlash = 0;
   private thrusting = false;
   private mouseActive = false;
+  private bombs = 2;
+  private boostTimer = 0;
+  private boostCd = 0;
+  private shieldTimer = 0;
+  private shieldCd = 0;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -183,10 +191,11 @@ export class GameEngine {
   }
 
   private keyDown = (e: KeyboardEvent) => {
-    this.keys.add(e.key.toLowerCase());
-    if ([" ", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(e.key.toLowerCase())) {
-      e.preventDefault();
-    }
+    const key = e.key.toLowerCase();
+    if (key === " ") e.preventDefault();
+    if (key === "a" && !this.keys.has("a")) this.tryBoost();
+    if (key === "f" && !this.keys.has("f")) this.tryShield();
+    this.keys.add(key);
   };
   private keyUp = (e: KeyboardEvent) => this.keys.delete(e.key.toLowerCase());
   private mouseMove = (e: MouseEvent) => {
@@ -197,8 +206,13 @@ export class GameEngine {
   };
   private mouseDown = (e: MouseEvent) => {
     if (e.button === 0) this.firing = true;
+    if (e.button === 2) {
+      e.preventDefault();
+      this.trySmartBomb();
+    }
   };
   private mouseUp = () => (this.firing = false);
+  private contextMenu = (e: MouseEvent) => e.preventDefault();
 
   private attach() {
     window.addEventListener("keydown", this.keyDown);
@@ -206,6 +220,7 @@ export class GameEngine {
     const canvas = this.ctx.canvas;
     canvas.addEventListener("mousemove", this.mouseMove);
     canvas.addEventListener("mousedown", this.mouseDown);
+    canvas.addEventListener("contextmenu", this.contextMenu);
     window.addEventListener("mouseup", this.mouseUp);
   }
 
@@ -216,7 +231,42 @@ export class GameEngine {
     const canvas = this.ctx.canvas;
     canvas.removeEventListener("mousemove", this.mouseMove);
     canvas.removeEventListener("mousedown", this.mouseDown);
+    canvas.removeEventListener("contextmenu", this.contextMenu);
     window.removeEventListener("mouseup", this.mouseUp);
+  }
+
+  private tryBoost() {
+    if (this.boostCd > 0 || this.boostTimer > 0) return;
+    this.boostTimer = 0.5;
+    this.boostCd = 3.5;
+    sfx.pickup();
+  }
+
+  private tryShield() {
+    if (this.shieldCd > 0 || this.shieldTimer > 0 || this.ship.energy < 15) return;
+    this.ship.energy = Math.max(0, this.ship.energy - 15);
+    this.shieldTimer = 3;
+    this.shieldCd = 8;
+    sfx.commit();
+  }
+
+  private trySmartBomb() {
+    if (this.bombs <= 0) return;
+    this.bombs -= 1;
+    sfx.explosion();
+    this.burst(this.px, this.py, "#ffd166", 24);
+    for (let i = 0; i < 24; i++) {
+      const a = (i / 24) * Math.PI * 2;
+      this.ents.push({
+        kind: "bullet",
+        x: this.px + Math.cos(a) * 40,
+        y: this.py + Math.sin(a) * 40,
+        vx: Math.cos(a) * 620,
+        vy: Math.sin(a) * 620,
+        r: 5,
+        hp: 1,
+      });
+    }
   }
 
   start() {
@@ -256,7 +306,7 @@ export class GameEngine {
   }
 
   private damage(amount: number) {
-    if (this.invuln > 0) return;
+    if (this.invuln > 0 || this.shieldTimer > 0) return;
     let remaining = amount;
     if (this.ship.armor > 0) {
       const absorbed = Math.min(this.ship.armor, amount * 0.6);
@@ -276,6 +326,7 @@ export class GameEngine {
   }
 
   private plasmaDamage(amount: number) {
+    if (this.shieldTimer > 0) return;
     let remaining = amount;
     if (this.ship.armor > 0) {
       const absorbed = Math.min(this.ship.armor, amount * 0.6);
@@ -307,27 +358,20 @@ export class GameEngine {
     this.fireCd = Math.max(0, this.fireCd - dt);
 
     // --- movement ---
-    // Mouse steers, space thrusts, click fires. WASD still thrusts directly.
-    const boost = this.keys.has("shift") && s.fuel > 0;
+    // Mouse steers, space thrusts, left click fires, A boosts, F raises the shield.
+    this.boostTimer = Math.max(0, this.boostTimer - dt);
+    this.boostCd = Math.max(0, this.boostCd - dt);
+    this.shieldTimer = Math.max(0, this.shieldTimer - dt);
+    this.shieldCd = Math.max(0, this.shieldCd - dt);
+    const boosting = this.boostTimer > 0 && s.fuel > 0;
     // Empty tank never soft-locks the player: reserve thrusters still limp along.
-    const ACCEL = s.fuel <= 0 ? 320 : boost ? 1250 : 900;
-    let ax = 0;
-    let ay = 0;
-    if (this.keys.has("w")) ay -= 1;
-    if (this.keys.has("s")) ay += 1;
-    if (this.keys.has("a")) ax -= 1;
-    if (this.keys.has("d")) ax += 1;
+    const ACCEL = s.fuel <= 0 ? 320 : boosting ? 2100 : 900;
     const mouseAngle = this.mouseActive
       ? Math.atan2(this.mouse.y - this.py, this.mouse.x - this.px)
       : null;
-    const spaceThrust = this.keys.has(" ") && mouseAngle !== null;
-    if (ax === 0 && ay === 0 && spaceThrust) {
-      ax = Math.cos(mouseAngle!);
-      ay = Math.sin(mouseAngle!);
-    }
-    const thrusting = ax !== 0 || ay !== 0;
+    const headingAngle = mouseAngle ?? this.shipAngle;
+    const thrusting = this.keys.has(" ") || boosting;
     this.thrusting = thrusting;
-    const headingAngle = mouseAngle ?? (thrusting ? Math.atan2(ay, ax) : this.aimAngle);
     this.shipFlipped = Math.cos(headingAngle) < 0;
     this.shipAngle = this.shipFlipped
       ? headingAngle >= 0
@@ -335,10 +379,9 @@ export class GameEngine {
         : headingAngle + Math.PI
       : headingAngle;
     if (thrusting) {
-      const len = Math.hypot(ax, ay);
-      this.pvx += (ax / len) * ACCEL * dt;
-      this.pvy += (ay / len) * ACCEL * dt;
-      s.fuel = Math.max(0, s.fuel - (boost ? 5 : 2.2) * dt);
+      this.pvx += Math.cos(headingAngle) * ACCEL * dt;
+      this.pvy += Math.sin(headingAngle) * ACCEL * dt;
+      s.fuel = Math.max(0, s.fuel - (boosting ? 5 : 2.2) * dt);
     }
     // exp damping
     const damp = Math.exp(-3.2 * dt);
@@ -346,15 +389,7 @@ export class GameEngine {
     this.pvy *= damp;
     this.px = Math.max(24, Math.min(WORLD_W - 24, this.px + this.pvx * dt));
     this.py = Math.max(24, Math.min(WORLD_H - 24, this.py + this.pvy * dt));
-    let aimX = 0;
-    let aimY = 0;
-    if (this.keys.has("arrowup")) aimY -= 1;
-    if (this.keys.has("arrowdown")) aimY += 1;
-    if (this.keys.has("arrowleft")) aimX -= 1;
-    if (this.keys.has("arrowright")) aimX += 1;
-    const arrowFiring = aimX !== 0 || aimY !== 0;
-    if (arrowFiring) this.aimAngle = Math.atan2(aimY, aimX);
-    else if (mouseAngle !== null) this.aimAngle = mouseAngle;
+    if (mouseAngle !== null) this.aimAngle = mouseAngle;
     else {
       const target = this.nearestThreat();
       this.aimAngle = target ? Math.atan2(target.y - this.py, target.x - this.px) : this.shipAngle;
@@ -369,7 +404,7 @@ export class GameEngine {
     }
 
     // --- shooting ---
-    const wantFire = (this.firing || this.keys.has("f") || arrowFiring) && this.fireCd <= 0;
+    const wantFire = this.firing && this.fireCd <= 0;
     if (wantFire && s.ammo >= 1 && s.energy >= 4) {
       s.ammo -= 1;
       s.energy -= 4;
@@ -570,12 +605,23 @@ export class GameEngine {
     const now = performance.now();
     if (now - this.lastSync > 200) {
       this.lastSync = now;
-      this.events.onShip(this.getShip(), { kills: this.kills, score: this.score });
+      this.events.onShip(this.getShip(), this.extras());
     }
   }
 
+  private extras() {
+    return {
+      kills: this.kills,
+      score: this.score,
+      bombs: this.bombs,
+      shield: this.shieldTimer > 0,
+      boostReady: this.boostCd <= 0,
+      shieldReady: this.shieldCd <= 0 && this.ship.energy >= 15,
+    };
+  }
+
   private dropPickup(x: number, y: number) {
-    const kinds = ["repair", "fuel", "ammo", "energy"] as const;
+    const kinds = ["repair", "fuel", "ammo", "energy", "bomb"] as const;
     const k = kinds[Math.floor(Math.random() * kinds.length)]!;
     this.ents.push({
       kind: "pickup",
@@ -644,13 +690,14 @@ export class GameEngine {
         this.ship.fuel = Math.min(100, this.ship.fuel + 20);
       }
       this.events.onEvent({ type: "upgrade", id });
-      this.events.onShip(this.getShip(), { kills: this.kills, score: this.score });
+      this.events.onShip(this.getShip(), this.extras());
       return;
     }
     if (p === "repair") this.ship.hull = Math.min(100, this.ship.hull + 20);
     if (p === "fuel") this.ship.fuel = Math.min(100, this.ship.fuel + 25);
     if (p === "ammo") this.ship.ammo = Math.min(100, this.ship.ammo + 25);
     if (p === "energy") this.ship.energy = Math.min(100, this.ship.energy + 25);
+    if (p === "bomb") this.bombs = Math.min(5, this.bombs + 1);
     this.score += 20;
   }
 
@@ -763,6 +810,17 @@ export class GameEngine {
     const blink = this.invuln > 0 && Math.floor(t * 12) % 2 === 0;
     if (!blink) {
       drawSprite(ctx, SHIP, this.px, this.py, 112, this.shipAngle, this.shipFlipped);
+    }
+    if (this.shieldTimer > 0) {
+      ctx.save();
+      ctx.strokeStyle = "rgba(25,211,197,0.85)";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(this.px, this.py, 72 + Math.sin(t * 9) * 3, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = "rgba(25,211,197,0.12)";
+      ctx.fill();
+      ctx.restore();
     }
     if (this.spec.drain) {
       // corruption glitch overlay
