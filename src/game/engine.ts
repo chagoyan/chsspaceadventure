@@ -306,7 +306,7 @@ export class GameEngine {
   }
 
   private damage(amount: number) {
-    if (this.invuln > 0) return;
+    if (this.invuln > 0 || this.shieldTimer > 0) return;
     let remaining = amount;
     if (this.ship.armor > 0) {
       const absorbed = Math.min(this.ship.armor, amount * 0.6);
@@ -326,6 +326,7 @@ export class GameEngine {
   }
 
   private plasmaDamage(amount: number) {
+    if (this.shieldTimer > 0) return;
     let remaining = amount;
     if (this.ship.armor > 0) {
       const absorbed = Math.min(this.ship.armor, amount * 0.6);
@@ -620,7 +621,7 @@ export class GameEngine {
   }
 
   private dropPickup(x: number, y: number) {
-    const kinds = ["repair", "fuel", "ammo", "energy"] as const;
+    const kinds = ["repair", "fuel", "ammo", "energy", "bomb"] as const;
     const k = kinds[Math.floor(Math.random() * kinds.length)]!;
     this.ents.push({
       kind: "pickup",
@@ -696,6 +697,7 @@ export class GameEngine {
     if (p === "fuel") this.ship.fuel = Math.min(100, this.ship.fuel + 25);
     if (p === "ammo") this.ship.ammo = Math.min(100, this.ship.ammo + 25);
     if (p === "energy") this.ship.energy = Math.min(100, this.ship.energy + 25);
+    if (p === "bomb") this.bombs = Math.min(5, this.bombs + 1);
     this.score += 20;
   }
 
@@ -808,6 +810,17 @@ export class GameEngine {
     const blink = this.invuln > 0 && Math.floor(t * 12) % 2 === 0;
     if (!blink) {
       drawSprite(ctx, SHIP, this.px, this.py, 112, this.shipAngle, this.shipFlipped);
+    }
+    if (this.shieldTimer > 0) {
+      ctx.save();
+      ctx.strokeStyle = "rgba(25,211,197,0.85)";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(this.px, this.py, 72 + Math.sin(t * 9) * 3, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = "rgba(25,211,197,0.12)";
+      ctx.fill();
+      ctx.restore();
     }
     if (this.spec.drain) {
       // corruption glitch overlay
