@@ -440,6 +440,14 @@ export function Game() {
                 return next;
               });
             }
+            if (step.id === "t_revert") {
+              // The lesson only completes if the Turbo Core's change was actually reversed.
+              if (save.repo.working.ship.upgrades.includes("Turbo Core")) {
+                setNotice("The corruption is still active — the Turbo Core is still installed. Find the checkpoint that installed it and reverse THAT one.");
+                return;
+              }
+              setNotice("Corruption reversed! The harmful checkpoint remains in history, undone by a new one. That's git revert.");
+            }
             advance();
           }}
         />

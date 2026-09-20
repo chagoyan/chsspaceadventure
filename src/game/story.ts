@@ -328,6 +328,20 @@ export const STEPS: Step[] = [
     ],
   },
   {
+    kind: "action",
+    id: "a_corrupt",
+    stage: 4,
+    spec: {
+      mode: "corrupt",
+      title: "Sector 4 — System Corruption",
+      objective: "SURVIVE: energy is draining! Reach the emergency dock beacon to access the terminal.",
+      asteroids: 3,
+      drones: 0,
+      drain: true,
+      beacon: { x: 1100, y: 600, r: 50 },
+    },
+  },
+  {
     kind: "terminal",
     id: "t_revert",
     task: {
