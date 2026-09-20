@@ -40,7 +40,7 @@ export interface EngineEvents {
 }
 
 interface Ent {
-  kind: "asteroid" | "drone" | "pickup" | "bullet" | "ebullet" | "boss" | "spark" | "effect";
+  kind: "asteroid" | "drone" | "pickup" | "bullet" | "ebullet" | "boss" | "spark" | "effect" | "barrier";
   x: number;
   y: number;
   vx: number;
@@ -97,6 +97,12 @@ export class GameEngine {
   private boostCd = 0;
   private shieldTimer = 0;
   private shieldCd = 0;
+  // Boss encounter: fight -> retreat off screen -> drone waves (power-ups) -> return.
+  private bossPhase: "fight" | "retreat" | "waves" | "return" = "fight";
+  private bossThresholds: number[] = [];
+  private bossWaveRemaining = 0;
+  private bossPhaseTimer = 0;
+  private bossHomeX = WORLD_W - 220;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -148,6 +154,35 @@ export class GameEngine {
         hp: 60,
         fireCd: 1.5,
       });
+      // Two retreats: at 40 hp and at 20 hp the MERGE CONFLICT withdraws and sends waves.
+      this.bossThresholds = [40, 20];
+      // Cover to hide behind while the guns track you.
+      for (const b of [
+        { x: 430, y: 170, r: 52 },
+        { x: 430, y: WORLD_H - 170, r: 52 },
+        { x: 700, y: WORLD_H / 2, r: 62 },
+        { x: 960, y: 210, r: 46 },
+        { x: 960, y: WORLD_H - 210, r: 46 },
+      ]) {
+        this.ents.push({ kind: "barrier", x: b.x, y: b.y, vx: 0, vy: 0, r: b.r, hp: Number.POSITIVE_INFINITY });
+      }
+      for (const p of [
+        { kind: "repair", x: 240, y: 150 },
+        { kind: "ammo", x: 240, y: WORLD_H - 150 },
+        { kind: "bomb", x: 560, y: WORLD_H / 2 },
+      ] as const) {
+        this.ents.push({
+          kind: "pickup",
+          x: p.x,
+          y: p.y,
+          vx: 0,
+          vy: 0,
+          r: 13,
+          hp: 1,
+          sprite: PICKUP_SPRITES[p.kind]!,
+          pickup: p.kind,
+        });
+      }
     }
     for (const p of s.pickups ?? []) {
       this.ents.push({
@@ -389,6 +424,20 @@ export class GameEngine {
     this.pvy *= damp;
     this.px = Math.max(24, Math.min(WORLD_W - 24, this.px + this.pvx * dt));
     this.py = Math.max(24, Math.min(WORLD_H - 24, this.py + this.pvy * dt));
+    // Barriers are solid cover: slide the ship out instead of damaging it.
+    for (const b of this.ents) {
+      if (b.kind !== "barrier") continue;
+      const dx = this.px - b.x;
+      const dy = this.py - b.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      const min = b.r + 24;
+      if (dist < min) {
+        this.px = b.x + (dx / dist) * min;
+        this.py = b.y + (dy / dist) * min;
+        this.pvx *= 0.3;
+        this.pvy *= 0.3;
+      }
+    }
     if (mouseAngle !== null) this.aimAngle = mouseAngle;
     else {
       const target = this.nearestThreat();
@@ -491,31 +540,21 @@ export class GameEngine {
           e.hp = 0;
         }
       } else if (e.kind === "boss") {
-        e.y = WORLD_H / 2 + Math.sin(performance.now() / 900) * 200;
-        e.fireCd = (e.fireCd ?? 1) - dt;
-        if (e.fireCd <= 0) {
-          e.fireCd = 1.35;
-          for (let k = -1; k <= 1; k++) {
-            const a = Math.atan2(this.py - e.y, this.px - e.x) + k * 0.25;
-            this.ents.push({
-              kind: "ebullet",
-              x: e.x,
-              y: e.y,
-              vx: Math.cos(a) * 250,
-              vy: Math.sin(a) * 250,
-              r: 6,
-              hp: 1,
-            });
-          }
-        }
-        if (Math.random() < dt * 0.12 && this.ents.filter((x) => x.kind === "drone").length < 2) {
-          this.spawnDrone();
-        }
+        this.updateBoss(e, dt);
       } else if (e.kind === "bullet") {
         e.x += e.vx * dt;
         e.y += e.vy * dt;
         if (e.x < 0 || e.x > WORLD_W || e.y < 0 || e.y > WORLD_H) remove.add(e);
         for (const t of this.ents) {
+          if (t.kind === "barrier") {
+            if (Math.hypot(e.x - t.x, e.y - t.y) < t.r) {
+              remove.add(e);
+              this.burst(e.x, e.y, "#ffd166", 3);
+              break;
+            }
+            continue;
+          }
+          if (t.kind === "boss" && this.bossPhase !== "fight") continue;
           if (t.kind !== "asteroid" && t.kind !== "drone" && t.kind !== "boss") continue;
           if (Math.hypot(e.x - t.x, e.y - t.y) < t.r + e.r) {
             remove.add(e);
@@ -546,6 +585,14 @@ export class GameEngine {
         e.x += e.vx * dt;
         e.y += e.vy * dt;
         if (e.x < 0 || e.x > WORLD_W || e.y < 0 || e.y > WORLD_H) remove.add(e);
+        for (const t of this.ents) {
+          if (t.kind !== "barrier") continue;
+          if (Math.hypot(e.x - t.x, e.y - t.y) < t.r) {
+            remove.add(e);
+            this.burst(e.x, e.y, "#ff6b6b", 3);
+            break;
+          }
+        }
         if (Math.hypot(e.x - this.px, e.y - this.py) < e.r + 16) {
           remove.add(e);
           this.damage(e.r > 5 ? 7 : 4);
@@ -606,6 +653,83 @@ export class GameEngine {
     if (now - this.lastSync > 200) {
       this.lastSync = now;
       this.events.onShip(this.getShip(), this.extras());
+    }
+  }
+
+  // The MERGE CONFLICT fights, withdraws off screen so the player can farm a drone
+  // wave for power-ups, then charges back in.
+  private updateBoss(e: Ent, dt: number) {
+    const bob = WORLD_H / 2 + Math.sin(performance.now() / 900) * 200;
+    if (this.bossPhase === "fight") {
+      e.y = bob;
+      e.x += (this.bossHomeX - e.x) * Math.min(1, dt * 2);
+      e.fireCd = (e.fireCd ?? 1) - dt;
+      if (e.fireCd <= 0) {
+        e.fireCd = 1.35;
+        for (let k = -1; k <= 1; k++) {
+          const a = Math.atan2(this.py - e.y, this.px - e.x) + k * 0.25;
+          this.ents.push({ kind: "ebullet", x: e.x, y: e.y, vx: Math.cos(a) * 250, vy: Math.sin(a) * 250, r: 6, hp: 1 });
+        }
+      }
+      const next = this.bossThresholds[0];
+      if (next != null && e.hp <= next) {
+        this.bossThresholds.shift();
+        this.bossPhase = "retreat";
+        sfx.alarm();
+      }
+      return;
+    }
+    if (this.bossPhase === "retreat") {
+      e.y = bob;
+      e.x += 460 * dt;
+      if (e.x > WORLD_W + 260) {
+        this.bossPhase = "waves";
+        this.bossWaveRemaining = 5;
+        for (let i = 0; i < 5; i++) this.spawnDrone();
+        for (const p of [
+          { kind: "repair", x: rand(220, 620), y: rand(120, WORLD_H - 120) },
+          { kind: "ammo", x: rand(220, 620), y: rand(120, WORLD_H - 120) },
+          { kind: "energy", x: rand(220, 620), y: rand(120, WORLD_H - 120) },
+          { kind: "bomb", x: rand(220, 620), y: rand(120, WORLD_H - 120) },
+        ] as const) {
+          this.ents.push({
+            kind: "pickup",
+            x: p.x,
+            y: p.y,
+            vx: 0,
+            vy: 0,
+            r: 13,
+            hp: 1,
+            sprite: PICKUP_SPRITES[p.kind]!,
+            pickup: p.kind,
+          });
+        }
+      }
+      return;
+    }
+    if (this.bossPhase === "waves") {
+      e.x = WORLD_W + 300;
+      e.y = WORLD_H / 2;
+      const dronesLeft = this.ents.filter((x) => x.kind === "drone").length;
+      if (dronesLeft === 0) {
+        this.bossWaveRemaining = 0;
+        this.bossPhaseTimer = 2.5; // breathing room to collect power-ups
+        this.bossPhase = "return";
+      }
+      return;
+    }
+    // return
+    this.bossPhaseTimer = Math.max(0, this.bossPhaseTimer - dt);
+    if (this.bossPhaseTimer > 0) {
+      e.x = WORLD_W + 300;
+      return;
+    }
+    e.y = bob;
+    e.x -= 380 * dt;
+    if (e.x <= this.bossHomeX) {
+      e.x = this.bossHomeX;
+      this.bossPhase = "fight";
+      e.fireCd = 1.2;
     }
   }
 
@@ -764,7 +888,28 @@ export class GameEngine {
     }
     // entities
     for (const e of this.ents) {
-      if (e.kind === "asteroid") {
+      if (e.kind === "barrier") {
+        ctx.save();
+        ctx.fillStyle = "rgba(120,140,170,0.35)";
+        ctx.strokeStyle = "rgba(200,220,240,0.75)";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+          const a = (i / 6) * Math.PI * 2 + Math.PI / 6;
+          const x = e.x + Math.cos(a) * e.r;
+          const y = e.y + Math.sin(a) * e.r;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "rgba(25,211,197,0.25)";
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.r * 0.45, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      } else if (e.kind === "asteroid") {
         if (e.sprite) drawSprite(ctx, e.sprite, e.x, e.y, e.r * 2.45, e.rot ?? 0);
       } else if (e.kind === "drone") {
         drawSprite(ctx, DRONE, e.x, e.y, 58, Math.atan2(this.py - e.y, this.px - e.x));
