@@ -56,7 +56,7 @@ export function drawSprite(
 export const SHIP: Sprite = { src: shipAsset.url, aspect: 873 / 450 };
 export const DRONE: Sprite = { src: droneUrl, aspect: 350 / 295 };
 export const BOSS: Sprite = { src: bossUrl, aspect: 1090 / 350 };
-export const ASTEROIDS: Sprite[] = [
+export const ASTEROIDS: [Sprite, Sprite, Sprite] = [
   { src: asteroid1Url, aspect: 415 / 355 },
   { src: asteroid2Url, aspect: 370 / 315 },
   { src: asteroid3Url, aspect: 395 / 335 },

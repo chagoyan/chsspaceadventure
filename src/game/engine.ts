@@ -119,7 +119,7 @@ export class GameEngine {
         vy: rand(-20, 20),
         r: rand(16, 30),
         hp: 2,
-        sprite: ASTEROIDS[i % ASTEROIDS.length],
+        sprite: ASTEROIDS[i % ASTEROIDS.length] ?? ASTEROIDS[0],
         rot: rand(0, 6),
         rotSpd: rand(-1, 1),
       });
