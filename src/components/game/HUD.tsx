@@ -5,11 +5,11 @@ function Bar({ label, value, tone }: { label: string; value: number; tone: "hull
   const v = Math.max(0, Math.min(100, Math.round(value)));
   return (
     <div className="flex items-center gap-2">
-      <span className="w-14 font-pixel text-[8px] text-muted-foreground">{label}</span>
-      <div className="h-3 w-28 overflow-hidden rounded-sm bg-background/80 ring-1 ring-border">
+      <span className="w-12 font-heading text-sm text-muted-foreground">{label}</span>
+      <div className="h-2.5 w-24 overflow-hidden border border-border bg-background/80">
         <div className={`h-full hud-bar-${tone}`} style={{ width: `${v}%` }} />
       </div>
-      <span className={`w-9 font-mono text-xs ${v <= 25 ? "font-bold text-destructive" : "text-foreground"}`}>{v}%</span>
+      <span className={`w-8 font-heading text-sm ${v <= 25 ? "text-destructive" : "text-foreground"}`}>{v}</span>
     </div>
   );
 }
@@ -27,10 +27,10 @@ interface Props {
 
 export function HUD({ ship, objective, stageTitle, score, staged, commits, kills, killTarget }: Props) {
   return (
-    <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-4">
+    <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-3 md:p-5">
       <div className="flex items-start justify-between gap-4">
-        <div className="rounded border border-border bg-card/85 p-3 backdrop-blur-sm">
-          <div className="mb-2 font-pixel text-[9px] text-primary">{stageTitle}</div>
+        <div className="arcade-panel p-3">
+          <div className="mb-2 font-heading text-xl leading-none text-primary">{stageTitle}</div>
           <div className="flex flex-col gap-1.5">
             <Bar label="HULL" value={ship.hull} tone="hull" />
             <Bar label="ARMOR" value={ship.armor} tone="armor" />
@@ -49,8 +49,8 @@ export function HUD({ ship, objective, stageTitle, score, staged, commits, kills
           )}
         </div>
         <div className="flex flex-col items-end gap-2">
-          <div className="rounded border border-border bg-card/85 px-3 py-2 text-right backdrop-blur-sm">
-            <div className="font-mono text-sm text-foreground">SCORE {score}</div>
+          <div className="arcade-panel px-3 py-2 text-right">
+            <div className="font-heading text-2xl leading-none text-reward">SCORE {String(score).padStart(7, "0")}</div>
             {killTarget != null && (
               <div className="font-mono text-xs text-muted-foreground">
                 Kills {kills ?? 0}/{killTarget}
@@ -61,7 +61,7 @@ export function HUD({ ship, objective, stageTitle, score, staged, commits, kills
                 ● {commits} checkpoint{commits === 1 ? "" : "s"}
               </span>
               {staged && (
-                <span className="rounded bg-yellow-500/20 px-1.5 py-0.5 text-yellow-300" title="Staged but NOT committed — not protected!">
+                <span className="rounded bg-reward/20 px-1.5 py-0.5 text-reward" title="Staged but NOT committed — not protected!">
                   ◐ staged (not saved)
                 </span>
               )}
@@ -70,12 +70,12 @@ export function HUD({ ship, objective, stageTitle, score, staged, commits, kills
         </div>
       </div>
       <div className="flex items-end justify-between gap-4">
-        <div className="rounded border border-border bg-card/85 px-3 py-2 backdrop-blur-sm">
-          <div className="font-pixel text-[8px] text-muted-foreground">OBJECTIVE</div>
-          <div className="max-w-md font-mono text-xs text-foreground">{objective}</div>
+        <div className="arcade-panel max-w-lg px-3 py-2">
+          <div className="font-heading text-sm text-reward">MISSION OBJECTIVE</div>
+          <div className="text-xs font-semibold text-foreground md:text-sm">{objective}</div>
         </div>
-        <div className="rounded border border-border bg-card/85 px-3 py-2 font-mono text-[10px] text-muted-foreground backdrop-blur-sm">
-          WASD/arrows fly · mouse aim · click/Space shoot · Shift boost
+        <div className="arcade-panel hidden px-3 py-2 text-xs font-bold text-muted-foreground md:block">
+          WASD MOVE · ARROWS AIM + FIRE · SPACE FIRE · SHIFT BOOST
         </div>
       </div>
     </div>

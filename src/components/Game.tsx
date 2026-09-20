@@ -13,6 +13,7 @@ import { Dialogue } from "./game/Dialogue";
 import { HUD } from "./game/HUD";
 import { Menu } from "./game/Menu";
 import { CertificateView } from "../routes/certificate.$part";
+import { Button } from "./ui/button";
 
 type DestroyInfo = { hadCommits: false } | { hadCommits: true; hash: string; message: string };
 
@@ -25,6 +26,7 @@ export function Game() {
   const [hudShip, setHudShip] = useState<ShipState | null>(null);
   const [hudKills, setHudKills] = useState(0);
   const [hudScore, setHudScore] = useState(0);
+  const [controlsSeen, setControlsSeen] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
   const navigate = useNavigate();
@@ -136,7 +138,9 @@ export function Game() {
 
   // ---- action step engine lifecycle ----
   const step = stepById(stepId);
-  const actionStep = mode === "playing" && step?.kind === "action" && !destroyed ? (step as ActionStep) : null;
+  const showControls = mode === "playing" && stepId === "a_field" && !controlsSeen;
+  const actionStep = mode === "playing" && step?.kind === "action" && !destroyed && !showControls ? (step as ActionStep) : null;
+  const visibleActionStep = mode === "playing" && step?.kind === "action" ? (step as ActionStep) : null;
 
   useEffect(() => {
     if (!actionStep || !canvasRef.current || !save) return;
@@ -166,7 +170,7 @@ export function Game() {
       engineRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stepId, destroyed, mode]);
+  }, [stepId, destroyed, mode, controlsSeen]);
 
   function syncWorkingFromEngine(engine: GameEngine) {
     const ship = engine.getShip();
@@ -352,22 +356,39 @@ export function Game() {
   // playing
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-background">
-      {actionStep && (
-        <div className="relative" style={{ width: "min(100vw, 1280px)" }}>
+      {visibleActionStep && (
+        <div className="arcade-frame relative" style={{ width: "min(100vw, 1280px)" }}>
           <div className="relative w-full" style={{ aspectRatio: `${WORLD_W}/${WORLD_H}` }}>
             <canvas ref={canvasRef} width={WORLD_W} height={WORLD_H} className="h-full w-full [image-rendering:pixelated]" />
             {hudShip && (
               <HUD
                 ship={hudShip}
-                objective={actionStep.spec.objective}
-                stageTitle={actionStep.spec.title}
+                objective={visibleActionStep.spec.objective}
+                stageTitle={visibleActionStep.spec.title}
                 score={hudScore}
                 staged={save?.repo.staged != null}
                 commits={save?.repo.commits.length ?? 0}
                 kills={hudKills}
-                killTarget={actionStep.spec.killTarget}
+                killTarget={visibleActionStep.spec.killTarget}
               />
             )}
+          </div>
+        </div>
+      )}
+
+      {showControls && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-background/90 p-4" role="dialog" aria-label="Flight controls">
+          <div className="arcade-panel w-full max-w-xl p-6 text-center">
+            <p className="font-heading text-sm text-reward">FLIGHT SCHOOL</p>
+            <h2 className="mt-1 font-heading text-4xl text-primary">Two hands. No trackpad needed.</h2>
+            <div className="mt-6 grid gap-3 text-left sm:grid-cols-2">
+              <div className="control-tile"><kbd>W A S D</kbd><span>Move and stop instantly</span></div>
+              <div className="control-tile"><kbd>↑ ← ↓ →</kbd><span>Aim and fire together</span></div>
+              <div className="control-tile"><kbd>SPACE</kbd><span>Fire toward your aim</span></div>
+              <div className="control-tile"><kbd>SHIFT</kbd><span>Boost out of danger</span></div>
+            </div>
+            <p className="mt-5 text-sm text-muted-foreground">Mouse aiming still works if you want it. Your ship also points toward the nearest threat.</p>
+            <Button className="mt-6 h-12 w-full font-heading text-xl" onClick={() => setControlsSeen(true)}>START FLYING</Button>
           </div>
         </div>
       )}
