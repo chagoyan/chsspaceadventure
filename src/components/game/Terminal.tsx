@@ -238,7 +238,7 @@ export function Terminal({ repo, task, commitsAtOpen, onRepoChange, onAdvance, s
           {task.help === "panel" && (
             <button
               type="button"
-              className="mt-2 rounded border border-border px-2 py-1 text-xs text-accent-foreground hover:bg-accent"
+              className="mt-2 rounded border border-border px-2 py-1 text-xs text-foreground hover:bg-accent hover:text-accent-foreground"
               onClick={() => setHelpOpen((o) => !o)}
             >
               {helpOpen ? "Hide Hints" : "Show Hints"}
