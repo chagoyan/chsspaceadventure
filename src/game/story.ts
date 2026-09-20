@@ -483,6 +483,87 @@ export const STEPS: Step[] = [
   },
   {
     kind: "dialogue",
+    id: "d_drift",
+    lines: [
+      { speaker: "narrator", text: "Sector 9: The Ion Drift. With the Turbo Core engaged, Oscar crosses a field of charged wreckage at speed." },
+      { speaker: "komm", text: "The core is performing beautifully. Run the drift, grab the drifting canisters, and dock at the beacon." },
+    ],
+  },
+  {
+    kind: "action",
+    id: "a_drift",
+    stage: 9,
+    spec: {
+      mode: "asteroids",
+      title: "Sector 9 — The Ion Drift",
+      objective: "Collect the canisters, dodge the wreckage, and dock at the beacon.",
+      asteroids: 6,
+      drones: 1,
+      pickups: [
+        { kind: "fuel", x: 480, y: 500 },
+        { kind: "energy", x: 760, y: 220 },
+        { kind: "repair", x: 980, y: 560 },
+      ],
+      beacon: { x: 1180, y: 300, r: 46 },
+    },
+  },
+  {
+    kind: "terminal",
+    id: "t_drift_commit",
+    task: {
+      title: "Checkpoint the Drift",
+      briefing: "KOMM: Another clean run. Inspect, stage, commit — keep the history rich, it may save us soon.",
+      help: "none",
+      hint: "",
+      requires: ["status", "add", "commit"],
+      allowedCommands: ["init", "status", "add", "commit", "log", "reset"],
+      requireCommit: true,
+      advanceLabel: "Continue",
+    },
+  },
+  {
+    kind: "dialogue",
+    id: "d_patrol",
+    lines: [
+      { speaker: "narrator", text: "Sector 10: Cinder Patrol. A drone picket line guards the approach to the Void Gate." },
+      { speaker: "komm", text: "Six hostiles. The Turbo Core gives us the speed advantage... though my diagnostics show some odd power fluctuations. Clear them, then extract." },
+    ],
+  },
+  {
+    kind: "action",
+    id: "a_patrol",
+    stage: 10,
+    spec: {
+      mode: "combat",
+      title: "Sector 10 — Cinder Patrol",
+      objective: "Destroy 6 drones, collect supplies, then enter the extraction beacon.",
+      drones: 3,
+      asteroids: 3,
+      killTarget: 6,
+      pickups: [
+        { kind: "ammo", x: 520, y: 300 },
+        { kind: "repair", x: 860, y: 560 },
+      ],
+      beacon: { x: 1160, y: 200, r: 52 },
+      exitAfterKills: true,
+    },
+  },
+  {
+    kind: "terminal",
+    id: "t_patrol_commit",
+    task: {
+      title: "Checkpoint Before the Gate",
+      briefing: "KOMM: One more checkpoint before the Void Gate. Inspect, stage, commit.",
+      help: "none",
+      hint: "",
+      requires: ["status", "add", "commit"],
+      allowedCommands: ["init", "status", "add", "commit", "log", "reset"],
+      requireCommit: true,
+      advanceLabel: "Continue",
+    },
+  },
+  {
+    kind: "dialogue",
     id: "d_corrupt",
     lines: [
       { speaker: "narrator", text: "ALERT. The Turbo Core's firmware instability cascades. Energy is draining fast — the core is corrupting the ship's systems!" },
