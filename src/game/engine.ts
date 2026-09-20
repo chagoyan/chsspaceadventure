@@ -32,7 +32,10 @@ export type EngineEvent =
   | { type: "safeZone" };
 
 export interface EngineEvents {
-  onShip: (ship: ShipState, extras: { kills: number; score: number }) => void;
+  onShip: (
+    ship: ShipState,
+    extras: { kills: number; score: number; bombs: number; shield: boolean; boostReady: boolean; shieldReady: boolean },
+  ) => void;
   onEvent: (e: EngineEvent) => void;
 }
 
