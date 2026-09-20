@@ -23,4 +23,4 @@
 - [x] Give players a post-combat collection window after Sector 2
 - [x] Add combat-focused Sectors 3 and 4 before the midpoint certificate
 - [x] Renumber the later sectors and certificate milestones
-- [ ] Verify the revised first-half flow and terminal guidance
+- [x] Verify the revised first-half flow and terminal guidance
