@@ -3,7 +3,9 @@ import { useState } from "react";
 import type { SaveData } from "../../game/types";
 import { clearSave } from "../../game/save";
 import { Link } from "@tanstack/react-router";
+import { Volume2, VolumeX } from "lucide-react";
 import oscarToad from "../../assets/oscar-toad.png.asset.json";
+import shipAsset from "../../assets/voyage-ship.png.asset.json";
 
 function HeroPortrait() {
   return (
@@ -19,18 +21,26 @@ interface Props {
   onViewArchive: () => void;
   onStartOver: () => void;
   onResetAll: () => void;
+  muted: boolean;
+  onToggleSound: () => void;
 }
 
-export function Menu({ save, onNewGame, onContinue, onViewLog, onViewArchive, onStartOver, onResetAll }: Props) {
+export function Menu({ save, onNewGame, onContinue, onViewLog, onViewArchive, onStartOver, onResetAll, muted, onToggleSound }: Props) {
   const [name, setName] = useState("");
   const [confirmReset, setConfirmReset] = useState(false);
   const [confirmOver, setConfirmOver] = useState(false);
   const latest = save?.repo.commits[save.repo.commits.length - 1];
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background p-6">
+    <div className="relative flex min-h-screen flex-col items-center justify-center gap-5 overflow-hidden bg-background p-6">
       <div className="stars-bg" aria-hidden />
-      <HeroPortrait />
+      <button type="button" onClick={onToggleSound} className="absolute right-5 top-5 z-10 rounded-full border border-border bg-card p-3 text-accent hover:bg-secondary" aria-label={muted ? "Turn music and sound on" : "Turn music and sound off"} title={muted ? "Sound off" : "Sound on"}>
+        {muted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
+      </button>
+      <div className="relative z-0 flex h-52 w-full max-w-2xl items-center justify-center">
+        <img src={shipAsset.url} alt="Oscar's illustrated spacecraft" className="absolute h-auto w-[min(84vw,34rem)] opacity-30" />
+        <HeroPortrait />
+      </div>
       <div className="text-center">
         <h1 className="font-pixel text-3xl text-primary md:text-4xl">OSCAR'S</h1>
         <h2 className="mt-2 font-pixel text-sm text-accent-foreground md:text-base">GIT SPACE ADVENTURE</h2>

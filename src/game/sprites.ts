@@ -1,8 +1,38 @@
-// Procedural pixel-art sprites drawn from string grids — crisp, asset-free.
+import shipAsset from "../assets/voyage-ship.png.asset.json";
+import droneUrl from "../assets/game-art/drone.png";
+import bossUrl from "../assets/game-art/boss.png";
+import asteroid1Url from "../assets/game-art/asteroid-1.png";
+import asteroid2Url from "../assets/game-art/asteroid-2.png";
+import asteroid3Url from "../assets/game-art/asteroid-3.png";
+import repairUrl from "../assets/game-art/repair.png";
+import fuelUrl from "../assets/game-art/fuel.png";
+import energyUrl from "../assets/game-art/energy.png";
+import ammoUrl from "../assets/game-art/ammo.png";
+import upgradeUrl from "../assets/game-art/upgrade.png";
+import impactUrl from "../assets/game-art/impact.png";
+import explosionUrl from "../assets/game-art/explosion.png";
 
 export interface Sprite {
-  rows: string[];
-  palette: Record<string, string>;
+  src: string;
+  aspect: number;
+}
+
+const imageCache = new Map<string, HTMLImageElement>();
+
+function getImage(src: string): HTMLImageElement | null {
+  if (typeof Image === "undefined") return null;
+  const cached = imageCache.get(src);
+  if (cached) return cached;
+  const image = new Image();
+  image.src = src;
+  imageCache.set(src, image);
+  return image;
+}
+
+export function preloadSprites(): void {
+  for (const sprite of [SHIP, DRONE, BOSS, IMPACT, EXPLOSION, ...ASTEROIDS, ...Object.values(PICKUP_SPRITES)]) {
+    getImage(sprite.src);
+  }
 }
 
 export function drawSprite(
@@ -10,149 +40,36 @@ export function drawSprite(
   sprite: Sprite,
   x: number,
   y: number,
-  scale: number,
+  width: number,
   angle = 0,
 ): void {
-  const rows = sprite.rows;
-  const h = rows.length;
-  const w = rows[0]?.length ?? 0;
+  const image = getImage(sprite.src);
+  if (!image?.complete || image.naturalWidth === 0) return;
+  const height = width / sprite.aspect;
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(angle);
-  ctx.imageSmoothingEnabled = false;
-  for (let r = 0; r < h; r++) {
-    const row = rows[r]!;
-    for (let c = 0; c < row.length; c++) {
-      const ch = row[c]!;
-      const color = sprite.palette[ch];
-      if (!color) continue;
-      ctx.fillStyle = color;
-      ctx.fillRect((c - w / 2) * scale, (r - h / 2) * scale, scale, scale);
-    }
-  }
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(image, -width / 2, -height / 2, width, height);
   ctx.restore();
 }
 
-export function spriteSize(sprite: Sprite, scale: number): { w: number; h: number } {
-  return { w: (sprite.rows[0]?.length ?? 0) * scale, h: sprite.rows.length * scale };
-}
-
-// Solar Arcade sprites use bold ink outlines, two-tone shading, and bright highlights.
-// Oscar's ship points right (angle 0 = facing +x).
-export const SHIP: Sprite = {
-  rows: [
-    "......KK........",
-    ".....KTTK.......",
-    "....KTTTTK......",
-    "...KTTWWTTKK....",
-    "..KTTWGGWTTTK...",
-    "KKTTWGGGWTTTTK..",
-    "KYYTTWWWWTTTTTK.",
-    "KKTTTTTTTTTKKK..",
-    "..KTTTYYTTK.....",
-    "...KKKYYKK......",
-    ".....KCCK.......",
-    "......CC........",
-  ],
-  palette: {
-    K: "#071019",
-    T: "#19d3c5",
-    W: "#e9fff9",
-    G: "#ffd166",
-    Y: "#f3a93b",
-    C: "#f45b69",
-  },
-};
-
-// Enemy drone — 10x8
-export const DRONE: Sprite = {
-  rows: [
-    "..KK....KK..",
-    ".KRRK..KRRK.",
-    "KRRRKKKRRRK.",
-    "KRRRRRRRRRRK",
-    "KRRYRRRRYRRK",
-    ".KRRKKKKRRK.",
-    "..KK....KK..",
-    ".K........K.",
-  ],
-  palette: { K: "#071019", R: "#f45b69", Y: "#ffd166" },
-};
-
-// Boss — 16x14
-export const BOSS: Sprite = {
-  rows: [
-    ".....PPPPP......",
-    "...PPPPPPPPP....",
-    "..PPPPPPPPPPP...",
-    ".PPPWWPPPWWPPP..",
-    ".PPPWPPPPPWPPP..",
-    "PPPPPPPPPPPPPPP.",
-    "PPPGGPPPPPGGPPP.",
-    "PPPGGPPPPPGGPPP.",
-    "PPPPPPPPPPPPPPP.",
-    ".PPPPPPPPPPPPP..",
-    "..PP.PP.PP.PP...",
-    "..P...P.P...P...",
-  ],
-  palette: { P: "#f45b69", W: "#e9fff9", G: "#ffd166" },
-};
-
-// Asteroid — 10x10
-export const ASTEROID: Sprite = {
-  rows: [
-    "...AAAA...",
-    "..AAAAAA..",
-    ".AAAaAAAA.",
-    "AAaAAAAaA.",
-    "AAAAAAAAAA",
-    "AAAAaAAAAA",
-    ".AAAAAAAA.",
-    ".AAaAAAA..",
-    "..AAAAA...",
-    "...AAA....",
-  ],
-  palette: { A: "#60788a", a: "#263947" },
-};
-
-// Guide AI "KOMM" — 12x12 floating bot
-export const KOMM_PORTRAIT: Sprite = {
-  rows: [
-    "....GGGG....",
-    "..GGGGGGGG..",
-    ".GGGGGGGGGG.",
-    ".GGBBGGBBGG.",
-    ".GGBBGGBBGG.",
-    ".GGGGGGGGGG.",
-    ".GGGCCCCGGG.",
-    "..GGGGGGGG..",
-    "....GGGG....",
-    ".....GG.....",
-    "....G..G....",
-    "............",
-  ],
-  palette: { G: "#57d9a3", B: "#0b3d2e", C: "#0b3d2e" },
-};
+export const SHIP: Sprite = { src: shipAsset.url, aspect: 873 / 450 };
+export const DRONE: Sprite = { src: droneUrl, aspect: 350 / 295 };
+export const BOSS: Sprite = { src: bossUrl, aspect: 1090 / 350 };
+export const IMPACT: Sprite = { src: impactUrl, aspect: 410 / 435 };
+export const EXPLOSION: Sprite = { src: explosionUrl, aspect: 620 / 540 };
+export const ASTEROIDS: [Sprite, Sprite, Sprite] = [
+  { src: asteroid1Url, aspect: 415 / 355 },
+  { src: asteroid2Url, aspect: 370 / 315 },
+  { src: asteroid3Url, aspect: 395 / 335 },
+];
 
 export const PICKUP_SPRITES: Record<string, Sprite> = {
-  repair: {
-    rows: [".WW.", "WGGW", "WGGW", ".WW."],
-    palette: { W: "#eef6ff", G: "#2ecc71" },
-  },
-  fuel: {
-    rows: [".YY.", "YOOY", "YOOY", ".YY."],
-    palette: { Y: "#ffd94d", O: "#ff9d3b" },
-  },
-  ammo: {
-    rows: [".RR.", "RYYR", "RYYR", ".RR."],
-    palette: { R: "#c0392b", Y: "#ffd94d" },
-  },
-  energy: {
-    rows: [".BB.", "BWWB", "BWWB", ".BB."],
-    palette: { B: "#3498db", W: "#eaf6ff" },
-  },
-  upgrade: {
-    rows: ["..PP..", ".PPPP.", "PPWWPP", "PPWWPP", ".PPPP.", "..PP.."],
-    palette: { P: "#b06ee8", W: "#f5e6ff" },
-  },
+  repair: { src: repairUrl, aspect: 228 / 270 },
+  fuel: { src: fuelUrl, aspect: 235 / 270 },
+  energy: { src: energyUrl, aspect: 240 / 270 },
+  ammo: { src: ammoUrl, aspect: 240 / 270 },
+  upgrade: { src: upgradeUrl, aspect: 285 / 370 },
 };

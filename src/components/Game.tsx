@@ -7,7 +7,7 @@ import { loadSave, storeSave, clearSave, makeVerificationCode } from "../game/sa
 import { cloneSnapshot, head } from "../game/git";
 import { STEPS, stepById, nextStepId, type ActionStep, type DialogueStep, type TerminalStep, type CertificateStep } from "../game/story";
 import { GameEngine, WORLD_W, WORLD_H, type EngineEvent } from "../game/engine";
-import { setMuted, sfx } from "../game/audio";
+import { setMuted, startMusic, stopMusic, sfx } from "../game/audio";
 import { Terminal } from "./game/Terminal";
 import { Dialogue } from "./game/Dialogue";
 import { HUD } from "./game/HUD";
@@ -79,6 +79,8 @@ export function Game() {
       settings: { reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches, muted: false },
     };
     persist(data);
+    setMuted(false);
+    startMusic(1);
     setStepId("d_intro");
     setMode("playing");
   }
@@ -94,6 +96,8 @@ export function Game() {
     };
     const next = { ...save, repo };
     persist(next);
+    setMuted(save.settings.muted);
+    startMusic(1);
     setStepId(save.storyStep);
     setMode("playing");
   }
@@ -113,9 +117,22 @@ export function Game() {
   }
 
   function resetAll() {
+    stopMusic();
     setSave(null);
     setMode("menu");
     setStepId("d_intro");
+  }
+
+  function toggleSound() {
+    setSave((current) => {
+      const nextMuted = !(current?.settings.muted ?? false);
+      setMuted(nextMuted);
+      if (!nextMuted) startMusic(1);
+      if (!current) return current;
+      const next = { ...current, settings: { ...current.settings, muted: nextMuted } };
+      storeSave(next);
+      return next;
+    });
   }
 
   const advance = useCallback(() => {
@@ -293,6 +310,8 @@ export function Game() {
         onViewArchive={() => setMode("archive")}
         onStartOver={startOver}
         onResetAll={resetAll}
+        muted={save?.settings.muted ?? false}
+        onToggleSound={toggleSound}
       />
     );
   }
@@ -359,7 +378,7 @@ export function Game() {
       {visibleActionStep && (
         <div className="arcade-frame relative" style={{ width: "min(100vw, 1280px)" }}>
           <div className="relative w-full" style={{ aspectRatio: `${WORLD_W}/${WORLD_H}` }}>
-            <canvas ref={canvasRef} width={WORLD_W} height={WORLD_H} className="h-full w-full [image-rendering:pixelated]" />
+            <canvas ref={canvasRef} width={WORLD_W} height={WORLD_H} className="h-full w-full" />
             {hudShip && (
               <HUD
                 ship={hudShip}

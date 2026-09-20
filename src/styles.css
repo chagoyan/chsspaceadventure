@@ -64,25 +64,25 @@
 :root {
   --radius: 0.625rem;
 
-  --background: oklch(0.17 0.032 253);
-  --foreground: oklch(0.96 0.018 184);
-  --card: oklch(0.215 0.04 246);
+  --background: oklch(0.145 0.035 305);
+  --foreground: oklch(0.97 0.012 75);
+  --card: oklch(0.205 0.045 302);
   --card-foreground: oklch(0.984 0.003 247.858);
   --popover: oklch(0.208 0.042 265.755);
   --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.78 0.14 184);
-  --primary-foreground: oklch(0.17 0.032 253);
-  --secondary: oklch(0.3 0.055 246);
+  --primary: oklch(0.69 0.19 42);
+  --primary-foreground: oklch(0.17 0.035 38);
+  --secondary: oklch(0.29 0.06 298);
   --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.27 0.04 246);
-  --muted-foreground: oklch(0.75 0.035 212);
-  --accent: oklch(0.86 0.14 85);
-  --accent-foreground: oklch(0.17 0.032 253);
+  --muted: oklch(0.26 0.045 300);
+  --muted-foreground: oklch(0.78 0.03 68);
+  --accent: oklch(0.83 0.16 76);
+  --accent-foreground: oklch(0.19 0.045 50);
   --destructive: oklch(0.68 0.19 20);
   --destructive-foreground: oklch(0.98 0.01 20);
-  --border: oklch(0.78 0.14 184 / 28%);
-  --input: oklch(0.78 0.14 184 / 38%);
-  --ring: oklch(0.78 0.14 184);
+  --border: oklch(0.69 0.19 42 / 35%);
+  --input: oklch(0.83 0.16 76 / 38%);
+  --ring: oklch(0.69 0.19 42);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -134,8 +134,8 @@
 }
 
 :root {
-  --terminal-green: oklch(0.78 0.14 184);
-  --reward: oklch(0.86 0.14 85);
+  --terminal-green: oklch(0.8 0.14 184);
+  --reward: oklch(0.86 0.16 84);
 }
 
 @theme inline {
@@ -170,8 +170,8 @@
   inset: 0;
   z-index: 20;
   pointer-events: none;
-  background: repeating-linear-gradient(to bottom, transparent 0 3px, color-mix(in oklab, var(--color-background) 18%, transparent) 3px 4px);
-  opacity: 0.32;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--color-accent) 5%, transparent), transparent 24%);
+  opacity: 0.7;
 }
 
 .arcade-panel {
@@ -301,12 +301,12 @@
   inset: 0;
   pointer-events: none;
   background-image:
-    radial-gradient(1px 1px at 20% 30%, rgba(255, 255, 255, 0.6), transparent),
-    radial-gradient(1px 1px at 60% 70%, rgba(255, 255, 255, 0.5), transparent),
-    radial-gradient(2px 2px at 80% 20%, rgba(160, 200, 255, 0.5), transparent),
-    radial-gradient(1px 1px at 35% 85%, rgba(255, 255, 255, 0.4), transparent),
-    radial-gradient(2px 2px at 90% 60%, rgba(255, 220, 160, 0.4), transparent),
-    radial-gradient(1px 1px at 10% 60%, rgba(255, 255, 255, 0.5), transparent);
+    radial-gradient(1px 1px at 20% 30%, color-mix(in oklab, var(--color-foreground) 68%, transparent), transparent),
+    radial-gradient(1px 1px at 60% 70%, color-mix(in oklab, var(--color-foreground) 55%, transparent), transparent),
+    radial-gradient(2px 2px at 80% 20%, color-mix(in oklab, var(--color-terminal-green) 60%, transparent), transparent),
+    radial-gradient(1px 1px at 35% 85%, color-mix(in oklab, var(--color-foreground) 48%, transparent), transparent),
+    radial-gradient(2px 2px at 90% 60%, color-mix(in oklab, var(--color-reward) 52%, transparent), transparent),
+    radial-gradient(1px 1px at 10% 60%, color-mix(in oklab, var(--color-foreground) 55%, transparent), transparent);
 }
 
 /* ---- Certificates ---- */

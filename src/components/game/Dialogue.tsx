@@ -1,31 +1,17 @@
-// Dialogue overlay with pixel portraits and player choice lines.
-import { useEffect, useRef, useState } from "react";
+// Dialogue overlay with illustrated portraits and player choice lines.
+import { useEffect, useState } from "react";
 import type { DialogueLine } from "../../game/story";
-import { KOMM_PORTRAIT, drawSprite } from "../../game/sprites";
 import { sfx } from "../../game/audio";
 import oscarToad from "../../assets/oscar-toad.png.asset.json";
+import kommAlien from "../../assets/exploration-alien.png.asset.json";
 
 function Portrait({ who }: { who: "oscar" | "komm" | "narrator" }) {
-  const ref = useRef<HTMLCanvasElement>(null);
-  useEffect(() => {
-    const ctx = ref.current?.getContext("2d");
-    if (!ctx) return;
-    ctx.clearRect(0, 0, 96, 96);
-    if (who !== "komm") return;
-    drawSprite(ctx, KOMM_PORTRAIT, 48, 48, 5.5);
-  }, [who]);
   if (who === "narrator") return null;
   if (who === "oscar") {
     return <img src={oscarToad.url} alt="Oscar" className="h-20 w-20 shrink-0 border-2 border-border bg-background object-contain" />;
   }
   return (
-    <canvas
-      ref={ref}
-      width={96}
-      height={96}
-      className="h-20 w-20 shrink-0 rounded border-2 border-border bg-background [image-rendering:pixelated]"
-      aria-hidden
-    />
+    <img src={kommAlien.url} alt="KOMM" className="h-20 w-20 shrink-0 border-2 border-border bg-background object-contain" />
   );
 }
 
