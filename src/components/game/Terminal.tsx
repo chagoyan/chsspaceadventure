@@ -89,7 +89,8 @@ export function Terminal({ repo, task, commitsAtOpen, onRepoChange, onAdvance, s
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!input.trim()) return;
-    const cmd = input;
+    // Normalize smart dashes (macOS/iOS autocorrect turns -- into –/—)
+    const cmd = input.replace(/[–—]/g, "--").replace(/−/g, "-");
     setInput("");
     setCmdHistory((c) => [...c, cmd]);
     setHistIdx(-1);
@@ -217,6 +218,8 @@ git revert <hash>             undo one checkpoint, safely`}
             className="terminal-input"
             aria-label="Terminal command input"
             autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="none"
             spellCheck={false}
           />
         </form>
