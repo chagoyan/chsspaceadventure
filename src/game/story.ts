@@ -633,7 +633,7 @@ export const STEPS: Step[] = [
     spec: {
       mode: "boss",
       title: "Sector 11 — The Void Gate",
-      objective: "Destroy the MERGE CONFLICT!",
+      objective: "Destroy the MERGE CONFLICT! It retreats between rounds — clear the drone waves, grab power-ups, and use the cover.",
       boss: true,
       drones: 0,
       asteroids: 1,
