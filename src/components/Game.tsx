@@ -334,7 +334,7 @@ export function Game() {
       <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background p-6 text-center text-foreground">
         <h1 className="font-pixel text-xl text-primary">MISSION COMPLETE</h1>
         <p className="max-w-md text-sm text-muted-foreground">
-          Git delivered the Starlight Beacon to the Void Gate. Final score:{" "}
+          Oscar delivered the Starlight Beacon to the Void Gate. Final score:{" "}
           <span className="font-mono text-foreground">{save?.repo.working.score ?? 0}</span> · Play time:{" "}
           {Math.floor((save?.playTimeSeconds ?? 0) / 60)}m
         </p>

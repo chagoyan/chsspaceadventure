@@ -115,35 +115,6 @@ export const ASTEROID: Sprite = {
   palette: { A: "#60788a", a: "#263947" },
 };
 
-// Git the astronaut portrait — 16x16
-export const GIT_PORTRAIT: Sprite = {
-  rows: [
-    ".....WWWWWW.....",
-    "...WWWWWWWWWW...",
-    "..WWWWWWWWWWWW..",
-    "..WWOOWWWWOOWW..",
-    ".WWOYYWWWWYYOWW.",
-    ".WWOYYWWWWYYOWW.",
-    ".WWOOWWWWWWOOWW.",
-    ".WWWWWWSSWWWWWW.",
-    "..WWWWWSSWWWWW..",
-    "..WWWWWWWWWWWW..",
-    "...WWBBBBBBWW...",
-    "....WBBBBBBW....",
-    "...WWBBBBBBWW...",
-    "..WWWBWWWWBWWW..",
-    "..WBWBWWWWBWBW..",
-    "..WWWBWWWWBWWW..",
-  ],
-  palette: {
-    W: "#eef6ff",
-    O: "#1b2a3a",
-    Y: "#ffd94d",
-    S: "#7fd4ff",
-    B: "#ff8c42",
-  },
-};
-
 // Guide AI "KOMM" — 12x12 floating bot
 export const KOMM_PORTRAIT: Sprite = {
   rows: [
