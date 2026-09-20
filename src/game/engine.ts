@@ -271,14 +271,15 @@ export class GameEngine {
 
     // --- movement ---
     const boost = this.keys.has("shift") && s.fuel > 0;
-    const ACCEL = boost ? 620 : 380;
+    // Empty tank never soft-locks the player: reserve thrusters still limp along.
+    const ACCEL = s.fuel <= 0 ? 110 : boost ? 620 : 380;
     let ax = 0;
     let ay = 0;
     if (this.keys.has("w") || this.keys.has("arrowup")) ay -= 1;
     if (this.keys.has("s") || this.keys.has("arrowdown")) ay += 1;
     if (this.keys.has("a") || this.keys.has("arrowleft")) ax -= 1;
     if (this.keys.has("d") || this.keys.has("arrowright")) ax += 1;
-    const thrusting = (ax !== 0 || ay !== 0) && s.fuel > 0;
+    const thrusting = ax !== 0 || ay !== 0;
     if (thrusting) {
       const len = Math.hypot(ax, ay);
       this.pvx += (ax / len) * ACCEL * dt;
