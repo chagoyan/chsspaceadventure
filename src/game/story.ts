@@ -394,10 +394,10 @@ export const STEPS: Step[] = [
   {
     kind: "action",
     id: "a_nebula",
-    stage: 5,
+    stage: 7,
     spec: {
       mode: "nebula",
-      title: "Sector 5 — The Crimson Nebula",
+      title: "Sector 7 — The Crimson Nebula",
       objective: "Thread the nebula clouds and reach the beacon. Plasma clouds damage your hull!",
       asteroids: 2,
       drones: 1,
@@ -427,10 +427,10 @@ export const STEPS: Step[] = [
   {
     kind: "action",
     id: "a_nebula2",
-    stage: 5,
+    stage: 7,
     spec: {
       mode: "nebula",
-      title: "Sector 5 — Nebula's Edge",
+      title: "Sector 7 — Nebula's Edge",
       objective: "Final stretch — reach the far beacon!",
       asteroids: 2,
       drones: 2,
@@ -446,7 +446,7 @@ export const STEPS: Step[] = [
     kind: "dialogue",
     id: "d_turbo",
     lines: [
-      { speaker: "narrator", text: "Sector 6: The wreck of the UNS Commit. Its experimental Turbo Core still hums with power." },
+      { speaker: "narrator", text: "Sector 8: The wreck of the UNS Commit. Its experimental Turbo Core still hums with power." },
       { speaker: "komm", text: "That Turbo Core would boost our engines... My scans show a minor firmware instability, but the efficiency gains look worth it. Shall we take it?", choices: [
         { label: "\"Take it — speed wins missions.\"", response: "Agreed! We'll grab it ahead. And afterwards we should commit — if it works, that checkpoint captures our upgrade." },
         { label: "\"Instability? Risky...\"", response: "True — but remember, we have Git now. If we commit carefully, we always have a way to deal with a bad change. Let's take it." },
@@ -456,10 +456,10 @@ export const STEPS: Step[] = [
   {
     kind: "action",
     id: "a_turbo",
-    stage: 6,
+    stage: 8,
     spec: {
       mode: "asteroids",
-      title: "Sector 6 — The Wreck",
+      title: "Sector 8 — The Wreck",
       objective: "Collect the Turbo Core, then dock at the beacon.",
       asteroids: 4,
       drones: 0,
