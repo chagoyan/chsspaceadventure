@@ -1,0 +1,612 @@
+// Top-down arcade engine: movement, shooting, asteroids, drones, pickups,
+// nebula hazards, beacon goals, boss. Delta-time, frame-rate independent.
+import type { ShipState } from "./types";
+import { drawSprite, SHIP, DRONE, BOSS, ASTEROID, PICKUP_SPRITES, type Sprite } from "./sprites";
+import { sfx } from "./audio";
+
+export const WORLD_W = 1280;
+export const WORLD_H = 760;
+
+export interface StageSpec {
+  mode: "asteroids" | "combat" | "nebula" | "corrupt" | "boss";
+  title: string;
+  objective: string;
+  asteroids?: number;
+  drones?: number;
+  killTarget?: number;
+  beacon?: { x: number; y: number; r: number };
+  nebulae?: { x: number; y: number; r: number }[];
+  boss?: boolean;
+  drain?: boolean; // turbo corruption: constant energy drain
+  upgradePickup?: { id: string; x: number; y: number };
+  spawnUpgradeAtKills?: { id: string; kills: number };
+  safeZone?: { x: number; y: number; r: number }; // terminal beacon
+}
+
+export type EngineEvent =
+  | { type: "destroyed" }
+  | { type: "objective" }
+  | { type: "upgrade"; id: string }
+  | { type: "safeZone" };
+
+export interface EngineEvents {
+  onShip: (ship: ShipState, extras: { kills: number; score: number }) => void;
+  onEvent: (e: EngineEvent) => void;
+}
+
+interface Ent {
+  kind: "asteroid" | "drone" | "pickup" | "bullet" | "ebullet" | "boss";
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  r: number;
+  hp: number;
+  sprite?: Sprite;
+  pickup?: string;
+  fireCd?: number;
+  rot?: number;
+  rotSpd?: number;
+}
+
+const rand = (a: number, b: number) => a + Math.random() * (b - a);
+
+export class GameEngine {
+  private ctx: CanvasRenderingContext2D;
+  private ship: ShipState;
+  private spec: StageSpec;
+  private events: EngineEvents;
+  private keys = new Set<string>();
+  private mouse = { x: WORLD_W / 2, y: 0 };
+  private firing = false;
+  private px = 120;
+  private py = WORLD_H / 2;
+  private pvx = 0;
+  private pvy = 0;
+  private angle = 0;
+  private fireCd = 0;
+  private invuln = 0;
+  private ents: Ent[] = [];
+  private kills = 0;
+  private score: number;
+  private running = false;
+  private paused = false;
+  private raf = 0;
+  private last = 0;
+  private lastSync = 0;
+  private stars: { x: number; y: number; s: number }[] = [];
+  private objectiveSent = false;
+  private safeZoneSent = false;
+  private upgradeSpawned = false;
+  private reducedMotion: boolean;
+  private hitFlash = 0;
+
+  constructor(
+    canvas: HTMLCanvasElement,
+    ship: ShipState,
+    startScore: number,
+    spec: StageSpec,
+    events: EngineEvents,
+    reducedMotion = false,
+  ) {
+    this.ctx = canvas.getContext("2d")!;
+    this.ship = { ...ship, upgrades: [...ship.upgrades] };
+    this.score = startScore;
+    this.spec = spec;
+    this.events = events;
+    this.reducedMotion = reducedMotion;
+    for (let i = 0; i < 140; i++) {
+      this.stars.push({ x: rand(0, WORLD_W), y: rand(0, WORLD_H), s: rand(0.5, 2.2) });
+    }
+    this.populate();
+    this.attach();
+  }
+
+  private populate() {
+    const s = this.spec;
+    for (let i = 0; i < (s.asteroids ?? 0); i++) {
+      this.ents.push({
+        kind: "asteroid",
+        x: rand(300, WORLD_W - 60),
+        y: rand(60, WORLD_H - 60),
+        vx: rand(-30, 30),
+        vy: rand(-20, 20),
+        r: rand(16, 30),
+        hp: 2,
+        rot: rand(0, 6),
+        rotSpd: rand(-1, 1),
+      });
+    }
+    for (let i = 0; i < (s.drones ?? 0); i++) this.spawnDrone();
+    if (s.boss) {
+      this.ents.push({
+        kind: "boss",
+        x: WORLD_W - 220,
+        y: WORLD_H / 2,
+        vx: 0,
+        vy: 0,
+        r: 46,
+        hp: 60,
+        fireCd: 1.5,
+      });
+    }
+    if (s.upgradePickup) {
+      this.ents.push({
+        kind: "pickup",
+        x: s.upgradePickup.x,
+        y: s.upgradePickup.y,
+        vx: 0,
+        vy: 0,
+        r: 16,
+        hp: 1,
+        sprite: PICKUP_SPRITES["upgrade"]!,
+        pickup: `upgrade:${s.upgradePickup.id}`,
+      });
+    }
+  }
+
+  private spawnDrone() {
+    this.ents.push({
+      kind: "drone",
+      x: rand(WORLD_W * 0.55, WORLD_W - 80),
+      y: rand(60, WORLD_H - 60),
+      vx: 0,
+      vy: 0,
+      r: 15,
+      hp: 2,
+      fireCd: rand(1, 2.5),
+    });
+  }
+
+  private keyDown = (e: KeyboardEvent) => {
+    this.keys.add(e.key.toLowerCase());
+    if ([" ", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(e.key.toLowerCase())) {
+      e.preventDefault();
+    }
+  };
+  private keyUp = (e: KeyboardEvent) => this.keys.delete(e.key.toLowerCase());
+  private mouseMove = (e: MouseEvent) => {
+    const rect = (e.target as HTMLCanvasElement).getBoundingClientRect();
+    this.mouse.x = ((e.clientX - rect.left) / rect.width) * WORLD_W;
+    this.mouse.y = ((e.clientY - rect.top) / rect.height) * WORLD_H;
+  };
+  private mouseDown = (e: MouseEvent) => {
+    if (e.button === 0) this.firing = true;
+  };
+  private mouseUp = () => (this.firing = false);
+
+  private attach() {
+    window.addEventListener("keydown", this.keyDown);
+    window.addEventListener("keyup", this.keyUp);
+    const canvas = this.ctx.canvas;
+    canvas.addEventListener("mousemove", this.mouseMove);
+    canvas.addEventListener("mousedown", this.mouseDown);
+    window.addEventListener("mouseup", this.mouseUp);
+  }
+
+  destroy() {
+    this.stop();
+    window.removeEventListener("keydown", this.keyDown);
+    window.removeEventListener("keyup", this.keyUp);
+    const canvas = this.ctx.canvas;
+    canvas.removeEventListener("mousemove", this.mouseMove);
+    canvas.removeEventListener("mousedown", this.mouseDown);
+    window.removeEventListener("mouseup", this.mouseUp);
+  }
+
+  start() {
+    this.running = true;
+    this.last = performance.now();
+    const loop = (t: number) => {
+      if (!this.running) return;
+      const dt = Math.min((t - this.last) / 1000, 0.05);
+      this.last = t;
+      if (!this.paused) this.update(dt);
+      this.render(t / 1000);
+      this.raf = requestAnimationFrame(loop);
+    };
+    this.raf = requestAnimationFrame(loop);
+  }
+
+  pause() {
+    this.paused = true;
+  }
+  resume() {
+    this.paused = false;
+    this.last = performance.now();
+  }
+  stop() {
+    this.running = false;
+    cancelAnimationFrame(this.raf);
+  }
+
+  getShip(): ShipState {
+    return { ...this.ship, upgrades: [...this.ship.upgrades] };
+  }
+  getScore(): number {
+    return this.score;
+  }
+  setDrain(on: boolean) {
+    this.spec.drain = on;
+  }
+
+  private damage(amount: number) {
+    if (this.invuln > 0) return;
+    let remaining = amount;
+    if (this.ship.armor > 0) {
+      const absorbed = Math.min(this.ship.armor, amount * 0.6);
+      this.ship.armor -= absorbed;
+      remaining = amount - absorbed;
+    }
+    this.ship.hull = Math.max(0, this.ship.hull - remaining);
+    this.invuln = 0.6;
+    this.hitFlash = 0.25;
+    sfx.hit();
+    if (this.ship.hull <= 0) {
+      sfx.explosion();
+      this.events.onEvent({ type: "destroyed" });
+      this.stop();
+    }
+  }
+
+  private update(dt: number) {
+    const s = this.ship;
+    this.invuln = Math.max(0, this.invuln - dt);
+    this.hitFlash = Math.max(0, this.hitFlash - dt);
+    this.fireCd = Math.max(0, this.fireCd - dt);
+
+    // --- movement ---
+    const boost = this.keys.has("shift") && s.fuel > 0;
+    const ACCEL = boost ? 620 : 380;
+    let ax = 0;
+    let ay = 0;
+    if (this.keys.has("w") || this.keys.has("arrowup")) ay -= 1;
+    if (this.keys.has("s") || this.keys.has("arrowdown")) ay += 1;
+    if (this.keys.has("a") || this.keys.has("arrowleft")) ax -= 1;
+    if (this.keys.has("d") || this.keys.has("arrowright")) ax += 1;
+    const thrusting = (ax !== 0 || ay !== 0) && s.fuel > 0;
+    if (thrusting) {
+      const len = Math.hypot(ax, ay);
+      this.pvx += (ax / len) * ACCEL * dt;
+      this.pvy += (ay / len) * ACCEL * dt;
+      s.fuel = Math.max(0, s.fuel - (boost ? 5 : 2.2) * dt);
+    }
+    // exp damping
+    const damp = Math.exp(-1.6 * dt);
+    this.pvx *= damp;
+    this.pvy *= damp;
+    this.px = Math.max(24, Math.min(WORLD_W - 24, this.px + this.pvx * dt));
+    this.py = Math.max(24, Math.min(WORLD_H - 24, this.py + this.pvy * dt));
+    this.angle = Math.atan2(this.mouse.y - this.py, this.mouse.x - this.px);
+
+    // energy regen / corruption drain
+    s.energy = Math.min(100, s.energy + 3.5 * dt);
+    if (this.spec.drain) {
+      s.energy = Math.max(0, s.energy - 9 * dt);
+      s.hull = Math.max(1, s.hull - 0.8 * dt); // corruption flicker, not fatal
+    }
+
+    // --- shooting ---
+    const wantFire = (this.firing || this.keys.has(" ")) && this.fireCd <= 0;
+    if (wantFire && s.ammo >= 1 && s.energy >= 4) {
+      s.ammo -= 1;
+      s.energy -= 4;
+      this.fireCd = this.ship.upgrades.includes("Rapid Cycler") ? 0.12 : 0.2;
+      const spread = 0.04;
+      this.ents.push({
+        kind: "bullet",
+        x: this.px + Math.cos(this.angle) * 26,
+        y: this.py + Math.sin(this.angle) * 26,
+        vx: Math.cos(this.angle + rand(-spread, spread)) * 640,
+        vy: Math.sin(this.angle + rand(-spread, spread)) * 640,
+        r: 4,
+        hp: 1,
+      });
+      sfx.shoot();
+    }
+
+    // --- nebula damage ---
+    for (const n of this.spec.nebulae ?? []) {
+      const d = Math.hypot(this.px - n.x, this.py - n.y);
+      if (d < n.r) this.damage(14 * dt + 0); // continuous
+    }
+    // invuln would block continuous nebula damage; nebula uses raw application:
+    // (kept simple: invuln mainly for impacts)
+
+    // --- safe zone ---
+    if (this.spec.safeZone && !this.safeZoneSent) {
+      const z = this.spec.safeZone;
+      if (Math.hypot(this.px - z.x, this.py - z.y) < z.r) {
+        this.safeZoneSent = true;
+        this.events.onEvent({ type: "safeZone" });
+      }
+    }
+
+    // --- beacon objective ---
+    if (this.spec.beacon && !this.objectiveSent) {
+      const b = this.spec.beacon;
+      if (Math.hypot(this.px - b.x, this.py - b.y) < b.r) {
+        this.objectiveSent = true;
+        sfx.commit();
+        this.events.onEvent({ type: "objective" });
+      }
+    }
+
+    // --- entities ---
+    const remove = new Set<Ent>();
+    for (const e of this.ents) {
+      if (e.kind === "asteroid") {
+        e.x += e.vx * dt;
+        e.y += e.vy * dt;
+        e.rot = (e.rot ?? 0) + (e.rotSpd ?? 0) * dt;
+        if (e.x < -40) e.x = WORLD_W + 40;
+        if (e.x > WORLD_W + 40) e.x = -40;
+        if (e.y < -40) e.y = WORLD_H + 40;
+        if (e.y > WORLD_H + 40) e.y = -40;
+        if (Math.hypot(e.x - this.px, e.y - this.py) < e.r + 18) {
+          this.damage(12);
+          e.vx = -e.vx * 1.4;
+          e.vy = -e.vy * 1.4;
+        }
+      } else if (e.kind === "drone") {
+        const d = Math.hypot(this.px - e.x, this.py - e.y) || 1;
+        const speed = 90;
+        e.vx = ((this.px - e.x) / d) * speed;
+        e.vy = ((this.py - e.y) / d) * speed;
+        e.x += e.vx * dt;
+        e.y += e.vy * dt;
+        e.fireCd = (e.fireCd ?? 1) - dt;
+        if (e.fireCd <= 0 && d < 520) {
+          e.fireCd = rand(1.6, 2.6);
+          this.ents.push({
+            kind: "ebullet",
+            x: e.x,
+            y: e.y,
+            vx: ((this.px - e.x) / d) * 300,
+            vy: ((this.py - e.y) / d) * 300,
+            r: 5,
+            hp: 1,
+          });
+        }
+        if (d < e.r + 18) {
+          this.damage(15);
+          e.hp = 0;
+        }
+      } else if (e.kind === "boss") {
+        e.y = WORLD_H / 2 + Math.sin(performance.now() / 900) * 200;
+        e.fireCd = (e.fireCd ?? 1) - dt;
+        if (e.fireCd <= 0) {
+          e.fireCd = 0.9;
+          for (let k = -1; k <= 1; k++) {
+            const a = Math.atan2(this.py - e.y, this.px - e.x) + k * 0.25;
+            this.ents.push({
+              kind: "ebullet",
+              x: e.x,
+              y: e.y,
+              vx: Math.cos(a) * 320,
+              vy: Math.sin(a) * 320,
+              r: 6,
+              hp: 1,
+            });
+          }
+        }
+        if (Math.random() < dt * 0.25 && this.ents.filter((x) => x.kind === "drone").length < 3) {
+          this.spawnDrone();
+        }
+      } else if (e.kind === "bullet") {
+        e.x += e.vx * dt;
+        e.y += e.vy * dt;
+        if (e.x < 0 || e.x > WORLD_W || e.y < 0 || e.y > WORLD_H) remove.add(e);
+        for (const t of this.ents) {
+          if (t.kind !== "asteroid" && t.kind !== "drone" && t.kind !== "boss") continue;
+          if (Math.hypot(e.x - t.x, e.y - t.y) < t.r + e.r) {
+            remove.add(e);
+            t.hp -= 1;
+            if (t.hp <= 0) {
+              remove.add(t);
+              sfx.explosion();
+              if (t.kind === "drone") {
+                this.kills++;
+                this.score += 100;
+              } else if (t.kind === "boss") {
+                this.kills++;
+                this.score += 1500;
+              } else {
+                this.score += 25;
+              }
+              if (Math.random() < 0.4 && t.kind !== "boss") this.dropPickup(t.x, t.y);
+              if (t.kind === "boss") {
+                this.dropPickup(t.x - 30, t.y);
+                this.dropPickup(t.x + 30, t.y);
+              }
+            }
+            break;
+          }
+        }
+      } else if (e.kind === "ebullet") {
+        e.x += e.vx * dt;
+        e.y += e.vy * dt;
+        if (e.x < 0 || e.x > WORLD_W || e.y < 0 || e.y > WORLD_H) remove.add(e);
+        if (Math.hypot(e.x - this.px, e.y - this.py) < e.r + 16) {
+          remove.add(e);
+          this.damage(e.r > 5 ? 10 : 6);
+        }
+      } else if (e.kind === "pickup") {
+        if (Math.hypot(e.x - this.px, e.y - this.py) < e.r + 20) {
+          remove.add(e);
+          this.applyPickup(e.pickup ?? "repair");
+        }
+      }
+    }
+    for (const e of remove) this.ents.splice(this.ents.indexOf(e), 1);
+
+    // spawn scripted upgrade mid-stage
+    const sup = this.spec.spawnUpgradeAtKills;
+    if (sup && !this.upgradeSpawned && this.kills >= sup.kills) {
+      this.upgradeSpawned = true;
+      this.ents.push({
+        kind: "pickup",
+        x: WORLD_W / 2,
+        y: WORLD_H / 2,
+        vx: 0,
+        vy: 0,
+        r: 16,
+        hp: 1,
+        sprite: PICKUP_SPRITES["upgrade"]!,
+        pickup: `upgrade:${sup.id}`,
+      });
+    }
+
+    // kill-target objective
+    if (this.spec.killTarget && !this.objectiveSent && this.kills >= this.spec.killTarget) {
+      const bossAlive = this.ents.some((e) => e.kind === "boss");
+      if (!bossAlive) {
+        this.objectiveSent = true;
+        sfx.commit();
+        this.events.onEvent({ type: "objective" });
+      }
+    }
+
+    // HUD sync ~5x/sec
+    const now = performance.now();
+    if (now - this.lastSync > 200) {
+      this.lastSync = now;
+      this.events.onShip(this.getShip(), { kills: this.kills, score: this.score });
+    }
+  }
+
+  private dropPickup(x: number, y: number) {
+    const kinds = ["repair", "fuel", "ammo", "energy"] as const;
+    const k = kinds[Math.floor(Math.random() * kinds.length)]!;
+    this.ents.push({
+      kind: "pickup",
+      x,
+      y,
+      vx: 0,
+      vy: 0,
+      r: 13,
+      hp: 1,
+      sprite: PICKUP_SPRITES[k]!,
+      pickup: k,
+    });
+  }
+
+  private applyPickup(p: string) {
+    sfx.pickup();
+    if (p.startsWith("upgrade:")) {
+      const id = p.slice(8);
+      if (!this.ship.upgrades.includes(id)) this.ship.upgrades.push(id);
+      if (id === "Turbo Core") {
+        this.ship.fuel = Math.min(100, this.ship.fuel + 20);
+      }
+      this.events.onEvent({ type: "upgrade", id });
+      this.events.onShip(this.getShip(), { kills: this.kills, score: this.score });
+      return;
+    }
+    if (p === "repair") this.ship.hull = Math.min(100, this.ship.hull + 20);
+    if (p === "fuel") this.ship.fuel = Math.min(100, this.ship.fuel + 25);
+    if (p === "ammo") this.ship.ammo = Math.min(100, this.ship.ammo + 25);
+    if (p === "energy") this.ship.energy = Math.min(100, this.ship.energy + 25);
+    this.score += 20;
+  }
+
+  private render(t: number) {
+    const ctx = this.ctx;
+    ctx.fillStyle = "#060913";
+    ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+    // stars
+    for (const st of this.stars) {
+      const tw = this.reducedMotion ? 0.8 : 0.5 + 0.5 * Math.sin(t * 2 + st.x);
+      ctx.fillStyle = `rgba(200,225,255,${0.25 + 0.5 * tw * st.s * 0.3})`;
+      ctx.fillRect(st.x, st.y, st.s, st.s);
+    }
+    // nebulae
+    for (const n of this.spec.nebulae ?? []) {
+      const g = ctx.createRadialGradient(n.x, n.y, 10, n.x, n.y, n.r);
+      g.addColorStop(0, "rgba(255,80,120,0.35)");
+      g.addColorStop(1, "rgba(255,80,120,0.02)");
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255,80,120,0.5)";
+      ctx.setLineDash([8, 8]);
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    // beacon
+    if (this.spec.beacon) {
+      const b = this.spec.beacon;
+      const pulse = this.reducedMotion ? 1 : 1 + 0.15 * Math.sin(t * 4);
+      ctx.strokeStyle = "#57d9a3";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.r * pulse, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = "rgba(87,217,163,0.12)";
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#57d9a3";
+      ctx.font = "16px 'Press Start 2P', monospace";
+      ctx.textAlign = "center";
+      ctx.fillText("GOAL", b.x, b.y - b.r - 12);
+    }
+    // safe zone
+    if (this.spec.safeZone) {
+      const z = this.spec.safeZone;
+      ctx.strokeStyle = "#57d9a3";
+      ctx.setLineDash([4, 6]);
+      ctx.beginPath();
+      ctx.arc(z.x, z.y, z.r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = "#57d9a3";
+      ctx.font = "12px 'Press Start 2P', monospace";
+      ctx.textAlign = "center";
+      ctx.fillText("SAFE TERMINAL", z.x, z.y - z.r - 10);
+    }
+    // entities
+    for (const e of this.ents) {
+      if (e.kind === "asteroid") {
+        drawSprite(ctx, ASTEROID, e.x, e.y, e.r / 5, e.rot ?? 0);
+      } else if (e.kind === "drone") {
+        drawSprite(ctx, DRONE, e.x, e.y, 3, Math.atan2(this.py - e.y, this.px - e.x));
+      } else if (e.kind === "boss") {
+        drawSprite(ctx, BOSS, e.x, e.y, 6, Math.PI);
+        // boss hp bar
+        ctx.fillStyle = "#31122e";
+        ctx.fillRect(e.x - 60, e.y - 70, 120, 8);
+        ctx.fillStyle = "#ff4757";
+        ctx.fillRect(e.x - 60, e.y - 70, (120 * Math.max(0, e.hp)) / 60, 8);
+      } else if (e.kind === "bullet") {
+        ctx.fillStyle = "#7fd4ff";
+        ctx.fillRect(e.x - 3, e.y - 2, 10, 4);
+      } else if (e.kind === "ebullet") {
+        ctx.fillStyle = "#ff6b6b";
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (e.kind === "pickup" && e.sprite) {
+        const bob = this.reducedMotion ? 0 : Math.sin(t * 3 + e.x) * 3;
+        drawSprite(ctx, e.sprite, e.x, e.y + bob, 4);
+      }
+    }
+    // player ship
+    const blink = this.invuln > 0 && Math.floor(t * 12) % 2 === 0;
+    if (!blink) {
+      drawSprite(ctx, SHIP, this.px, this.py, 4, this.angle);
+    }
+    if (this.spec.drain) {
+      // corruption glitch overlay
+      ctx.fillStyle = `rgba(255,60,90,${0.04 + 0.05 * Math.abs(Math.sin(t * 7))})`;
+      ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+    }
+    if (this.hitFlash > 0) {
+      ctx.fillStyle = `rgba(255,80,80,${this.hitFlash * 0.7})`;
+      ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+    }
+  }
+}
