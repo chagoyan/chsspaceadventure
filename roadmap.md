@@ -8,4 +8,4 @@
 - [x] Verify Oscar's opening dialogue and initialization on desktop and mobile-sized viewports
 - [x] Replace pixel graphics with the illustrated style from Typing Voyage and Typing Exploration
 - [x] Reuse fitting music and the brighter color treatment from the earlier games
-- [ ] Verify the refreshed game on desktop and mobile-sized viewports
+- [x] Verify the refreshed game on desktop and mobile-sized viewports
