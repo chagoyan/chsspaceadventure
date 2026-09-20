@@ -10,33 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TeacherRouteImport } from './routes/teacher'
+import { Route as CertificatePartRouteImport } from './routes/certificate.$part'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TeacherRoute = TeacherRouteImport.update({
+  id: '/teacher',
+  path: '/teacher',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CertificatePartRoute = CertificatePartRouteImport.update({
+  id: '/certificate/$part',
+  path: '/certificate/$part',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/teacher': typeof TeacherRoute
+  '/certificate/$part': typeof CertificatePartRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/teacher': typeof TeacherRoute
+  '/certificate/$part': typeof CertificatePartRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/teacher': typeof TeacherRoute
+  '/certificate/$part': typeof CertificatePartRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/teacher' | '/certificate/$part'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/teacher' | '/certificate/$part'
+  id: '__root__' | '/' | '/teacher' | '/certificate/$part'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  TeacherRoute: typeof TeacherRoute
+  CertificatePartRoute: typeof CertificatePartRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +68,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/teacher': {
+      id: '/teacher'
+      path: '/teacher'
+      fullPath: '/teacher'
+      preLoaderRoute: typeof TeacherRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/certificate/$part': {
+      id: '/certificate/$part'
+      path: '/certificate/$part'
+      fullPath: '/certificate/$part'
+      preLoaderRoute: typeof CertificatePartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  TeacherRoute: TeacherRoute,
+  CertificatePartRoute: CertificatePartRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

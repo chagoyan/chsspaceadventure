@@ -253,12 +253,11 @@ export const STEPS: Step[] = [
     id: "t_reset",
     task: {
       title: "Rewind to Safety (Optional but wise)",
-      briefing: "KOMM: That nebula chewed us up. You could push on in this battered state... or use git log --oneline to find an earlier, healthier checkpoint and move the timeline back with git reset --hard <hash>. Your call, pilot.",
+      briefing: "KOMM: That nebula chewed us up. Our hull is in bad shape for the final stretch. Use git log --oneline to find an earlier, healthier checkpoint, then move the timeline back with git reset --hard <hash>. Read the warning carefully before confirming.",
       help: "partial",
       hint: "git log --oneline, then git reset --hard <hash>",
-      requires: [],
+      requires: ["reset"],
       advanceLabel: "Fly On",
-      freeForm: true,
     },
   },
   {
