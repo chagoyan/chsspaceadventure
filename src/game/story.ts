@@ -114,7 +114,7 @@ export const STEPS: Step[] = [
       help: "full",
       hint: "Type exactly: git status",
       requires: ["status"],
-      allowedCommands: ["init", "status"],
+      allowedCommands: ["status"],
       advanceLabel: "Continue to Supply Cache",
     },
   },
