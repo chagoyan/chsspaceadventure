@@ -97,6 +97,12 @@ export class GameEngine {
   private boostCd = 0;
   private shieldTimer = 0;
   private shieldCd = 0;
+  // Boss encounter: fight -> retreat off screen -> drone waves (power-ups) -> return.
+  private bossPhase: "fight" | "retreat" | "waves" | "return" = "fight";
+  private bossThresholds: number[] = [];
+  private bossWaveRemaining = 0;
+  private bossPhaseTimer = 0;
+  private bossHomeX = WORLD_W - 220;
 
   constructor(
     canvas: HTMLCanvasElement,
