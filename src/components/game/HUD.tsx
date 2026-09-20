@@ -75,7 +75,7 @@ export function HUD({ ship, objective, stageTitle, score, staged, commits, kills
           <div className="text-xs font-semibold text-foreground md:text-sm">{objective}</div>
         </div>
         <div className="arcade-panel hidden px-3 py-2 text-xs font-bold text-muted-foreground md:block">
-          WASD MOVE · ARROWS AIM + FIRE · SPACE FIRE · SHIFT BOOST
+          MOUSE STEER · SPACE THRUST · CLICK FIRE · WASD / ARROWS ALSO WORK · SHIFT BOOST
         </div>
       </div>
     </div>
