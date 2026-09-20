@@ -38,7 +38,7 @@ export function spriteSize(sprite: Sprite, scale: number): { w: number; h: numbe
 }
 
 // Solar Arcade sprites use bold ink outlines, two-tone shading, and bright highlights.
-// Git's ship points right (angle 0 = facing +x).
+// Oscar's ship points right (angle 0 = facing +x).
 export const SHIP: Sprite = {
   rows: [
     "......KK........",
@@ -113,35 +113,6 @@ export const ASTEROID: Sprite = {
     "...AAA....",
   ],
   palette: { A: "#60788a", a: "#263947" },
-};
-
-// Git the astronaut portrait — 16x16
-export const GIT_PORTRAIT: Sprite = {
-  rows: [
-    ".....WWWWWW.....",
-    "...WWWWWWWWWW...",
-    "..WWWWWWWWWWWW..",
-    "..WWOOWWWWOOWW..",
-    ".WWOYYWWWWYYOWW.",
-    ".WWOYYWWWWYYOWW.",
-    ".WWOOWWWWWWOOWW.",
-    ".WWWWWWSSWWWWWW.",
-    "..WWWWWSSWWWWW..",
-    "..WWWWWWWWWWWW..",
-    "...WWBBBBBBWW...",
-    "....WBBBBBBW....",
-    "...WWBBBBBBWW...",
-    "..WWWBWWWWBWWW..",
-    "..WBWBWWWWBWBW..",
-    "..WWWBWWWWBWWW..",
-  ],
-  palette: {
-    W: "#eef6ff",
-    O: "#1b2a3a",
-    Y: "#ffd94d",
-    S: "#7fd4ff",
-    B: "#ff8c42",
-  },
 };
 
 // Guide AI "KOMM" — 12x12 floating bot

@@ -195,7 +195,7 @@ export function execCommand(repo: Repo, rawInput: string, opts?: { resetConfirme
   if (tokens[0] !== "git") {
     return err(
       `${tokens[0]}: command not found`,
-      "This terminal controls the ship's Git timeline. Try 'help' or a command starting with git.",
+      "This terminal uses Git to track the ship's status and changes. Try 'help' or a command starting with git.",
     );
   }
   const sub = tokens[1];
@@ -213,7 +213,7 @@ export function execCommand(repo: Repo, rawInput: string, opts?: { resetConfirme
         ok: true,
         didInit: true,
         lines: [
-          { text: "Initialized empty Git repository in /ship/mission/.git/", kind: "clean" },
+          { text: "Git tracking initialized for the ship's mission.", kind: "clean" },
           { text: "The mission is now being tracked — but no checkpoint exists yet.", kind: "info" },
         ],
       };

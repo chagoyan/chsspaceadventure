@@ -1,20 +1,13 @@
 // Title menu: new game (name entry), continue, log view, archive, reset.
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import type { SaveData } from "../../game/types";
-import { GIT_PORTRAIT, drawSprite } from "../../game/sprites";
 import { clearSave } from "../../game/save";
 import { Link } from "@tanstack/react-router";
+import oscarToad from "../../assets/oscar-toad.png.asset.json";
 
 function HeroPortrait() {
-  const ref = useRef<HTMLCanvasElement>(null);
-  useEffect(() => {
-    const ctx = ref.current?.getContext("2d");
-    if (!ctx) return;
-    ctx.clearRect(0, 0, 192, 192);
-    drawSprite(ctx, GIT_PORTRAIT, 96, 96, 11);
-  }, []);
   return (
-    <canvas ref={ref} width={192} height={192} className="h-40 w-40 [image-rendering:pixelated]" aria-label="Git the astronaut" />
+    <img src={oscarToad.url} alt="Oscar the horned toad in a CHS spacesuit" className="h-48 w-auto object-contain drop-shadow-[0_0_18px_color-mix(in_oklab,var(--color-primary)_30%,transparent)]" />
   );
 }
 
@@ -39,10 +32,10 @@ export function Menu({ save, onNewGame, onContinue, onViewLog, onViewArchive, on
       <div className="stars-bg" aria-hidden />
       <HeroPortrait />
       <div className="text-center">
-        <h1 className="font-pixel text-3xl text-primary md:text-4xl">GIT</h1>
-        <h2 className="mt-2 font-pixel text-sm text-accent-foreground md:text-base">SPACE ADVENTURE</h2>
+        <h1 className="font-pixel text-3xl text-primary md:text-4xl">OSCAR'S</h1>
+        <h2 className="mt-2 font-pixel text-sm text-accent-foreground md:text-base">GIT SPACE ADVENTURE</h2>
         <p className="mt-3 max-w-md text-sm text-muted-foreground">
-          A top-down arcade mission where your ship's timeline runs on real Git commands.
+          A top-down arcade mission where Oscar uses Git commands to track the ship's status, changes, and checkpoints.
         </p>
       </div>
 

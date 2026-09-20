@@ -1,19 +1,23 @@
 // Dialogue overlay with pixel portraits and player choice lines.
 import { useEffect, useRef, useState } from "react";
 import type { DialogueLine } from "../../game/story";
-import { GIT_PORTRAIT, KOMM_PORTRAIT, drawSprite } from "../../game/sprites";
+import { KOMM_PORTRAIT, drawSprite } from "../../game/sprites";
 import { sfx } from "../../game/audio";
+import oscarToad from "../../assets/oscar-toad.png.asset.json";
 
-function Portrait({ who }: { who: "git" | "komm" | "narrator" }) {
+function Portrait({ who }: { who: "oscar" | "komm" | "narrator" }) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const ctx = ref.current?.getContext("2d");
     if (!ctx) return;
     ctx.clearRect(0, 0, 96, 96);
-    if (who === "narrator") return;
-    drawSprite(ctx, who === "git" ? GIT_PORTRAIT : KOMM_PORTRAIT, 48, 48, 5.5);
+    if (who !== "komm") return;
+    drawSprite(ctx, KOMM_PORTRAIT, 48, 48, 5.5);
   }, [who]);
   if (who === "narrator") return null;
+  if (who === "oscar") {
+    return <img src={oscarToad.url} alt="Oscar" className="h-20 w-20 shrink-0 border-2 border-border bg-background object-contain" />;
+  }
   return (
     <canvas
       ref={ref}
@@ -52,7 +56,7 @@ export function Dialogue({ lines, onDone }: { lines: DialogueLine[]; onDone: () 
   }
 
   if (!line) return null;
-  const name = line.speaker === "git" ? "GIT" : line.speaker === "komm" ? "KOMM" : "";
+  const name = line.speaker === "oscar" ? "OSCAR" : line.speaker === "komm" ? "KOMM" : "";
 
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/60 p-4 pb-10" role="dialog" aria-label="Dialogue">

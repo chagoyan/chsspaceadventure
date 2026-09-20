@@ -4,7 +4,7 @@ import type { StageSpec } from "./engine";
 export type HelpLevel = "full" | "partial" | "none" | "panel";
 
 export interface DialogueLine {
-  speaker: "git" | "komm" | "narrator";
+  speaker: "oscar" | "komm" | "narrator";
   text: string;
   choices?: { label: string; response: string }[];
 }
@@ -58,12 +58,12 @@ export const STEPS: Step[] = [
     kind: "dialogue",
     id: "d_intro",
     lines: [
-      { speaker: "narrator", text: "Year 3026. Rookie pilot Git reports for their first solo mission: cross five sectors and deliver the Starlight Beacon to the Void Gate." },
-      { speaker: "komm", text: "Good morning, Git! I'm KOMM, your ship computer. Before launch I must warn you: this ship has NO timeline protection yet.", choices: [
+      { speaker: "narrator", text: "Year 3026. Oscar the horned toad reports for his first solo mission: cross five sectors and deliver the Starlight Beacon to the Void Gate." },
+      { speaker: "komm", text: "Good morning, Oscar! I'm KOMM, your ship computer. Before launch I must warn you: this ship has NO timeline protection yet.", choices: [
         { label: "\"Timeline protection? Sounds serious.\"", response: "It is! If anything goes wrong out there, every repair, every drop of fuel you gain — gone. Unless we track the mission with Git." },
         { label: "\"I'm sure it'll be fine.\"", response: "Famous last words, pilot. Space is full of asteroids and drones. We need a way to save our progress — properly." },
       ]},
-      { speaker: "komm", text: "This ship runs on Git. With it we can create checkpoints in time. But first we must initialize the mission repository." },
+      { speaker: "komm", text: "This ship uses Git to track its status and changes. With the right commands, we can record checkpoints in time. First, we must initialize mission tracking." },
     ],
   },
   {
@@ -95,7 +95,7 @@ export const STEPS: Step[] = [
     kind: "dialogue",
     id: "d_status",
     lines: [
-      { speaker: "git", text: "Whew! That asteroid clipped us, KOMM. How bad is the damage? And how much fuel did we burn?" },
+      { speaker: "oscar", text: "Whew! That asteroid clipped us, KOMM. How bad is the damage? And how much fuel did we burn?" },
       { speaker: "komm", text: "I... don't know. My sensors track the present, but we initialized timeline tracking — Git can compare the ship NOW against how it started.", choices: [
         { label: "\"Show me how.\"", response: "Open the terminal and ask for the ship's status. Git will report everything that changed: damage, fuel burned, ammo spent." },
         { label: "\"Can't you just guess?\"", response: "Guessing is how missions end. Git knows exactly what changed — we just have to ask with the status command." },
@@ -160,7 +160,7 @@ export const STEPS: Step[] = [
     kind: "dialogue",
     id: "d_stage2",
     lines: [
-      { speaker: "narrator", text: "Sector 2: The Drone Hive. Hostile salvage drones patrol the wreck fields. They are NOT happy to see Git." },
+      { speaker: "narrator", text: "Sector 2: The Drone Hive. Hostile salvage drones patrol the wreck fields. They are NOT happy to see Oscar." },
       { speaker: "komm", text: "This sector is dangerous. My advice: whenever you gain something valuable — an upgrade, repairs, supplies — stage and commit it. Uncommitted gains can be lost forever if we're destroyed." },
     ],
   },
@@ -182,7 +182,7 @@ export const STEPS: Step[] = [
     kind: "dialogue",
     id: "d_stage2b",
     lines: [
-      { speaker: "git", text: "That was intense! We're still in one piece... mostly." },
+      { speaker: "oscar", text: "That was intense! We're still in one piece... mostly." },
       { speaker: "komm", text: "Before we push on: check what changed, stage anything worth keeping, and commit it. You remember the workflow — I'll only give you a partial hint this time.", choices: [
         { label: "\"status, add, commit. Got it.\"", response: "Exactly right. Check status first — always inspect before you commit. A checkpoint of a wrecked ship is still just a wreck." },
         { label: "\"Remind me why?\"", response: "Because anything not committed vanishes if we're destroyed. The commit is the only thing that survives." },
@@ -212,7 +212,7 @@ export const STEPS: Step[] = [
     id: "d_stage3",
     lines: [
       { speaker: "narrator", text: "Sector 3: The Crimson Nebula. Clouds of ionized plasma eat through hull plating. The only safe path threads between them." },
-      { speaker: "komm", text: "Git, we've made several checkpoints now. If things go badly, we can look at our checkpoint history — every commit we've ever made — with git log --oneline." },
+      { speaker: "komm", text: "Oscar, we've made several checkpoints now. If things go badly, we can ask Git for our checkpoint history — every commit we've ever made — with git log --oneline." },
       { speaker: "komm", text: "And here's the powerful part: git reset --hard <hash> can move our whole timeline BACK to an earlier checkpoint. Dangerous but powerful — it discards everything after that point." },
     ],
   },
@@ -321,7 +321,7 @@ export const STEPS: Step[] = [
     id: "d_corrupt",
     lines: [
       { speaker: "narrator", text: "ALERT. The Turbo Core's firmware instability cascades. Energy is draining fast — the core is corrupting the ship's systems!" },
-      { speaker: "komm", text: "Git, this is bad! The corruption started when we installed that core — and we COMMITTED it. Resetting would throw away everything else we did since... There must be a better way.", choices: [
+      { speaker: "komm", text: "Oscar, this is bad! The corruption started when we installed that core — and we COMMITTED it. Resetting would throw away everything else we did since... There must be a better way.", choices: [
         { label: "\"Can't we just delete that commit?\"", response: "Rewriting shared history is dangerous. But Git has a safe reversal: git revert <hash> creates a NEW checkpoint that undoes exactly that one change — and keeps the rest of our history intact." },
         { label: "\"Help! What do we do?\"", response: "Stay calm. Find the commit where we installed the Turbo Core — then git revert <hash> will create a new checkpoint that undoes exactly that change, without erasing our history." },
       ]},
@@ -358,7 +358,7 @@ export const STEPS: Step[] = [
     id: "d_final",
     lines: [
       { speaker: "narrator", text: "Sector 5: The Void Gate. Its guardian — the dread warship MERGE CONFLICT — blocks the way." },
-      { speaker: "komm", text: "This is it, Git. Everything you've learned: check your status, stage what matters, commit often, read your history. I'll be here if you need help — but the flying is all you.", choices: [
+      { speaker: "komm", text: "This is it, Oscar. Everything you've learned: check your status, stage what matters, commit often, read your history. I'll be here if you need help — but the flying is all you.", choices: [
         { label: "\"For every commit we've made!\"", response: "That's the spirit. One more thing: commit BEFORE the big fight. If we fall, we rise again at that checkpoint." },
         { label: "\"Let's end this.\"", response: "Right behind you. And remember — a checkpoint before the battle is a pilot's best friend." },
       ]},
