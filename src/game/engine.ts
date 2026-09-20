@@ -888,7 +888,28 @@ export class GameEngine {
     }
     // entities
     for (const e of this.ents) {
-      if (e.kind === "asteroid") {
+      if (e.kind === "barrier") {
+        ctx.save();
+        ctx.fillStyle = "rgba(120,140,170,0.35)";
+        ctx.strokeStyle = "rgba(200,220,240,0.75)";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+          const a = (i / 6) * Math.PI * 2 + Math.PI / 6;
+          const x = e.x + Math.cos(a) * e.r;
+          const y = e.y + Math.sin(a) * e.r;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "rgba(25,211,197,0.25)";
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.r * 0.45, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      } else if (e.kind === "asteroid") {
         if (e.sprite) drawSprite(ctx, e.sprite, e.x, e.y, e.r * 2.45, e.rot ?? 0);
       } else if (e.kind === "drone") {
         drawSprite(ctx, DRONE, e.x, e.y, 58, Math.atan2(this.py - e.y, this.px - e.x));
