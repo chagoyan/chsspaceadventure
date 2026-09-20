@@ -421,7 +421,7 @@ export function Game() {
 
       {step?.kind === "terminal" && save && (
         <Terminal
-          key={step.id + String(save.repo.commits.length)}
+          key={step.id}
           repo={save.repo}
           task={(step as TerminalStep).task}
           commitsAtOpen={save.repo.commits.length}

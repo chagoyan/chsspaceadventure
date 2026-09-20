@@ -63,7 +63,7 @@ export const STEPS: Step[] = [
         { label: "\"Timeline protection? Sounds serious.\"", response: "It is! If anything goes wrong out there, every repair, every drop of fuel you gain — gone. Unless we track the mission with Git." },
         { label: "\"I'm sure it'll be fine.\"", response: "Famous last words, pilot. Space is full of asteroids and drones. We need a way to save our progress — properly." },
       ]},
-      { speaker: "komm", text: "This ship runs on Git — the same tool real programmers use. With it we can create checkpoints in time. But first we must initialize the mission repository." },
+      { speaker: "komm", text: "This ship runs on Git. With it we can create checkpoints in time. But first we must initialize the mission repository." },
     ],
   },
   {
