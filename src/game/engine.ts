@@ -1,7 +1,7 @@
 // Top-down arcade engine: movement, shooting, asteroids, drones, pickups,
 // nebula hazards, beacon goals, boss. Delta-time, frame-rate independent.
 import type { ShipState } from "./types";
-import { drawSprite, preloadSprites, SHIP, DRONE, BOSS, ASTEROIDS, IMPACT, EXPLOSION, PICKUP_SPRITES, type Sprite } from "./sprites";
+import { drawSprite, preloadSprites, SHIP, SHIP_BOOST, DRONE, BOSS, ASTEROIDS, IMPACT, EXPLOSION, PICKUP_SPRITES, type Sprite } from "./sprites";
 import { sfx } from "./audio";
 
 export const WORLD_W = 1280;
@@ -809,7 +809,9 @@ export class GameEngine {
     // player ship
     const blink = this.invuln > 0 && Math.floor(t * 12) % 2 === 0;
     if (!blink) {
-      drawSprite(ctx, SHIP, this.px, this.py, 112, this.shipAngle, this.shipFlipped);
+      const boostFrame = this.reducedMotion ? 0 : Math.floor(t * 12) % SHIP_BOOST.length;
+      const shipSprite = this.boostTimer > 0 ? SHIP_BOOST[boostFrame] ?? SHIP_BOOST[0] : SHIP;
+      drawSprite(ctx, shipSprite, this.px, this.py, 112, this.shipAngle, this.shipFlipped);
     }
     if (this.shieldTimer > 0) {
       ctx.save();

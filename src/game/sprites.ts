@@ -1,4 +1,6 @@
 import shipUrl from "../assets/oscar-round-ship.png";
+import shipBoost1Url from "../assets/oscar-round-ship-boost-1.png";
+import shipBoost2Url from "../assets/oscar-round-ship-boost-2.png";
 import droneUrl from "../assets/game-art/drone.png";
 import bossUrl from "../assets/game-art/boss.png";
 import asteroid1Url from "../assets/game-art/asteroid-1.png";
@@ -31,7 +33,7 @@ function getImage(src: string): HTMLImageElement | null {
 }
 
 export function preloadSprites(): void {
-  for (const sprite of [SHIP, DRONE, BOSS, IMPACT, EXPLOSION, ...ASTEROIDS, ...Object.values(PICKUP_SPRITES)]) {
+  for (const sprite of [SHIP, ...SHIP_BOOST, DRONE, BOSS, IMPACT, EXPLOSION, ...ASTEROIDS, ...Object.values(PICKUP_SPRITES)]) {
     getImage(sprite.src);
   }
 }
@@ -59,6 +61,10 @@ export function drawSprite(
 }
 
 export const SHIP: Sprite = { src: shipUrl, aspect: 971 / 543 };
+export const SHIP_BOOST: [Sprite, Sprite] = [
+  { src: shipBoost1Url, aspect: 971 / 543 },
+  { src: shipBoost2Url, aspect: 971 / 543 },
+];
 export const DRONE: Sprite = { src: droneUrl, aspect: 350 / 295 };
 export const BOSS: Sprite = { src: bossUrl, aspect: 1090 / 350 };
 export const IMPACT: Sprite = { src: impactUrl, aspect: 410 / 435 };
