@@ -576,10 +576,10 @@ export const STEPS: Step[] = [
   {
     kind: "action",
     id: "a_corrupt",
-    stage: 6,
+    stage: 10,
     spec: {
       mode: "corrupt",
-      title: "Sector 6 — System Corruption",
+      title: "Sector 10 — System Corruption",
       objective: "SURVIVE: energy is draining! Reach the emergency dock beacon to access the terminal.",
       asteroids: 3,
       drones: 0,
@@ -604,7 +604,7 @@ export const STEPS: Step[] = [
     kind: "dialogue",
     id: "d_final",
     lines: [
-      { speaker: "narrator", text: "Sector 7: The Void Gate. Its guardian — the dread warship MERGE CONFLICT — blocks the way." },
+      { speaker: "narrator", text: "Sector 11: The Void Gate. Its guardian — the dread warship MERGE CONFLICT — blocks the way." },
       { speaker: "komm", text: "This is it, Oscar. Everything you've learned: check your status, stage what matters, commit often, read your history. I'll be here if you need help — but the flying is all you.", choices: [
         { label: "\"For every commit we've made!\"", response: "That's the spirit. One more thing: commit BEFORE the big fight. If we fall, we rise again at that checkpoint." },
         { label: "\"Let's end this.\"", response: "Right behind you. And remember — a checkpoint before the battle is a pilot's best friend." },
@@ -627,10 +627,10 @@ export const STEPS: Step[] = [
   {
     kind: "action",
     id: "a_boss",
-    stage: 7,
+    stage: 11,
     spec: {
       mode: "boss",
-      title: "Sector 7 — The Void Gate",
+      title: "Sector 11 — The Void Gate",
       objective: "Destroy the MERGE CONFLICT!",
       boss: true,
       drones: 0,
