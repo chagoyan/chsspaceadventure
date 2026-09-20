@@ -5,7 +5,7 @@ import type { CertificateData, Repo, SaveData, ShipState } from "../game/types";
 import { freshRepo } from "../game/types";
 import { loadSave, storeSave, clearSave, makeVerificationCode } from "../game/save";
 import { cloneSnapshot, head } from "../game/git";
-import { STEPS, stepById, nextStepId, type ActionStep, type DialogueStep, type TerminalStep, type CertificateStep } from "../game/story";
+import { STEPS, stepById, nextStepId, type ActionStep, type DialogueStep, type TerminalStep, type CertificateStep, type TerminalTask } from "../game/story";
 import { GameEngine, WORLD_W, WORLD_H, type EngineEvent } from "../game/engine";
 import { setMuted, startMusic, stopMusic, sfx } from "../game/audio";
 import { Terminal } from "./game/Terminal";
@@ -317,13 +317,13 @@ export function Game() {
   }
 
   if (mode === "log" && save) {
-    const timelineTask = {
+    const timelineTask: TerminalTask = {
       title: "Checkpoint Navigator",
       briefing: "Use git log --oneline to review checkpoints. To continue from an earlier one, type git reset --hard <hash> and confirm.",
       help: "panel" as const,
       hint: "git log --oneline",
       requires: [],
-      allowedCommands: ["init", "status", "add", "commit", "log", "reset", "revert"] as const,
+      allowedCommands: ["init", "status", "add", "commit", "log", "reset", "revert"],
       advanceLabel: "Back to Main Menu",
       freeForm: true,
       recommendHealthyCheckpoint: true,

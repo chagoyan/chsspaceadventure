@@ -204,6 +204,20 @@ export function Terminal({ repo, task, commitsAtOpen, onRepoChange, onAdvance, s
     inputRef.current?.focus();
   }
 
+  function renderLine(line: StatusLine) {
+    const match = line.text.match(/\b[0-9a-f]{7}\b/);
+    if (!match || match.index == null) return line.text;
+    const start = match.index;
+    const hash = match[0];
+    return (
+      <>
+        {line.text.slice(0, start)}
+        <span className={recommendedCheckpoint?.hash === hash ? "hash-recommended" : "hash-flash"}>{hash}</span>
+        {line.text.slice(start + hash.length)}
+      </>
+    );
+  }
+
   return (
     <div className={embedded ? "w-full" : "fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4"} role={embedded ? "region" : "dialog"} aria-label="Ship terminal">
       <div className="terminal-shell w-full max-w-3xl">
@@ -245,14 +259,7 @@ git revert <hash>             undo one checkpoint, safely`}
         <div ref={scrollRef} className="terminal-scroll" aria-live="polite">
           {history.map((l, i) => (
             <div key={i} className={`terminal-line terminal-${l.kind}`}>
-              {l.hashFlash ? (
-                <>
-                  <span className={recommendedCheckpoint && l.text.startsWith(recommendedCheckpoint.hash) ? "hash-recommended" : "hash-flash"}>{l.text.slice(0, 7)}</span>
-                  {l.text.slice(7)}
-                </>
-              ) : (
-                l.text
-              )}
+              {renderLine(l)}
             </div>
           ))}
           {pendingReset && (
