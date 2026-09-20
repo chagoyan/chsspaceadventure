@@ -15,6 +15,7 @@ interface Props {
   onAdvance: () => void;
   onClose?: () => void;
   showHelpPanel?: boolean;
+  embedded?: boolean;
 }
 
 interface PendingReset {
@@ -23,7 +24,7 @@ interface PendingReset {
   input: string;
 }
 
-export function Terminal({ repo, task, commitsAtOpen, onRepoChange, onAdvance, showHelpPanel }: Props) {
+export function Terminal({ repo, task, commitsAtOpen, onRepoChange, onAdvance, showHelpPanel, embedded = false }: Props) {
   const [history, setHistory] = useState<StatusLine[]>([
     { text: "GIT SHIP TERMINAL v3.0.26 — timeline control online", kind: "info" },
     { text: `Mission: ${task.title}`, kind: "info" },
@@ -49,6 +50,14 @@ export function Terminal({ repo, task, commitsAtOpen, onRepoChange, onAdvance, s
   const requirementsMet = task.requires.every((r) => done.has(r));
   const commitRequirementMet = !task.requireCommit || committedHere;
   const canAdvance = requirementsMet && commitRequirementMet;
+  const recommendedCheckpoint = task.recommendHealthyCheckpoint
+    ? repo.commits.slice(0, -1).reduce<(typeof repo.commits)[number] | null>((best, commit) => {
+        if (!best) return commit;
+        const score = commit.snapshot.ship.hull + commit.snapshot.ship.armor + commit.snapshot.ship.energy + commit.snapshot.ship.fuel + commit.snapshot.ship.ammo;
+        const bestScore = best.snapshot.ship.hull + best.snapshot.ship.armor + best.snapshot.ship.energy + best.snapshot.ship.fuel + best.snapshot.ship.ammo;
+        return score > bestScore ? commit : best;
+      }, null)
+    : null;
   const activeHint = task.hintSteps
     ? ([...task.hintSteps].reverse().find((step) => !step.after || done.has(step.after))?.text ?? "")
     : task.hint;
@@ -107,10 +116,15 @@ export function Terminal({ repo, task, commitsAtOpen, onRepoChange, onAdvance, s
     const echo: StatusLine = { text: `git@ship:~$ ${raw}`, kind: "echo" };
     const successfulLog = result.ok && raw.trim().startsWith("git log") && result.lines.length > 0;
     const explanationLines: StatusLine[] = successfulLog
-      ? (task.logExplanation ?? []).map((text) => ({ text, kind: "clean" as const }))
+      ? [
+          ...(task.logExplanation ?? []).map((text) => ({ text, kind: "clean" as const })),
+          ...(recommendedCheckpoint
+            ? [{ text: `${recommendedCheckpoint.hash} ← KOMM recommends this earlier, healthier checkpoint.`, kind: "clean" as const, hashFlash: true }]
+            : []),
+        ]
       : [];
-    // While KOMM explains hashes, make the hash at the start of each log line flash.
-    const resultLines = successfulLog && explanationLines.length > 0
+    // Every displayed log hash flashes briefly. A recommended checkpoint keeps pulsing.
+    const resultLines = successfulLog
       ? result.lines.map((l) => ({ ...l, hashFlash: /^[0-9a-f]{7}\s/.test(l.text) }))
       : result.lines;
     const newLines = [echo, ...resultLines, ...explanationLines];
@@ -191,7 +205,7 @@ export function Terminal({ repo, task, commitsAtOpen, onRepoChange, onAdvance, s
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4" role="dialog" aria-label="Ship terminal">
+    <div className={embedded ? "w-full" : "fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4"} role={embedded ? "region" : "dialog"} aria-label="Ship terminal">
       <div className="terminal-shell w-full max-w-3xl">
         <div className="terminal-titlebar">
           <span className="inline-block h-3 w-3 rounded-full bg-red-500" />
@@ -213,7 +227,7 @@ export function Terminal({ repo, task, commitsAtOpen, onRepoChange, onAdvance, s
               className="mt-2 rounded border border-border px-2 py-1 text-xs text-accent-foreground hover:bg-accent"
               onClick={() => setHelpOpen((o) => !o)}
             >
-              {helpOpen ? "Hide Command Reference" : "Show Command Reference"}
+              {helpOpen ? "Hide Hints" : "Show Hints"}
             </button>
           )}
           {helpOpen && (
@@ -233,7 +247,7 @@ git revert <hash>             undo one checkpoint, safely`}
             <div key={i} className={`terminal-line terminal-${l.kind}`}>
               {l.hashFlash ? (
                 <>
-                  <span className="hash-flash">{l.text.slice(0, 7)}</span>
+                  <span className={recommendedCheckpoint && l.text.startsWith(recommendedCheckpoint.hash) ? "hash-recommended" : "hash-flash"}>{l.text.slice(0, 7)}</span>
                   {l.text.slice(7)}
                 </>
               ) : (
@@ -244,11 +258,14 @@ git revert <hash>             undo one checkpoint, safely`}
           {pendingReset && (
             <div className="mt-2 rounded border-2 border-destructive bg-destructive/10 p-3">
               <p className="font-bold text-destructive">WARNING — git reset --hard is destructive:</p>
+              {task.recommendHealthyCheckpoint && (
+                <p className="mt-2 font-bold text-terminal-green">This is the action KOMM wants you to take in this lesson. Confirm the recommended checkpoint to continue safely.</p>
+              )}
               <ul className="mt-1 list-inside list-disc text-sm text-foreground">
-                <li>The timeline will move back to {pendingReset.hash} "{pendingReset.message}".</li>
+                <li>The timeline will move back to <span className="hash-flash">{pendingReset.hash}</span> "{pendingReset.message}".</li>
                 <li>Ship and mission return to that committed snapshot.</li>
                 <li>All staged and uncommitted changes will be discarded.</li>
-                <li>Checkpoints after {pendingReset.hash} disappear from the normal git log timeline.</li>
+                <li>Checkpoints after <span className="hash-flash">{pendingReset.hash}</span> disappear from the normal git log timeline.</li>
               </ul>
               <div className="mt-3 flex gap-2">
                 <button type="button" onClick={() => confirmReset(true)} className="rounded bg-destructive px-3 py-1.5 text-sm font-bold text-destructive-foreground hover:opacity-90">
