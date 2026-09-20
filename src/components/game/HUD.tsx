@@ -61,7 +61,7 @@ export function HUD({ ship, objective, stageTitle, score, staged, commits, kills
                 ● {commits} checkpoint{commits === 1 ? "" : "s"}
               </span>
               {staged && (
-                <span className="rounded bg-yellow-500/20 px-1.5 py-0.5 text-yellow-300" title="Staged but NOT committed — not protected!">
+                <span className="rounded bg-reward/20 px-1.5 py-0.5 text-reward" title="Staged but NOT committed — not protected!">
                   ◐ staged (not saved)
                 </span>
               )}

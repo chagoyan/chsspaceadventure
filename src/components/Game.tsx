@@ -170,7 +170,7 @@ export function Game() {
       engineRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stepId, destroyed, mode]);
+  }, [stepId, destroyed, mode, controlsSeen]);
 
   function syncWorkingFromEngine(engine: GameEngine) {
     const ship = engine.getShip();
