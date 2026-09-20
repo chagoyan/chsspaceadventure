@@ -283,7 +283,7 @@ export function Game() {
       milestone:
         part === 1
           ? "Sector 4 cleared — The Iron Ring (midpoint)"
-          : "Sector 7 cleared — MERGE CONFLICT destroyed, Void Gate reached",
+          : "Sector 11 cleared — MERGE CONFLICT destroyed, Void Gate reached",
       commitEvidence: save.repo.commits.slice(-6).map((c) => ({ hash: c.hash, message: c.message })),
       playTimeSeconds: save.playTimeSeconds,
     };
