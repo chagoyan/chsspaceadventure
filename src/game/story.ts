@@ -287,9 +287,90 @@ export const STEPS: Step[] = [
   },
   {
     kind: "dialogue",
+    id: "d_ember",
+    lines: [
+      { speaker: "narrator", text: "Sector 5: The Ember Belt. Burning debris drifts across the shipping lane, and abandoned supply pods drift with it." },
+      { speaker: "komm", text: "Salvage run, Oscar. Collect the pods, reach the beacon, and we will save a checkpoint on the far side." },
+    ],
+  },
+  {
+    kind: "action",
+    id: "a_ember",
+    stage: 5,
+    spec: {
+      mode: "asteroids",
+      title: "Sector 5 — The Ember Belt",
+      objective: "Collect the supply pods, then reach the beacon.",
+      asteroids: 5,
+      drones: 1,
+      pickups: [
+        { kind: "repair", x: 430, y: 240 },
+        { kind: "fuel", x: 700, y: 560 },
+        { kind: "ammo", x: 930, y: 300 },
+      ],
+      beacon: { x: 1180, y: 420, r: 46 },
+    },
+  },
+  {
+    kind: "terminal",
+    id: "t_ember_commit",
+    task: {
+      title: "Log the Salvage Run",
+      briefing: "KOMM: New supplies are aboard. Inspect, stage, and commit so this haul is protected.",
+      help: "none",
+      hint: "",
+      requires: ["status", "add", "commit"],
+      allowedCommands: ["init", "status", "add", "commit"],
+      requireCommit: true,
+      advanceLabel: "Continue",
+    },
+  },
+  {
+    kind: "dialogue",
+    id: "d_reef",
+    lines: [
+      { speaker: "narrator", text: "Sector 6: The Static Reef. Drone scouts nest inside a lattice of dead satellites." },
+      { speaker: "komm", text: "Six scouts between us and the nebula. Clear them, gather what drops, then extract through the beacon." },
+    ],
+  },
+  {
+    kind: "action",
+    id: "a_reef",
+    stage: 6,
+    spec: {
+      mode: "combat",
+      title: "Sector 6 — The Static Reef",
+      objective: "Destroy 6 drones, collect supplies, then enter the extraction beacon.",
+      drones: 3,
+      asteroids: 3,
+      killTarget: 6,
+      pickups: [
+        { kind: "energy", x: 560, y: 220 },
+        { kind: "ammo", x: 820, y: 560 },
+      ],
+      beacon: { x: 1160, y: 300, r: 52 },
+      exitAfterKills: true,
+    },
+  },
+  {
+    kind: "terminal",
+    id: "t_reef_commit",
+    task: {
+      title: "Checkpoint the Reef",
+      briefing: "KOMM: Another checkpoint, pilot. Inspect, stage, commit — a clear message helps you find this moment later.",
+      help: "none",
+      hint: "",
+      requires: ["status", "add", "commit"],
+      allowedCommands: ["init", "status", "add", "commit"],
+      requireCommit: true,
+      advanceLabel: "Continue",
+    },
+  },
+  {
+    kind: "dialogue",
     id: "d_stage3",
     lines: [
-      { speaker: "narrator", text: "Sector 5: The Crimson Nebula. Clouds of ionized plasma eat through hull plating. The only safe path threads between them." },
+      { speaker: "narrator", text: "Sector 7: The Crimson Nebula. Clouds of ionized plasma eat through hull plating. The only safe path threads between them." },
       { speaker: "komm", text: "Oscar, we've made several checkpoints now. Use git log --oneline to ask Git for our checkpoint history. It lists every commit we've made." },
     ],
   },
@@ -313,10 +394,10 @@ export const STEPS: Step[] = [
   {
     kind: "action",
     id: "a_nebula",
-    stage: 5,
+    stage: 7,
     spec: {
       mode: "nebula",
-      title: "Sector 5 — The Crimson Nebula",
+      title: "Sector 7 — The Crimson Nebula",
       objective: "Thread the nebula clouds and reach the beacon. Plasma clouds damage your hull!",
       asteroids: 2,
       drones: 1,
@@ -346,10 +427,10 @@ export const STEPS: Step[] = [
   {
     kind: "action",
     id: "a_nebula2",
-    stage: 5,
+    stage: 7,
     spec: {
       mode: "nebula",
-      title: "Sector 5 — Nebula's Edge",
+      title: "Sector 7 — Nebula's Edge",
       objective: "Final stretch — reach the far beacon!",
       asteroids: 2,
       drones: 2,
@@ -365,7 +446,7 @@ export const STEPS: Step[] = [
     kind: "dialogue",
     id: "d_turbo",
     lines: [
-      { speaker: "narrator", text: "Sector 6: The wreck of the UNS Commit. Its experimental Turbo Core still hums with power." },
+      { speaker: "narrator", text: "Sector 8: The wreck of the UNS Commit. Its experimental Turbo Core still hums with power." },
       { speaker: "komm", text: "That Turbo Core would boost our engines... My scans show a minor firmware instability, but the efficiency gains look worth it. Shall we take it?", choices: [
         { label: "\"Take it — speed wins missions.\"", response: "Agreed! We'll grab it ahead. And afterwards we should commit — if it works, that checkpoint captures our upgrade." },
         { label: "\"Instability? Risky...\"", response: "True — but remember, we have Git now. If we commit carefully, we always have a way to deal with a bad change. Let's take it." },
@@ -375,10 +456,10 @@ export const STEPS: Step[] = [
   {
     kind: "action",
     id: "a_turbo",
-    stage: 6,
+    stage: 8,
     spec: {
       mode: "asteroids",
-      title: "Sector 6 — The Wreck",
+      title: "Sector 8 — The Wreck",
       objective: "Collect the Turbo Core, then dock at the beacon.",
       asteroids: 4,
       drones: 0,
@@ -402,6 +483,87 @@ export const STEPS: Step[] = [
   },
   {
     kind: "dialogue",
+    id: "d_drift",
+    lines: [
+      { speaker: "narrator", text: "Sector 9: The Ion Drift. With the Turbo Core engaged, Oscar crosses a field of charged wreckage at speed." },
+      { speaker: "komm", text: "The core is performing beautifully. Run the drift, grab the drifting canisters, and dock at the beacon." },
+    ],
+  },
+  {
+    kind: "action",
+    id: "a_drift",
+    stage: 9,
+    spec: {
+      mode: "asteroids",
+      title: "Sector 9 — The Ion Drift",
+      objective: "Collect the canisters, dodge the wreckage, and dock at the beacon.",
+      asteroids: 6,
+      drones: 1,
+      pickups: [
+        { kind: "fuel", x: 480, y: 500 },
+        { kind: "energy", x: 760, y: 220 },
+        { kind: "repair", x: 980, y: 560 },
+      ],
+      beacon: { x: 1180, y: 300, r: 46 },
+    },
+  },
+  {
+    kind: "terminal",
+    id: "t_drift_commit",
+    task: {
+      title: "Checkpoint the Drift",
+      briefing: "KOMM: Another clean run. Inspect, stage, commit — keep the history rich, it may save us soon.",
+      help: "none",
+      hint: "",
+      requires: ["status", "add", "commit"],
+      allowedCommands: ["init", "status", "add", "commit", "log", "reset"],
+      requireCommit: true,
+      advanceLabel: "Continue",
+    },
+  },
+  {
+    kind: "dialogue",
+    id: "d_patrol",
+    lines: [
+      { speaker: "narrator", text: "Sector 10: Cinder Patrol. A drone picket line guards the approach to the Void Gate." },
+      { speaker: "komm", text: "Six hostiles. The Turbo Core gives us the speed advantage... though my diagnostics show some odd power fluctuations. Clear them, then extract." },
+    ],
+  },
+  {
+    kind: "action",
+    id: "a_patrol",
+    stage: 10,
+    spec: {
+      mode: "combat",
+      title: "Sector 10 — Cinder Patrol",
+      objective: "Destroy 6 drones, collect supplies, then enter the extraction beacon.",
+      drones: 3,
+      asteroids: 3,
+      killTarget: 6,
+      pickups: [
+        { kind: "ammo", x: 520, y: 300 },
+        { kind: "repair", x: 860, y: 560 },
+      ],
+      beacon: { x: 1160, y: 200, r: 52 },
+      exitAfterKills: true,
+    },
+  },
+  {
+    kind: "terminal",
+    id: "t_patrol_commit",
+    task: {
+      title: "Checkpoint Before the Gate",
+      briefing: "KOMM: One more checkpoint before the Void Gate. Inspect, stage, commit.",
+      help: "none",
+      hint: "",
+      requires: ["status", "add", "commit"],
+      allowedCommands: ["init", "status", "add", "commit", "log", "reset"],
+      requireCommit: true,
+      advanceLabel: "Continue",
+    },
+  },
+  {
+    kind: "dialogue",
     id: "d_corrupt",
     lines: [
       { speaker: "narrator", text: "ALERT. The Turbo Core's firmware instability cascades. Energy is draining fast — the core is corrupting the ship's systems!" },
@@ -414,10 +576,10 @@ export const STEPS: Step[] = [
   {
     kind: "action",
     id: "a_corrupt",
-    stage: 6,
+    stage: 10,
     spec: {
       mode: "corrupt",
-      title: "Sector 6 — System Corruption",
+      title: "Sector 10 — System Corruption",
       objective: "SURVIVE: energy is draining! Reach the emergency dock beacon to access the terminal.",
       asteroids: 3,
       drones: 0,
@@ -442,7 +604,7 @@ export const STEPS: Step[] = [
     kind: "dialogue",
     id: "d_final",
     lines: [
-      { speaker: "narrator", text: "Sector 7: The Void Gate. Its guardian — the dread warship MERGE CONFLICT — blocks the way." },
+      { speaker: "narrator", text: "Sector 11: The Void Gate. Its guardian — the dread warship MERGE CONFLICT — blocks the way." },
       { speaker: "komm", text: "This is it, Oscar. Everything you've learned: check your status, stage what matters, commit often, read your history. I'll be here if you need help — but the flying is all you.", choices: [
         { label: "\"For every commit we've made!\"", response: "That's the spirit. One more thing: commit BEFORE the big fight. If we fall, we rise again at that checkpoint." },
         { label: "\"Let's end this.\"", response: "Right behind you. And remember — a checkpoint before the battle is a pilot's best friend." },
@@ -465,10 +627,10 @@ export const STEPS: Step[] = [
   {
     kind: "action",
     id: "a_boss",
-    stage: 7,
+    stage: 11,
     spec: {
       mode: "boss",
-      title: "Sector 7 — The Void Gate",
+      title: "Sector 11 — The Void Gate",
       objective: "Destroy the MERGE CONFLICT!",
       boss: true,
       drones: 0,

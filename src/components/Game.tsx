@@ -283,7 +283,7 @@ export function Game() {
       milestone:
         part === 1
           ? "Sector 4 cleared — The Iron Ring (midpoint)"
-          : "Sector 7 cleared — MERGE CONFLICT destroyed, Void Gate reached",
+          : "Sector 11 cleared — MERGE CONFLICT destroyed, Void Gate reached",
       commitEvidence: save.repo.commits.slice(-6).map((c) => ({ hash: c.hash, message: c.message })),
       playTimeSeconds: save.playTimeSeconds,
     };
@@ -399,14 +399,14 @@ export function Game() {
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-background/90 p-4" role="dialog" aria-label="Flight controls">
           <div className="arcade-panel w-full max-w-xl p-6 text-center">
             <p className="font-heading text-sm text-reward">FLIGHT SCHOOL</p>
-            <h2 className="mt-1 font-heading text-4xl text-primary">Two hands. No trackpad needed.</h2>
+            <h2 className="mt-1 font-heading text-4xl text-primary">Point, thrust, shoot.</h2>
             <div className="mt-6 grid gap-3 text-left sm:grid-cols-2">
-              <div className="control-tile"><kbd>W A S D</kbd><span>Move — the ship faces your direction</span></div>
-              <div className="control-tile"><kbd>↑ ← ↓ →</kbd><span>Aim and fire together</span></div>
-              <div className="control-tile"><kbd>SPACE</kbd><span>Fire toward your aim</span></div>
+              <div className="control-tile"><kbd>MOUSE</kbd><span>Point where the ship should face</span></div>
+              <div className="control-tile"><kbd>SPACE</kbd><span>Thrust toward the pointer</span></div>
+              <div className="control-tile"><kbd>CLICK</kbd><span>Fire</span></div>
               <div className="control-tile"><kbd>SHIFT</kbd><span>Boost out of danger</span></div>
             </div>
-            <p className="mt-5 text-sm text-muted-foreground">Aim independently with the arrow keys or mouse while the ship follows your movement.</p>
+            <p className="mt-5 text-sm text-muted-foreground">Prefer keys? W A S D still fly, the arrow keys aim and fire, and F fires straight ahead.</p>
             <Button className="mt-6 h-12 w-full font-heading text-xl" onClick={() => setControlsSeen(true)}>START FLYING</Button>
           </div>
         </div>

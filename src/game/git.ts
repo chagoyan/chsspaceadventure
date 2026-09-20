@@ -52,6 +52,7 @@ export function findCommit(repo: Repo, hash: string): Commit | null {
 export interface StatusLine {
   text: string;
   kind: "staged" | "unstaged" | "clean" | "info" | "stat" | "changed" | "echo";
+  hashFlash?: boolean; // highlight the leading checkpoint hash
 }
 
 export function normalizeCommandInput(value: string): string {
@@ -347,7 +348,11 @@ export function execCommand(repo: Repo, rawInput: string, opts?: { resetConfirme
       if (!repo.initialized) return err("fatal: not a git repository", "Run git init first.");
       const oneline = tokens.includes("--oneline");
       if (!oneline && tokens.length > 2) {
-        return err("error: unsupported log options", "This terminal supports: git log --oneline");
+        const typo = tokens.find((t) => /^-+o/i.test(t) && t !== "--oneline");
+        return err(
+          `error: unsupported log options`,
+          typo ? `Did you mean --oneline? Type: git log --oneline` : "This terminal supports: git log --oneline",
+        );
       }
       if (!repo.commits.length) {
         return { ok: true, lines: [{ text: "No checkpoints yet. Create one with git add . then git commit -m \"...\"", kind: "info" }] };
