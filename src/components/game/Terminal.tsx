@@ -48,7 +48,9 @@ export function Terminal({ repo, task, commitsAtOpen, onRepoChange, onAdvance, s
   const commitRequirementMet = !task.requireCommit || committedHere;
   const canAdvance = requirementsMet && commitRequirementMet;
 
-  function run(raw: string, resetConfirmed = false) {
+  function run(rawInput: string, resetConfirmed = false) {
+    // Normalize smart dashes here too, so every entry point is safe.
+    const raw = rawInput.replace(/[–—]/g, "--").replace(/−/g, "-");
     const result: ExecResult = execCommand(repo, raw, { resetConfirmed });
     // clear screen
     if (result.lines.some((l) => l.text === "__CLEAR__")) {
