@@ -22,6 +22,7 @@ export interface TerminalTask {
   hint: string; // shown for full/partial
   hintSteps?: { after?: "status" | "add"; text: string }[];
   requires: ("init" | "status" | "add" | "commit" | "log" | "reset" | "revert")[];
+  allowedCommands?: ("init" | "status" | "add" | "commit" | "log" | "reset" | "revert")[];
   advanceLabel: string;
   requireCommit?: boolean; // advance only after a NEW commit in this session
   freeForm?: boolean; // optional terminal, no required commands
@@ -76,6 +77,7 @@ export const STEPS: Step[] = [
       help: "full",
       hint: "Type exactly: git init",
       requires: ["init"],
+      allowedCommands: ["init"],
       advanceLabel: "Launch Mission",
     },
   },
@@ -112,6 +114,7 @@ export const STEPS: Step[] = [
       help: "full",
       hint: "Type exactly: git status",
       requires: ["status"],
+      allowedCommands: ["status"],
       advanceLabel: "Continue to Supply Cache",
     },
   },
@@ -139,7 +142,7 @@ export const STEPS: Step[] = [
     id: "d_commit",
     lines: [
       { speaker: "komm", text: "Repairs done, tanks topped up. THIS is a moment worth keeping. If disaster strikes later, wouldn't it be nice to return to exactly this condition?" },
-      { speaker: "komm", text: "In Git, that's a two-step process. First we STAGE everything with git add . — that prepares the changes. Then we COMMIT with a message — that records a permanent checkpoint.", choices: [
+      { speaker: "komm", text: "In Git, that's a two-step process. First we STAGE everything with git add .; that prepares the changes. Then we COMMIT with a message; that records a permanent checkpoint.", choices: [
         { label: "\"Why two steps?\"", response: "Staging lets you choose exactly what goes into the checkpoint. For now, git add . stages everything — but committing is what actually protects it." },
         { label: "\"Let's do it!\"", response: "Right! Remember: staging alone protects NOTHING. Only the commit creates the checkpoint." },
       ]},
@@ -154,14 +157,16 @@ export const STEPS: Step[] = [
     id: "t_commit",
     task: {
       title: "Create Your First Checkpoint",
-      briefing: "KOMM: Creating a checkpoint is one two-step process. Complete the first command, then I will show you the second.",
+      briefing: "KOMM: Creating a checkpoint is a three-step process. Inspect the ship, prepare its changes, then save the checkpoint. Complete each command and I will show you the next one.",
       help: "full",
       hint: "",
       hintSteps: [
-        { text: "Type git add . and press Enter. This prepares the ship's current state." },
-        { after: "add", text: 'Now type git commit -m "Repaired and refueled after the Shatter Field" and press Enter. The quoted words are the checkpoint message.' },
+        { text: "First, type git status and press Enter to inspect what changed." },
+        { after: "status", text: "Next, type git add . and press Enter. This prepares the ship's current state." },
+        { after: "add", text: 'Now type git commit -m "Initial checkpoint after Shatter Field" and press Enter. The quoted words are the checkpoint message.' },
       ],
-      requires: ["add", "commit"],
+      requires: ["status", "add", "commit"],
+      allowedCommands: ["init", "status", "add", "commit"],
       advanceLabel: "Enter Sector 2",
     },
   },
@@ -214,6 +219,7 @@ export const STEPS: Step[] = [
         { after: "add", text: 'Finally, type git commit -m "Secured Drone Hive supplies" and press Enter. The message describes this checkpoint.' },
       ],
       requires: ["status", "add", "commit"],
+      allowedCommands: ["init", "status", "add", "commit"],
       requireCommit: true,
       advanceLabel: "Continue",
     },
@@ -283,7 +289,7 @@ export const STEPS: Step[] = [
     id: "d_stage3",
     lines: [
       { speaker: "narrator", text: "Sector 5: The Crimson Nebula. Clouds of ionized plasma eat through hull plating. The only safe path threads between them." },
-      { speaker: "komm", text: "Oscar, we've made several checkpoints now. If things go badly, we can ask Git for our checkpoint history — every commit we've ever made — with git log --oneline." },
+      { speaker: "komm", text: "Oscar, we've made several checkpoints now. Use git log --oneline to ask Git for our checkpoint history. It lists every commit we've made." },
       { speaker: "komm", text: "A hash is a unique short code that identifies one exact checkpoint. In git log --oneline, it appears at the far left of each checkpoint — for example, a3f9c21." },
       { speaker: "komm", text: "When a command shows <hash>, replace <hash> with the short code beside the checkpoint you want. For example: git reset --hard a3f9c21." },
       { speaker: "komm", text: "You don't need to memorize or fully type the long version — the short hash from git log --oneline is enough. Copy it exactly as shown." },
@@ -299,6 +305,7 @@ export const STEPS: Step[] = [
       help: "partial",
       hint: "git log --oneline",
       requires: ["log"],
+      allowedCommands: ["init", "status", "add", "commit", "log"],
       advanceLabel: "Enter the Nebula",
     },
   },
@@ -331,6 +338,7 @@ export const STEPS: Step[] = [
       help: "partial",
       hint: "git log --oneline, then git reset --hard <hash>",
       requires: ["reset"],
+      allowedCommands: ["init", "status", "add", "commit", "log", "reset"],
       advanceLabel: "Fly On",
     },
   },
@@ -385,7 +393,8 @@ export const STEPS: Step[] = [
       briefing: "KOMM: The Turbo Core is installed and purring. Protect this progress — you know the workflow. No hints this time: inspect, stage, commit.",
       help: "none",
       hint: "",
-      requires: ["add", "commit"],
+      requires: ["status", "add", "commit"],
+      allowedCommands: ["init", "status", "add", "commit", "log", "reset"],
       requireCommit: true,
       advanceLabel: "Engage Turbo Core",
     },
@@ -424,6 +433,7 @@ export const STEPS: Step[] = [
       help: "none",
       hint: "",
       requires: ["revert"],
+      allowedCommands: ["init", "status", "add", "commit", "log", "reset", "revert"],
       advanceLabel: "Systems Restored — Continue",
     },
   },

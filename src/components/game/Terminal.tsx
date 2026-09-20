@@ -5,6 +5,8 @@ import { execCommand, applyResult, type StatusLine, type ExecResult } from "../.
 import { sfx } from "../../game/audio";
 import type { TerminalTask } from "../../game/story";
 
+type GitCommand = TerminalTask["requires"][number];
+
 interface Props {
   repo: Repo;
   task: TerminalTask;
@@ -51,9 +53,46 @@ export function Terminal({ repo, task, commitsAtOpen, onRepoChange, onAdvance, s
     ? ([...task.hintSteps].reverse().find((step) => !step.after || done.has(step.after))?.text ?? "")
     : task.hint;
 
+  function commandFrom(raw: string): GitCommand | null {
+    const tokens = raw.trim().split(/\s+/);
+    if (tokens[0] !== "git") return null;
+    const command = tokens[1];
+    return command === "init" || command === "status" || command === "add" || command === "commit" || command === "log" || command === "reset" || command === "revert"
+      ? command
+      : null;
+  }
+
+  function lessonBlock(raw: string): StatusLine[] | null {
+    const command = commandFrom(raw);
+    if (!command || task.freeForm) return null;
+    if (task.allowedCommands && !task.allowedCommands.includes(command)) {
+      return [
+        { text: `KOMM: We have not learned git ${command} yet.`, kind: "info" },
+        { text: `Follow the current hint: ${activeHint}`, kind: "info" },
+      ];
+    }
+    const requiredIndex = task.requires.indexOf(command);
+    if (requiredIndex > 0) {
+      const unfinishedEarlier = task.requires.slice(0, requiredIndex).find((required) => !done.has(required));
+      if (unfinishedEarlier) {
+        return [
+          { text: `KOMM: Complete git ${unfinishedEarlier} before git ${command}.`, kind: "info" },
+          { text: `Follow the current hint: ${activeHint}`, kind: "info" },
+        ];
+      }
+    }
+    return null;
+  }
+
   function run(rawInput: string, resetConfirmed = false) {
     // Normalize smart dashes here too, so every entry point is safe.
     const raw = rawInput.replace(/[–—]/g, "--").replace(/−/g, "-");
+    const blockedLines = lessonBlock(raw);
+    if (blockedLines) {
+      setHistory((h) => [...h, { text: `git@ship:~$ ${raw}`, kind: "echo" }, ...blockedLines]);
+      sfx.error();
+      return;
+    }
     const result: ExecResult = execCommand(repo, raw, { resetConfirmed });
     // clear screen
     if (result.lines.some((l) => l.text === "__CLEAR__")) {
@@ -66,7 +105,7 @@ export function Terminal({ repo, task, commitsAtOpen, onRepoChange, onAdvance, s
     }
     setPendingReset(null);
 
-    const echo: StatusLine = { text: `git@ship:~$ ${raw}`, kind: "echo" as StatusLine["kind"] };
+    const echo: StatusLine = { text: `git@ship:~$ ${raw}`, kind: "echo" };
     const newLines = [echo, ...result.lines];
 
     if (result.ok) {
