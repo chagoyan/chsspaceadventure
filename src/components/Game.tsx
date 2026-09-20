@@ -401,12 +401,12 @@ export function Game() {
             <p className="font-heading text-sm text-reward">FLIGHT SCHOOL</p>
             <h2 className="mt-1 font-heading text-4xl text-primary">Two hands. No trackpad needed.</h2>
             <div className="mt-6 grid gap-3 text-left sm:grid-cols-2">
-              <div className="control-tile"><kbd>W A S D</kbd><span>Move and stop instantly</span></div>
+              <div className="control-tile"><kbd>W A S D</kbd><span>Move — the ship faces your direction</span></div>
               <div className="control-tile"><kbd>↑ ← ↓ →</kbd><span>Aim and fire together</span></div>
               <div className="control-tile"><kbd>SPACE</kbd><span>Fire toward your aim</span></div>
               <div className="control-tile"><kbd>SHIFT</kbd><span>Boost out of danger</span></div>
             </div>
-            <p className="mt-5 text-sm text-muted-foreground">Mouse aiming still works if you want it. Your ship also points toward the nearest threat.</p>
+            <p className="mt-5 text-sm text-muted-foreground">Aim independently with the arrow keys or mouse while the ship follows your movement.</p>
             <Button className="mt-6 h-12 w-full font-heading text-xl" onClick={() => setControlsSeen(true)}>START FLYING</Button>
           </div>
         </div>

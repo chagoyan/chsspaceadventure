@@ -1,4 +1,4 @@
-import shipAsset from "../assets/voyage-ship.png.asset.json";
+import shipUrl from "../assets/oscar-round-ship.png";
 import droneUrl from "../assets/game-art/drone.png";
 import bossUrl from "../assets/game-art/boss.png";
 import asteroid1Url from "../assets/game-art/asteroid-1.png";
@@ -55,7 +55,7 @@ export function drawSprite(
   ctx.restore();
 }
 
-export const SHIP: Sprite = { src: shipAsset.url, aspect: 873 / 450 };
+export const SHIP: Sprite = { src: shipUrl, aspect: 971 / 543 };
 export const DRONE: Sprite = { src: droneUrl, aspect: 350 / 295 };
 export const BOSS: Sprite = { src: bossUrl, aspect: 1090 / 350 };
 export const IMPACT: Sprite = { src: impactUrl, aspect: 410 / 435 };

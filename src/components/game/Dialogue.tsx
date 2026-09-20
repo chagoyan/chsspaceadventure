@@ -1,17 +1,22 @@
 // Dialogue overlay with illustrated portraits and player choice lines.
 import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight, MonitorCog } from "lucide-react";
 import type { DialogueLine } from "../../game/story";
 import { sfx } from "../../game/audio";
 import oscarToad from "../../assets/oscar-toad.png.asset.json";
-import kommAlien from "../../assets/exploration-alien.png.asset.json";
+import { Button } from "../ui/button";
 
 function Portrait({ who }: { who: "oscar" | "komm" | "narrator" }) {
   if (who === "narrator") return null;
   if (who === "oscar") {
-    return <img src={oscarToad.url} alt="Oscar" className="h-20 w-20 shrink-0 border-2 border-border bg-background object-contain" />;
+    return <img src={oscarToad.url} alt="Oscar" className="h-28 w-28 shrink-0 border-2 border-border bg-background object-contain sm:h-36 sm:w-36" />;
   }
   return (
-    <img src={kommAlien.url} alt="KOMM" className="h-20 w-20 shrink-0 border-2 border-border bg-background object-contain" />
+    <div className="komm-display flex h-28 w-28 shrink-0 flex-col items-center justify-center border-2 border-border bg-background sm:h-36 sm:w-36" role="img" aria-label="KOMM ship computer">
+      <MonitorCog aria-hidden="true" className="h-12 w-12 text-terminal-green sm:h-16 sm:w-16" />
+      <span className="mt-2 font-heading text-lg text-reward">SHIP AI</span>
+      <span className="font-mono text-[10px] text-terminal-green">ONLINE</span>
+    </div>
   );
 }
 
@@ -45,56 +50,58 @@ export function Dialogue({ lines, onDone }: { lines: DialogueLine[]; onDone: () 
   const name = line.speaker === "oscar" ? "OSCAR" : line.speaker === "komm" ? "KOMM" : "";
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/60 p-4 pb-10" role="dialog" aria-label="Dialogue">
-      <div className="w-full max-w-3xl rounded-lg border-2 border-border bg-card shadow-2xl">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-background/90 p-4 sm:p-8" role="dialog" aria-label="Dialogue">
+      <div className="communication-panel w-full max-w-5xl border-2 border-border bg-card shadow-2xl">
         {name && (
-          <div className="inline-block -translate-y-1/2 translate-x-4 rounded border border-border bg-primary px-3 py-1 font-pixel text-[10px] text-primary-foreground">
+          <div className="inline-block -translate-y-1/2 translate-x-5 border border-border bg-primary px-4 py-1.5 font-heading text-lg text-primary-foreground sm:text-xl">
             {name}
           </div>
         )}
-        <div className="flex items-start gap-4 px-5 pb-5">
+        <div className="flex flex-col items-center gap-5 px-5 pb-6 sm:flex-row sm:items-start sm:gap-7 sm:px-8 sm:pb-8">
           <Portrait who={line.speaker} />
-          <div className="min-h-20 flex-1">
-            <p className={`text-base leading-relaxed ${line.speaker === "narrator" ? "italic text-muted-foreground" : "text-foreground"}`}>
+          <div className="min-h-28 w-full flex-1">
+            <p className={`text-center text-xl leading-relaxed sm:text-left sm:text-2xl ${line.speaker === "narrator" ? "italic text-muted-foreground" : "text-foreground"}`}>
               {chosen ?? line.text}
             </p>
             {line.choices && !chosen ? (
-              <div className="mt-4 flex flex-col gap-2">
+              <div className="mt-6 grid gap-3">
                 {line.choices.map((c) => (
-                  <button
+                  <Button
                     key={c.label}
                     type="button"
+                    variant="outline"
                     onClick={() => {
                       sfx.pickup();
                       setChosen(c.response);
                     }}
-                    className="rounded border border-border bg-background px-3 py-2 text-left text-sm text-accent-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
+                    className="h-auto min-h-14 justify-start whitespace-normal px-5 py-3 text-left text-base leading-snug sm:text-lg"
                   >
                     {c.label}
-                  </button>
+                  </Button>
                 ))}
               </div>
             ) : (
-              <div className="mt-4 flex items-center gap-2">
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:justify-start">
                 {idx > 0 && (
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
                     onClick={() => {
                       setIdx(idx - 1);
                       setChosen(null);
                     }}
-                    className="rounded border border-border px-3 py-2 text-sm text-foreground hover:bg-accent"
+                    className="h-12 px-5 text-base"
                   >
-                    ◂ Read again
-                  </button>
+                    <ChevronLeft aria-hidden="true" /> Read again
+                  </Button>
                 )}
-                <button
+                <Button
                   type="button"
                   onClick={advance}
-                  className="rounded bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:opacity-90"
+                  className="h-12 px-6 text-base font-bold"
                 >
-                  {idx < lines.length - 1 ? "Next ▸" : "Continue ▸"}
-                </button>
+                  {idx < lines.length - 1 ? "Next" : "Continue"} <ChevronRight aria-hidden="true" />
+                </Button>
               </div>
             )}
           </div>
