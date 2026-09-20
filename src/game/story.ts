@@ -125,7 +125,6 @@ export const STEPS: Step[] = [
       asteroids: 5,
       drones: 0,
       beacon: { x: 1180, y: 200, r: 46 },
-      upgradePickup: undefined,
     },
   },
   {
