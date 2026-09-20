@@ -124,6 +124,12 @@ export const STEPS: Step[] = [
       objective: "Reach the supply beacon. Collect the supply caches on the way!",
       asteroids: 5,
       drones: 0,
+      pickups: [
+        { kind: "repair", x: 480, y: 300 },
+        { kind: "fuel", x: 700, y: 500 },
+        { kind: "ammo", x: 900, y: 280 },
+        { kind: "energy", x: 820, y: 620 },
+      ],
       beacon: { x: 1180, y: 200, r: 46 },
     },
   },
