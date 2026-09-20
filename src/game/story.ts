@@ -142,6 +142,10 @@ export const STEPS: Step[] = [
         { label: "\"Why two steps?\"", response: "Staging lets you choose exactly what goes into the checkpoint. For now, git add . stages everything — but committing is what actually protects it." },
         { label: "\"Let's do it!\"", response: "Right! Remember: staging alone protects NOTHING. Only the commit creates the checkpoint." },
       ]},
+      { speaker: "komm", text: "One more thing about the commit: the -m means \"message\". Whatever you type in quotes after it becomes the checkpoint's label — like a note in the ship's log.", choices: [
+        { label: "\"Why does the message matter?\"", response: "Weeks from now, the hash won't tell you anything. A message like \"Repaired hull after asteroid field\" lets you find the exact checkpoint you need. Lazy messages like \"stuff\" are useless — the terminal will reject them!" },
+        { label: "\"Got it.\"", response: "Then describe what actually changed. Something like: git commit -m \"Repaired and refueled after the Shatter Field\"" },
+      ]},
     ],
   },
   {
@@ -149,9 +153,9 @@ export const STEPS: Step[] = [
     id: "t_commit",
     task: {
       title: "Create Your First Checkpoint",
-      briefing: "KOMM: This takes two commands. Type git add . and press Enter. When it finishes, type the git commit command and press Enter again.",
+      briefing: "KOMM: This takes two commands. Type git add . and press Enter. Then type git commit -m followed by your message in quotes — the message is your note about what changed. Press Enter to save the checkpoint.",
       help: "full",
-      hint: '1. Type git add . and press Enter.  2. Type git commit -m "Repaired and refueled after the Shatter Field" and press Enter.',
+      hint: '1. Type git add . and press Enter.  2. Type git commit -m "Repaired and refueled after the Shatter Field" and press Enter. The quoted text is your message — describe what changed.',
       requires: ["add", "commit"],
       advanceLabel: "Enter Sector 2",
     },
