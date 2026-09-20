@@ -37,42 +37,46 @@ export function spriteSize(sprite: Sprite, scale: number): { w: number; h: numbe
   return { w: (sprite.rows[0]?.length ?? 0) * scale, h: sprite.rows.length * scale };
 }
 
-// Git's ship — 12x10, points right (angle 0 = facing +x)
+// Solar Arcade sprites use bold ink outlines, two-tone shading, and bright highlights.
+// Git's ship points right (angle 0 = facing +x).
 export const SHIP: Sprite = {
   rows: [
-    "....WW......",
-    "...WSSW.....",
-    "..WSSSSW....",
-    ".WSCCSSWW...",
-    "WWSCCCSSSW..",
-    "WWSCGCCSSW..",
-    ".WSCCCSSSW..",
-    "..WSSSSW....",
-    "...WSSW..OO.",
-    "....WW...OO.",
+    "......KK........",
+    ".....KTTK.......",
+    "....KTTTTK......",
+    "...KTTWWTTKK....",
+    "..KTTWGGWTTTK...",
+    "KKTTWGGGWTTTTK..",
+    "KYYTTWWWWTTTTTK.",
+    "KKTTTTTTTTTKKK..",
+    "..KTTTYYTTK.....",
+    "...KKKYYKK......",
+    ".....KCCK.......",
+    "......CC........",
   ],
   palette: {
-    W: "#e8f4ff",
-    S: "#7fb4d8",
-    C: "#2c5f8a",
-    G: "#ffd94d",
-    O: "#ff9d3b",
+    K: "#071019",
+    T: "#19d3c5",
+    W: "#e9fff9",
+    G: "#ffd166",
+    Y: "#f3a93b",
+    C: "#f45b69",
   },
 };
 
 // Enemy drone — 10x8
 export const DRONE: Sprite = {
   rows: [
-    "..R....R..",
-    "..RR..RR..",
-    "...RRRR...",
-    "..RRRRRR..",
-    ".RRGRRGRR.",
-    ".RRRRRRRR.",
-    "..R.RR.R..",
-    "..R....R..",
+    "..KK....KK..",
+    ".KRRK..KRRK.",
+    "KRRRKKKRRRK.",
+    "KRRRRRRRRRRK",
+    "KRRYRRRRYRRK",
+    ".KRRKKKKRRK.",
+    "..KK....KK..",
+    ".K........K.",
   ],
-  palette: { R: "#c0392b", G: "#ff6b6b" },
+  palette: { K: "#071019", R: "#f45b69", Y: "#ffd166" },
 };
 
 // Boss — 16x14
@@ -91,7 +95,7 @@ export const BOSS: Sprite = {
     "..PP.PP.PP.PP...",
     "..P...P.P...P...",
   ],
-  palette: { P: "#8e44ad", W: "#f5e6ff", G: "#ff4757" },
+  palette: { P: "#f45b69", W: "#e9fff9", G: "#ffd166" },
 };
 
 // Asteroid — 10x10
@@ -108,7 +112,7 @@ export const ASTEROID: Sprite = {
     "..AAAAA...",
     "...AAA....",
   ],
-  palette: { A: "#8d7b68", a: "#6b5d4f" },
+  palette: { A: "#60788a", a: "#263947" },
 };
 
 // Git the astronaut portrait — 16x16

@@ -134,12 +134,15 @@
 }
 
 :root {
-  --terminal-green: oklch(0.85 0.2 155);
+  --terminal-green: oklch(0.79 0.15 184);
+  --reward: oklch(0.86 0.14 85);
 }
 
 @theme inline {
   --color-terminal-green: var(--terminal-green);
-  --font-pixel: "Press Start 2P", monospace;
+  --color-reward: var(--reward);
+  --font-pixel: "Bebas Neue", sans-serif;
+  --font-heading: "Bebas Neue", sans-serif;
 }
 
 @layer base {
@@ -150,8 +153,54 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-family: "Barlow", ui-sans-serif, sans-serif;
   }
+}
+
+.arcade-frame {
+  overflow: hidden;
+  border: 4px solid var(--color-primary);
+  background: var(--color-background);
+  box-shadow: 0 0 32px color-mix(in oklab, var(--color-primary) 26%, transparent);
+}
+
+.arcade-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom, transparent 0 3px, color-mix(in oklab, var(--color-background) 18%, transparent) 3px 4px);
+  opacity: 0.32;
+}
+
+.arcade-panel {
+  border: 1px solid color-mix(in oklab, var(--color-primary) 58%, transparent);
+  border-radius: 2px;
+  background: color-mix(in oklab, var(--color-background) 88%, transparent);
+  box-shadow: 4px 4px 0 color-mix(in oklab, var(--color-primary) 14%, transparent);
+}
+
+.control-tile {
+  display: flex;
+  min-height: 5rem;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.35rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  padding: 1rem;
+}
+
+.control-tile kbd {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 1.5rem;
+  color: var(--color-reward);
+}
+
+.control-tile span {
+  color: var(--color-muted-foreground);
+  font-size: 0.875rem;
 }
 
 /* Force the dark space theme as the default look */

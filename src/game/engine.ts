@@ -36,7 +36,7 @@ export interface EngineEvents {
 }
 
 interface Ent {
-  kind: "asteroid" | "drone" | "pickup" | "bullet" | "ebullet" | "boss";
+  kind: "asteroid" | "drone" | "pickup" | "bullet" | "ebullet" | "boss" | "spark";
   x: number;
   y: number;
   vx: number;
@@ -48,6 +48,8 @@ interface Ent {
   fireCd?: number;
   rot?: number;
   rotSpd?: number;
+  life?: number;
+  color?: string;
 }
 
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
@@ -81,6 +83,8 @@ export class GameEngine {
   private upgradeSpawned = false;
   private reducedMotion: boolean;
   private hitFlash = 0;
+  private thrusting = false;
+  private mouseActive = false;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -183,6 +187,7 @@ export class GameEngine {
     const rect = (e.target as HTMLCanvasElement).getBoundingClientRect();
     this.mouse.x = ((e.clientX - rect.left) / rect.width) * WORLD_W;
     this.mouse.y = ((e.clientY - rect.top) / rect.height) * WORLD_H;
+    this.mouseActive = true;
   };
   private mouseDown = (e: MouseEvent) => {
     if (e.button === 0) this.firing = true;
@@ -255,6 +260,7 @@ export class GameEngine {
     this.ship.hull = Math.max(0, this.ship.hull - remaining);
     this.invuln = 0.6;
     this.hitFlash = 0.25;
+    this.burst(this.px, this.py, "#f45b69", 7);
     sfx.hit();
     if (this.ship.hull <= 0) {
       sfx.explosion();
@@ -272,14 +278,15 @@ export class GameEngine {
     // --- movement ---
     const boost = this.keys.has("shift") && s.fuel > 0;
     // Empty tank never soft-locks the player: reserve thrusters still limp along.
-    const ACCEL = s.fuel <= 0 ? 110 : boost ? 620 : 380;
+    const ACCEL = s.fuel <= 0 ? 220 : boost ? 760 : 560;
     let ax = 0;
     let ay = 0;
-    if (this.keys.has("w") || this.keys.has("arrowup")) ay -= 1;
-    if (this.keys.has("s") || this.keys.has("arrowdown")) ay += 1;
-    if (this.keys.has("a") || this.keys.has("arrowleft")) ax -= 1;
-    if (this.keys.has("d") || this.keys.has("arrowright")) ax += 1;
+    if (this.keys.has("w")) ay -= 1;
+    if (this.keys.has("s")) ay += 1;
+    if (this.keys.has("a")) ax -= 1;
+    if (this.keys.has("d")) ax += 1;
     const thrusting = ax !== 0 || ay !== 0;
+    this.thrusting = thrusting;
     if (thrusting) {
       const len = Math.hypot(ax, ay);
       this.pvx += (ax / len) * ACCEL * dt;
@@ -287,22 +294,35 @@ export class GameEngine {
       s.fuel = Math.max(0, s.fuel - (boost ? 5 : 2.2) * dt);
     }
     // exp damping
-    const damp = Math.exp(-1.6 * dt);
+    const damp = Math.exp(-5.2 * dt);
     this.pvx *= damp;
     this.pvy *= damp;
     this.px = Math.max(24, Math.min(WORLD_W - 24, this.px + this.pvx * dt));
     this.py = Math.max(24, Math.min(WORLD_H - 24, this.py + this.pvy * dt));
-    this.angle = Math.atan2(this.mouse.y - this.py, this.mouse.x - this.px);
+    let aimX = 0;
+    let aimY = 0;
+    if (this.keys.has("arrowup")) aimY -= 1;
+    if (this.keys.has("arrowdown")) aimY += 1;
+    if (this.keys.has("arrowleft")) aimX -= 1;
+    if (this.keys.has("arrowright")) aimX += 1;
+    const arrowFiring = aimX !== 0 || aimY !== 0;
+    if (arrowFiring) this.angle = Math.atan2(aimY, aimX);
+    else if (this.mouseActive) this.angle = Math.atan2(this.mouse.y - this.py, this.mouse.x - this.px);
+    else {
+      const target = this.nearestThreat();
+      if (target) this.angle = Math.atan2(target.y - this.py, target.x - this.px);
+    }
 
     // energy regen / corruption drain
-    s.energy = Math.min(100, s.energy + 3.5 * dt);
+    s.energy = Math.min(100, s.energy + 6 * dt);
+    s.ammo = Math.min(100, s.ammo + 0.8 * dt);
     if (this.spec.drain) {
       s.energy = Math.max(0, s.energy - 9 * dt);
       s.hull = Math.max(1, s.hull - 0.8 * dt); // corruption flicker, not fatal
     }
 
     // --- shooting ---
-    const wantFire = (this.firing || this.keys.has(" ")) && this.fireCd <= 0;
+    const wantFire = (this.firing || this.keys.has(" ") || arrowFiring) && this.fireCd <= 0;
     if (wantFire && s.ammo >= 1 && s.energy >= 4) {
       s.ammo -= 1;
       s.energy -= 4;
@@ -323,7 +343,7 @@ export class GameEngine {
     // --- nebula damage ---
     for (const n of this.spec.nebulae ?? []) {
       const d = Math.hypot(this.px - n.x, this.py - n.y);
-      if (d < n.r) this.damage(14 * dt + 0); // continuous
+      if (d < n.r) this.damage(8 * dt + 0); // continuous
     }
     // invuln would block continuous nebula damage; nebula uses raw application:
     // (kept simple: invuln mainly for impacts)
@@ -359,53 +379,53 @@ export class GameEngine {
         if (e.y < -40) e.y = WORLD_H + 40;
         if (e.y > WORLD_H + 40) e.y = -40;
         if (Math.hypot(e.x - this.px, e.y - this.py) < e.r + 18) {
-          this.damage(12);
+          this.damage(7);
           e.vx = -e.vx * 1.4;
           e.vy = -e.vy * 1.4;
         }
       } else if (e.kind === "drone") {
         const d = Math.hypot(this.px - e.x, this.py - e.y) || 1;
-        const speed = 90;
+        const speed = 64;
         e.vx = ((this.px - e.x) / d) * speed;
         e.vy = ((this.py - e.y) / d) * speed;
         e.x += e.vx * dt;
         e.y += e.vy * dt;
         e.fireCd = (e.fireCd ?? 1) - dt;
         if (e.fireCd <= 0 && d < 520) {
-          e.fireCd = rand(1.6, 2.6);
+          e.fireCd = rand(2.4, 3.5);
           this.ents.push({
             kind: "ebullet",
             x: e.x,
             y: e.y,
-            vx: ((this.px - e.x) / d) * 300,
-            vy: ((this.py - e.y) / d) * 300,
+            vx: ((this.px - e.x) / d) * 230,
+            vy: ((this.py - e.y) / d) * 230,
             r: 5,
             hp: 1,
           });
         }
         if (d < e.r + 18) {
-          this.damage(15);
+          this.damage(9);
           e.hp = 0;
         }
       } else if (e.kind === "boss") {
         e.y = WORLD_H / 2 + Math.sin(performance.now() / 900) * 200;
         e.fireCd = (e.fireCd ?? 1) - dt;
         if (e.fireCd <= 0) {
-          e.fireCd = 0.9;
+          e.fireCd = 1.35;
           for (let k = -1; k <= 1; k++) {
             const a = Math.atan2(this.py - e.y, this.px - e.x) + k * 0.25;
             this.ents.push({
               kind: "ebullet",
               x: e.x,
               y: e.y,
-              vx: Math.cos(a) * 320,
-              vy: Math.sin(a) * 320,
+              vx: Math.cos(a) * 250,
+              vy: Math.sin(a) * 250,
               r: 6,
               hp: 1,
             });
           }
         }
-        if (Math.random() < dt * 0.25 && this.ents.filter((x) => x.kind === "drone").length < 3) {
+        if (Math.random() < dt * 0.12 && this.ents.filter((x) => x.kind === "drone").length < 2) {
           this.spawnDrone();
         }
       } else if (e.kind === "bullet") {
@@ -420,6 +440,7 @@ export class GameEngine {
             if (t.hp <= 0) {
               remove.add(t);
               sfx.explosion();
+              this.burst(t.x, t.y, t.kind === "boss" ? "#ffd166" : "#f45b69", t.kind === "boss" ? 24 : 12);
               if (t.kind === "drone") {
                 this.kills++;
                 this.score += 100;
@@ -444,13 +465,20 @@ export class GameEngine {
         if (e.x < 0 || e.x > WORLD_W || e.y < 0 || e.y > WORLD_H) remove.add(e);
         if (Math.hypot(e.x - this.px, e.y - this.py) < e.r + 16) {
           remove.add(e);
-          this.damage(e.r > 5 ? 10 : 6);
+          this.damage(e.r > 5 ? 7 : 4);
         }
       } else if (e.kind === "pickup") {
-        if (Math.hypot(e.x - this.px, e.y - this.py) < e.r + 20) {
+        if (Math.hypot(e.x - this.px, e.y - this.py) < e.r + 34) {
           remove.add(e);
           this.applyPickup(e.pickup ?? "repair");
         }
+      } else if (e.kind === "spark") {
+        e.x += e.vx * dt;
+        e.y += e.vy * dt;
+        e.life = (e.life ?? 0) - dt;
+        e.vx *= Math.exp(-2.5 * dt);
+        e.vy *= Math.exp(-2.5 * dt);
+        if ((e.life ?? 0) <= 0) remove.add(e);
       }
     }
     for (const e of remove) this.ents.splice(this.ents.indexOf(e), 1);
@@ -506,6 +534,38 @@ export class GameEngine {
     });
   }
 
+  private nearestThreat(): Ent | null {
+    let best: Ent | null = null;
+    let bestDistance = Number.POSITIVE_INFINITY;
+    for (const ent of this.ents) {
+      if (ent.kind !== "asteroid" && ent.kind !== "drone" && ent.kind !== "boss") continue;
+      const distance = Math.hypot(ent.x - this.px, ent.y - this.py);
+      if (distance < bestDistance) {
+        best = ent;
+        bestDistance = distance;
+      }
+    }
+    return best;
+  }
+
+  private burst(x: number, y: number, color: string, count: number) {
+    for (let i = 0; i < count; i++) {
+      const angle = rand(0, Math.PI * 2);
+      const speed = rand(70, 240);
+      this.ents.push({
+        kind: "spark",
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        r: rand(2, 5),
+        hp: 1,
+        life: rand(0.2, 0.55),
+        color,
+      });
+    }
+  }
+
   private applyPickup(p: string) {
     sfx.pickup();
     if (p.startsWith("upgrade:")) {
@@ -527,13 +587,15 @@ export class GameEngine {
 
   private render(t: number) {
     const ctx = this.ctx;
-    ctx.fillStyle = "#060913";
+    ctx.fillStyle = "#08111f";
     ctx.fillRect(0, 0, WORLD_W, WORLD_H);
     // stars
     for (const st of this.stars) {
       const tw = this.reducedMotion ? 0.8 : 0.5 + 0.5 * Math.sin(t * 2 + st.x);
-      ctx.fillStyle = `rgba(200,225,255,${0.25 + 0.5 * tw * st.s * 0.3})`;
-      ctx.fillRect(st.x, st.y, st.s, st.s);
+      const drift = (t * (8 + st.s * 8)) % WORLD_W;
+      const sx = (st.x - drift + WORLD_W) % WORLD_W;
+      ctx.fillStyle = `rgba(214,255,249,${0.2 + 0.55 * tw * st.s * 0.3})`;
+      ctx.fillRect(sx, st.y, st.s, st.s);
     }
     // nebulae
     for (const n of this.spec.nebulae ?? []) {
@@ -555,31 +617,31 @@ export class GameEngine {
     if (this.spec.beacon) {
       const b = this.spec.beacon;
       const pulse = this.reducedMotion ? 1 : 1 + 0.15 * Math.sin(t * 4);
-      ctx.strokeStyle = "#57d9a3";
+      ctx.strokeStyle = "#19d3c5";
       ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.arc(b.x, b.y, b.r * pulse, 0, Math.PI * 2);
       ctx.stroke();
-      ctx.fillStyle = "rgba(87,217,163,0.12)";
+      ctx.fillStyle = "rgba(25,211,197,0.13)";
       ctx.beginPath();
       ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "#57d9a3";
-      ctx.font = "16px 'Press Start 2P', monospace";
+      ctx.fillStyle = "#ffd166";
+      ctx.font = "24px 'Bebas Neue', sans-serif";
       ctx.textAlign = "center";
       ctx.fillText("GOAL", b.x, b.y - b.r - 12);
     }
     // safe zone
     if (this.spec.safeZone) {
       const z = this.spec.safeZone;
-      ctx.strokeStyle = "#57d9a3";
+      ctx.strokeStyle = "#19d3c5";
       ctx.setLineDash([4, 6]);
       ctx.beginPath();
       ctx.arc(z.x, z.y, z.r, 0, Math.PI * 2);
       ctx.stroke();
       ctx.setLineDash([]);
-      ctx.fillStyle = "#57d9a3";
-      ctx.font = "12px 'Press Start 2P', monospace";
+      ctx.fillStyle = "#19d3c5";
+      ctx.font = "18px 'Bebas Neue', sans-serif";
       ctx.textAlign = "center";
       ctx.fillText("SAFE TERMINAL", z.x, z.y - z.r - 10);
     }
@@ -597,8 +659,10 @@ export class GameEngine {
         ctx.fillStyle = "#ff4757";
         ctx.fillRect(e.x - 60, e.y - 70, (120 * Math.max(0, e.hp)) / 60, 8);
       } else if (e.kind === "bullet") {
-        ctx.fillStyle = "#7fd4ff";
-        ctx.fillRect(e.x - 3, e.y - 2, 10, 4);
+        ctx.fillStyle = "rgba(255,209,102,0.3)";
+        ctx.fillRect(e.x - e.vx * 0.025, e.y - e.vy * 0.025, 12, 5);
+        ctx.fillStyle = "#ffd166";
+        ctx.fillRect(e.x - 3, e.y - 2, 12, 5);
       } else if (e.kind === "ebullet") {
         ctx.fillStyle = "#ff6b6b";
         ctx.beginPath();
@@ -607,11 +671,27 @@ export class GameEngine {
       } else if (e.kind === "pickup" && e.sprite) {
         const bob = this.reducedMotion ? 0 : Math.sin(t * 3 + e.x) * 3;
         drawSprite(ctx, e.sprite, e.x, e.y + bob, 4);
+        ctx.strokeStyle = "rgba(255,209,102,0.45)";
+        ctx.strokeRect(e.x - 18, e.y + bob - 18, 36, 36);
+      } else if (e.kind === "spark") {
+        ctx.globalAlpha = Math.min(1, (e.life ?? 0) * 3);
+        ctx.fillStyle = e.color ?? "#ffd166";
+        ctx.fillRect(e.x - e.r, e.y - e.r, e.r * 2, e.r * 2);
+        ctx.globalAlpha = 1;
       }
     }
     // player ship
     const blink = this.invuln > 0 && Math.floor(t * 12) % 2 === 0;
     if (!blink) {
+      if (this.thrusting) {
+        const flame = 16 + Math.sin(t * 30) * 5;
+        ctx.fillStyle = "#ffd166";
+        ctx.beginPath();
+        ctx.moveTo(this.px - Math.cos(this.angle) * 27, this.py - Math.sin(this.angle) * 27);
+        ctx.lineTo(this.px - Math.cos(this.angle) * (27 + flame) + Math.sin(this.angle) * 6, this.py - Math.sin(this.angle) * (27 + flame) - Math.cos(this.angle) * 6);
+        ctx.lineTo(this.px - Math.cos(this.angle) * (27 + flame) - Math.sin(this.angle) * 6, this.py - Math.sin(this.angle) * (27 + flame) + Math.cos(this.angle) * 6);
+        ctx.fill();
+      }
       drawSprite(ctx, SHIP, this.px, this.py, 4, this.angle);
     }
     if (this.spec.drain) {
