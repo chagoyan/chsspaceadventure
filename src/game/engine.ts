@@ -642,6 +642,83 @@ export class GameEngine {
     }
   }
 
+  // The MERGE CONFLICT fights, withdraws off screen so the player can farm a drone
+  // wave for power-ups, then charges back in.
+  private updateBoss(e: Ent, dt: number) {
+    const bob = WORLD_H / 2 + Math.sin(performance.now() / 900) * 200;
+    if (this.bossPhase === "fight") {
+      e.y = bob;
+      e.x += (this.bossHomeX - e.x) * Math.min(1, dt * 2);
+      e.fireCd = (e.fireCd ?? 1) - dt;
+      if (e.fireCd <= 0) {
+        e.fireCd = 1.35;
+        for (let k = -1; k <= 1; k++) {
+          const a = Math.atan2(this.py - e.y, this.px - e.x) + k * 0.25;
+          this.ents.push({ kind: "ebullet", x: e.x, y: e.y, vx: Math.cos(a) * 250, vy: Math.sin(a) * 250, r: 6, hp: 1 });
+        }
+      }
+      const next = this.bossThresholds[0];
+      if (next != null && e.hp <= next) {
+        this.bossThresholds.shift();
+        this.bossPhase = "retreat";
+        sfx.alarm();
+      }
+      return;
+    }
+    if (this.bossPhase === "retreat") {
+      e.y = bob;
+      e.x += 460 * dt;
+      if (e.x > WORLD_W + 260) {
+        this.bossPhase = "waves";
+        this.bossWaveRemaining = 5;
+        for (let i = 0; i < 5; i++) this.spawnDrone();
+        for (const p of [
+          { kind: "repair", x: rand(220, 620), y: rand(120, WORLD_H - 120) },
+          { kind: "ammo", x: rand(220, 620), y: rand(120, WORLD_H - 120) },
+          { kind: "energy", x: rand(220, 620), y: rand(120, WORLD_H - 120) },
+          { kind: "bomb", x: rand(220, 620), y: rand(120, WORLD_H - 120) },
+        ] as const) {
+          this.ents.push({
+            kind: "pickup",
+            x: p.x,
+            y: p.y,
+            vx: 0,
+            vy: 0,
+            r: 13,
+            hp: 1,
+            sprite: PICKUP_SPRITES[p.kind]!,
+            pickup: p.kind,
+          });
+        }
+      }
+      return;
+    }
+    if (this.bossPhase === "waves") {
+      e.x = WORLD_W + 300;
+      e.y = WORLD_H / 2;
+      const dronesLeft = this.ents.filter((x) => x.kind === "drone").length;
+      if (dronesLeft === 0) {
+        this.bossWaveRemaining = 0;
+        this.bossPhaseTimer = 2.5; // breathing room to collect power-ups
+        this.bossPhase = "return";
+      }
+      return;
+    }
+    // return
+    this.bossPhaseTimer = Math.max(0, this.bossPhaseTimer - dt);
+    if (this.bossPhaseTimer > 0) {
+      e.x = WORLD_W + 300;
+      return;
+    }
+    e.y = bob;
+    e.x -= 380 * dt;
+    if (e.x <= this.bossHomeX) {
+      e.x = this.bossHomeX;
+      this.bossPhase = "fight";
+      e.fireCd = 1.2;
+    }
+  }
+
   private extras() {
     return {
       kills: this.kills,
