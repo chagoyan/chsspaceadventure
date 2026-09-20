@@ -6,8 +6,12 @@ import type { CertificateData } from "../game/types";
 export const Route = createFileRoute("/certificate/$part")({
   head: () => ({
     meta: [
-      { title: "Certificate — Git Space Adventure" },
-      { name: "description", content: "Git Space Adventure completion certificate." },
+      { title: "Certificate — Oscar's Git Space Adventure" },
+      { name: "description", content: "Oscar's Git Space Adventure completion certificate." },
+      { property: "og:title", content: "Certificate — Oscar's Git Space Adventure" },
+      { property: "og:description", content: "Classroom completion evidence from Oscar's Git Space Adventure." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -36,7 +40,7 @@ export function CertificateView({ cert }: { cert: CertificateData }) {
   return (
     <div className="certificate-sheet">
       <div className="cert-border">
-        <p className="font-pixel text-[10px] tracking-widest text-muted-foreground">GIT SPACE ADVENTURE</p>
+        <p className="font-pixel text-[10px] tracking-widest text-muted-foreground">OSCAR'S GIT SPACE ADVENTURE</p>
         <h1 className="mt-2 font-pixel text-xl text-primary">{title}</h1>
         <p className="mt-6 text-sm text-muted-foreground">This certifies that</p>
         <p className="cert-name">{cert.studentName}</p>
@@ -72,7 +76,7 @@ export function CertificateView({ cert }: { cert: CertificateData }) {
           </div>
         </dl>
         <p className="mt-3 text-[10px] text-muted-foreground">
-          Generated locally by Git Space Adventure as classroom completion evidence. Not
+          Generated locally by Oscar's Git Space Adventure as classroom completion evidence. Not
           cryptographically or server verified.
         </p>
       </div>
