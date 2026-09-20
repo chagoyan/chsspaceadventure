@@ -317,28 +317,42 @@ export function Game() {
   }
 
   if (mode === "log" && save) {
+    const timelineTask = {
+      title: "Checkpoint Navigator",
+      briefing: "Use git log --oneline to review checkpoints. To continue from an earlier one, type git reset --hard <hash> and confirm.",
+      help: "panel" as const,
+      hint: "git log --oneline",
+      requires: [],
+      allowedCommands: ["init", "status", "add", "commit", "log", "reset", "revert"] as const,
+      advanceLabel: "Back to Main Menu",
+      freeForm: true,
+      recommendHealthyCheckpoint: true,
+    };
     return (
       <div className="flex min-h-screen flex-col items-center bg-background p-6 text-foreground">
-        <div className="w-full max-w-2xl">
+        <div className="w-full max-w-3xl">
           <h1 className="font-pixel text-sm text-primary">MISSION TIMELINE — git log --oneline</h1>
           <div className="mt-4 rounded border border-border bg-card p-4 font-mono text-sm">
             {save.repo.commits.length === 0 && <p className="text-muted-foreground">No checkpoints yet.</p>}
             {[...save.repo.commits].reverse().map((c, i) => (
               <div key={c.hash} className="py-1">
-                <span className="text-terminal-green">{c.hash}</span>
+                <span className="hash-flash text-terminal-green">{c.hash}</span>
                 {i === 0 && <span className="text-muted-foreground"> (HEAD -&gt; main)</span>}{" "}
                 <span className="text-foreground">{c.message}</span>
                 <span className="ml-2 text-xs text-muted-foreground">{new Date(c.timestamp).toLocaleString()}</span>
               </div>
             ))}
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">
-            To return to an older checkpoint, continue the mission and type git reset --hard &lt;hash&gt; in the ship
-            terminal.
-          </p>
-          <button type="button" onClick={() => setMode("menu")} className="mt-4 rounded border border-border px-4 py-2 text-sm hover:bg-accent">
-            ← Back
-          </button>
+          <div className="mt-5">
+            <Terminal
+              embedded
+              repo={save.repo}
+              task={timelineTask}
+              commitsAtOpen={save.repo.commits.length}
+              onRepoChange={updateRepo}
+              onAdvance={() => setMode("menu")}
+            />
+          </div>
         </div>
       </div>
     );
@@ -436,7 +450,7 @@ export function Game() {
             ) : (
               <p className="mt-3 text-sm text-foreground">
                 Restoring your most recent checkpoint:{" "}
-                <span className="font-mono text-terminal-green">{destroyed.hash}</span> "{destroyed.message}".
+                <span className="hash-flash font-mono text-terminal-green">{destroyed.hash}</span> "{destroyed.message}".
                 <br />
                 <span className="text-muted-foreground">
                   Exactly that committed state returns — including its weaknesses. Anything staged but never committed
