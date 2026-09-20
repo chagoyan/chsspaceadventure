@@ -317,6 +317,12 @@ export function Game() {
   }
 
   if (mode === "log" && save) {
+    const recommendedTimelineCheckpoint = save.repo.commits.slice(0, -1).reduce<(typeof save.repo.commits)[number] | null>((best, commit) => {
+      if (!best) return commit;
+      const score = commit.snapshot.ship.hull + commit.snapshot.ship.armor + commit.snapshot.ship.energy + commit.snapshot.ship.fuel + commit.snapshot.ship.ammo;
+      const bestScore = best.snapshot.ship.hull + best.snapshot.ship.armor + best.snapshot.ship.energy + best.snapshot.ship.fuel + best.snapshot.ship.ammo;
+      return score > bestScore ? commit : best;
+    }, null);
     const timelineTask: TerminalTask = {
       title: "Checkpoint Navigator",
       briefing: "Use git log --oneline to review checkpoints. To continue from an earlier one, type git reset --hard <hash> and confirm.",
@@ -336,7 +342,7 @@ export function Game() {
             {save.repo.commits.length === 0 && <p className="text-muted-foreground">No checkpoints yet.</p>}
             {[...save.repo.commits].reverse().map((c, i) => (
               <div key={c.hash} className="py-1">
-                <span className="hash-flash text-terminal-green">{c.hash}</span>
+                <span className={c.hash === recommendedTimelineCheckpoint?.hash ? "hash-recommended text-terminal-green" : "hash-flash text-terminal-green"}>{c.hash}</span>
                 {i === 0 && <span className="text-muted-foreground"> (HEAD -&gt; main)</span>}{" "}
                 <span className="text-foreground">{c.message}</span>
                 <span className="ml-2 text-xs text-muted-foreground">{new Date(c.timestamp).toLocaleString()}</span>
