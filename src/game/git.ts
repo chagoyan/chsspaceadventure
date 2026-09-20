@@ -34,7 +34,7 @@ export function makeCommit(
   snapshot: GameSnapshot,
   kind: Commit["kind"] = "normal",
 ): Commit {
-  const parent = repo.commits.length ? repo.commits[repo.commits.length - 1].hash : null;
+  const parent = repo.commits.length ? (repo.commits[repo.commits.length - 1]?.hash ?? null) : null;
   const hash = shortHash(
     JSON.stringify(snapshot) + message + repo.commits.length + String(parent),
   );
@@ -42,7 +42,7 @@ export function makeCommit(
 }
 
 export function head(repo: Repo): Commit | null {
-  return repo.commits.length ? repo.commits[repo.commits.length - 1] : null;
+  return repo.commits.length ? (repo.commits[repo.commits.length - 1] ?? null) : null;
 }
 
 export function findCommit(repo: Repo, hash: string): Commit | null {
@@ -252,7 +252,7 @@ export function execCommand(repo: Repo, rawInput: string, opts?: { resetConfirme
           'A checkpoint needs a meaningful description: git commit -m "Repaired hull after asteroid field"',
         );
       }
-      let message = tokens[mIndex + 1];
+      let message: string = tokens[mIndex + 1] ?? "";
       if (!message.startsWith('"')) {
         return err(
           "error: commit message must be wrapped in double quotes",
@@ -308,7 +308,7 @@ export function execCommand(repo: Repo, rawInput: string, opts?: { resetConfirme
       }
       const lines: StatusLine[] = [];
       for (let i = repo.commits.length - 1; i >= 0; i--) {
-        const c = repo.commits[i];
+        const c = repo.commits[i]!;
         const tag = i === repo.commits.length - 1 ? " (HEAD -> main)" : "";
         lines.push({ text: `${c.hash}${tag} ${c.message}`, kind: "info" });
       }
@@ -317,7 +317,7 @@ export function execCommand(repo: Repo, rawInput: string, opts?: { resetConfirme
 
     case "reset": {
       if (!repo.initialized) return err("fatal: not a git repository", "Run git init first.");
-      const hashArg = tokens[tokens.length - 1];
+      const hashArg = tokens[tokens.length - 1] ?? "";
       if (!tokens.includes("--hard")) {
         return err(
           "error: this ship terminal requires --hard for reset",
