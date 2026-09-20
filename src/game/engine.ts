@@ -183,10 +183,11 @@ export class GameEngine {
   }
 
   private keyDown = (e: KeyboardEvent) => {
-    this.keys.add(e.key.toLowerCase());
-    if ([" ", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(e.key.toLowerCase())) {
-      e.preventDefault();
-    }
+    const key = e.key.toLowerCase();
+    if (key === " ") e.preventDefault();
+    if (key === "a" && !this.keys.has("a")) this.tryBoost();
+    if (key === "f" && !this.keys.has("f")) this.tryShield();
+    this.keys.add(key);
   };
   private keyUp = (e: KeyboardEvent) => this.keys.delete(e.key.toLowerCase());
   private mouseMove = (e: MouseEvent) => {
@@ -197,8 +198,13 @@ export class GameEngine {
   };
   private mouseDown = (e: MouseEvent) => {
     if (e.button === 0) this.firing = true;
+    if (e.button === 2) {
+      e.preventDefault();
+      this.trySmartBomb();
+    }
   };
   private mouseUp = () => (this.firing = false);
+  private contextMenu = (e: MouseEvent) => e.preventDefault();
 
   private attach() {
     window.addEventListener("keydown", this.keyDown);
@@ -206,6 +212,7 @@ export class GameEngine {
     const canvas = this.ctx.canvas;
     canvas.addEventListener("mousemove", this.mouseMove);
     canvas.addEventListener("mousedown", this.mouseDown);
+    canvas.addEventListener("contextmenu", this.contextMenu);
     window.addEventListener("mouseup", this.mouseUp);
   }
 
@@ -216,7 +223,42 @@ export class GameEngine {
     const canvas = this.ctx.canvas;
     canvas.removeEventListener("mousemove", this.mouseMove);
     canvas.removeEventListener("mousedown", this.mouseDown);
+    canvas.removeEventListener("contextmenu", this.contextMenu);
     window.removeEventListener("mouseup", this.mouseUp);
+  }
+
+  private tryBoost() {
+    if (this.boostCd > 0 || this.boostTimer > 0) return;
+    this.boostTimer = 0.5;
+    this.boostCd = 3.5;
+    sfx.pickup();
+  }
+
+  private tryShield() {
+    if (this.shieldCd > 0 || this.shieldTimer > 0 || this.ship.energy < 15) return;
+    this.ship.energy = Math.max(0, this.ship.energy - 15);
+    this.shieldTimer = 3;
+    this.shieldCd = 8;
+    sfx.commit();
+  }
+
+  private trySmartBomb() {
+    if (this.bombs <= 0) return;
+    this.bombs -= 1;
+    sfx.explosion();
+    this.burst(this.px, this.py, "#ffd166", 24);
+    for (let i = 0; i < 24; i++) {
+      const a = (i / 24) * Math.PI * 2;
+      this.ents.push({
+        kind: "bullet",
+        x: this.px + Math.cos(a) * 40,
+        y: this.py + Math.sin(a) * 40,
+        vx: Math.cos(a) * 620,
+        vy: Math.sin(a) * 620,
+        r: 5,
+        hp: 1,
+      });
+    }
   }
 
   start() {
