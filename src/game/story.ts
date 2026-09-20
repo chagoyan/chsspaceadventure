@@ -27,6 +27,7 @@ export interface TerminalTask {
   requireCommit?: boolean; // advance only after a NEW commit in this session
   freeForm?: boolean; // optional terminal, no required commands
   logExplanation?: string[]; // shown only after a successful git log
+  recommendHealthyCheckpoint?: boolean; // keep the best earlier checkpoint highlighted after log
 }
 
 export interface TerminalStep {
@@ -400,7 +401,7 @@ export const STEPS: Step[] = [
       title: "Sector 7 — The Crimson Nebula",
       objective: "Thread the nebula clouds and reach the beacon. Plasma clouds damage your hull!",
       asteroids: 2,
-      drones: 1,
+      drones: 6,
       beacon: { x: 1180, y: 620, r: 46 },
       nebulae: [
         { x: 500, y: 200, r: 120 },
@@ -421,6 +422,7 @@ export const STEPS: Step[] = [
       hint: "git log --oneline, then git reset --hard <hash>",
       requires: ["reset"],
       allowedCommands: ["init", "status", "add", "commit", "log", "reset"],
+      recommendHealthyCheckpoint: true,
       advanceLabel: "Fly On",
     },
   },
@@ -433,7 +435,7 @@ export const STEPS: Step[] = [
       title: "Sector 7 — Nebula's Edge",
       objective: "Final stretch — reach the far beacon!",
       asteroids: 2,
-      drones: 2,
+      drones: 6,
       beacon: { x: 1180, y: 160, r: 46 },
       nebulae: [
         { x: 550, y: 380, r: 130 },
@@ -472,8 +474,8 @@ export const STEPS: Step[] = [
     id: "t_turbocommit",
     task: {
       title: "Lock In the Upgrade",
-      briefing: "KOMM: The Turbo Core is installed and purring. Protect this progress — you know the workflow. No hints this time: inspect, stage, commit.",
-      help: "none",
+      briefing: "KOMM: The Turbo Core is installed and purring. Protect this progress. Inspect, stage, commit.",
+      help: "panel",
       hint: "",
       requires: ["status", "add", "commit"],
       allowedCommands: ["init", "status", "add", "commit", "log", "reset"],
@@ -513,7 +515,7 @@ export const STEPS: Step[] = [
     task: {
       title: "Checkpoint the Drift",
       briefing: "KOMM: Another clean run. Inspect, stage, commit — keep the history rich, it may save us soon.",
-      help: "none",
+      help: "panel",
       hint: "",
       requires: ["status", "add", "commit"],
       allowedCommands: ["init", "status", "add", "commit", "log", "reset"],

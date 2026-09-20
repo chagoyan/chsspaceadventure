@@ -30,3 +30,9 @@
 - [x] Hide staging instructions from the first diagnostics terminal
 - [x] Explain checkpoint hashes only after the first successful log
 - [x] Normalize and visibly preserve double-minus log and reset options
+- [ ] Add an interactive terminal to the saved checkpoint timeline
+- [ ] Animate and strengthen the Crimson Nebula encounter with six enemy ships
+- [ ] Flash displayed hashes and continuously identify the recommended healthy checkpoint
+- [ ] Reassure players during the guided reset confirmation
+- [ ] Apply the requested hint buttons to the three late checkpoint terminals
+- [ ] Verify the revised timeline, reset lesson, and nebula encounter
