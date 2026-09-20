@@ -526,31 +526,21 @@ export class GameEngine {
           e.hp = 0;
         }
       } else if (e.kind === "boss") {
-        e.y = WORLD_H / 2 + Math.sin(performance.now() / 900) * 200;
-        e.fireCd = (e.fireCd ?? 1) - dt;
-        if (e.fireCd <= 0) {
-          e.fireCd = 1.35;
-          for (let k = -1; k <= 1; k++) {
-            const a = Math.atan2(this.py - e.y, this.px - e.x) + k * 0.25;
-            this.ents.push({
-              kind: "ebullet",
-              x: e.x,
-              y: e.y,
-              vx: Math.cos(a) * 250,
-              vy: Math.sin(a) * 250,
-              r: 6,
-              hp: 1,
-            });
-          }
-        }
-        if (Math.random() < dt * 0.12 && this.ents.filter((x) => x.kind === "drone").length < 2) {
-          this.spawnDrone();
-        }
+        this.updateBoss(e, dt);
       } else if (e.kind === "bullet") {
         e.x += e.vx * dt;
         e.y += e.vy * dt;
         if (e.x < 0 || e.x > WORLD_W || e.y < 0 || e.y > WORLD_H) remove.add(e);
         for (const t of this.ents) {
+          if (t.kind === "barrier") {
+            if (Math.hypot(e.x - t.x, e.y - t.y) < t.r) {
+              remove.add(e);
+              this.burst(e.x, e.y, "#ffd166", 3);
+              break;
+            }
+            continue;
+          }
+          if (t.kind === "boss" && this.bossPhase !== "fight") continue;
           if (t.kind !== "asteroid" && t.kind !== "drone" && t.kind !== "boss") continue;
           if (Math.hypot(e.x - t.x, e.y - t.y) < t.r + e.r) {
             remove.add(e);
