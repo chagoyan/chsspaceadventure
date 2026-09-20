@@ -154,6 +154,35 @@ export class GameEngine {
         hp: 60,
         fireCd: 1.5,
       });
+      // Two retreats: at 40 hp and at 20 hp the MERGE CONFLICT withdraws and sends waves.
+      this.bossThresholds = [40, 20];
+      // Cover to hide behind while the guns track you.
+      for (const b of [
+        { x: 430, y: 170, r: 52 },
+        { x: 430, y: WORLD_H - 170, r: 52 },
+        { x: 700, y: WORLD_H / 2, r: 62 },
+        { x: 960, y: 210, r: 46 },
+        { x: 960, y: WORLD_H - 210, r: 46 },
+      ]) {
+        this.ents.push({ kind: "barrier", x: b.x, y: b.y, vx: 0, vy: 0, r: b.r, hp: Number.POSITIVE_INFINITY });
+      }
+      for (const p of [
+        { kind: "repair", x: 240, y: 150 },
+        { kind: "ammo", x: 240, y: WORLD_H - 150 },
+        { kind: "bomb", x: 560, y: WORLD_H / 2 },
+      ] as const) {
+        this.ents.push({
+          kind: "pickup",
+          x: p.x,
+          y: p.y,
+          vx: 0,
+          vy: 0,
+          r: 13,
+          hp: 1,
+          sprite: PICKUP_SPRITES[p.kind]!,
+          pickup: p.kind,
+        });
+      }
     }
     for (const p of s.pickups ?? []) {
       this.ents.push({
