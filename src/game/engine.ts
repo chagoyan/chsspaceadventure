@@ -139,7 +139,7 @@ export class GameEngine {
         vy: 0,
         r: 16,
         hp: 1,
-        sprite: PICKUP_SPRITES.upgrade,
+        sprite: PICKUP_SPRITES["upgrade"]!,
         pickup: `upgrade:${s.upgradePickup.id}`,
       });
     }
@@ -452,7 +452,7 @@ export class GameEngine {
         vy: 0,
         r: 16,
         hp: 1,
-        sprite: PICKUP_SPRITES.upgrade,
+        sprite: PICKUP_SPRITES["upgrade"]!,
         pickup: `upgrade:${sup.id}`,
       });
     }
@@ -486,7 +486,7 @@ export class GameEngine {
       vy: 0,
       r: 13,
       hp: 1,
-      sprite: PICKUP_SPRITES[k],
+      sprite: PICKUP_SPRITES[k]!,
       pickup: k,
     });
   }
