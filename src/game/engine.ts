@@ -19,6 +19,7 @@ export interface StageSpec {
   boss?: boolean;
   drain?: boolean; // turbo corruption: constant energy drain
   upgradePickup?: { id: string; x: number; y: number };
+  pickups?: { kind: "repair" | "fuel" | "ammo" | "energy"; x: number; y: number }[];
   spawnUpgradeAtKills?: { id: string; kills: number };
   safeZone?: { x: number; y: number; r: number }; // terminal beacon
 }
@@ -128,6 +129,19 @@ export class GameEngine {
         r: 46,
         hp: 60,
         fireCd: 1.5,
+      });
+    }
+    for (const p of s.pickups ?? []) {
+      this.ents.push({
+        kind: "pickup",
+        x: p.x,
+        y: p.y,
+        vx: 0,
+        vy: 0,
+        r: 13,
+        hp: 1,
+        sprite: PICKUP_SPRITES[p.kind]!,
+        pickup: p.kind,
       });
     }
     if (s.upgradePickup) {
