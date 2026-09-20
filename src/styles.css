@@ -293,6 +293,22 @@
   font: inherit;
 }
 
+@keyframes terminal-hint-flash {
+  0%, 100% { color: var(--color-muted-foreground); text-shadow: none; }
+  50% { color: var(--color-reward); text-shadow: 0 0 12px var(--color-reward); }
+}
+
+.terminal-hint-label {
+  animation: terminal-hint-flash 0.55s ease-in-out 3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .terminal-hint-label {
+    animation: none;
+    color: var(--color-reward);
+  }
+}
+
 /* ---- HUD bars ---- */
 .hud-bar-hull {
   background: oklch(0.7 0.19 25);

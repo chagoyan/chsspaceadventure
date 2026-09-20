@@ -22,6 +22,7 @@ export interface StageSpec {
   pickups?: { kind: "repair" | "fuel" | "ammo" | "energy"; x: number; y: number }[];
   spawnUpgradeAtKills?: { id: string; kills: number };
   safeZone?: { x: number; y: number; r: number }; // terminal beacon
+  exitAfterKills?: boolean; // keep the arena open for pickups, then leave through beacon
 }
 
 export type EngineEvent =
@@ -371,7 +372,7 @@ export class GameEngine {
     }
 
     // --- beacon objective ---
-    if (this.spec.beacon && !this.objectiveSent) {
+    if (this.spec.beacon && !this.objectiveSent && (!this.spec.exitAfterKills || (this.spec.killTarget != null && this.kills >= this.spec.killTarget))) {
       const b = this.spec.beacon;
       if (Math.hypot(this.px - b.x, this.py - b.y) < b.r) {
         this.objectiveSent = true;
@@ -522,7 +523,7 @@ export class GameEngine {
     }
 
     // kill-target objective
-    if (this.spec.killTarget && !this.objectiveSent && this.kills >= this.spec.killTarget) {
+    if (this.spec.killTarget && !this.spec.exitAfterKills && !this.objectiveSent && this.kills >= this.spec.killTarget) {
       const bossAlive = this.ents.some((e) => e.kind === "boss");
       if (!bossAlive) {
         this.objectiveSent = true;
@@ -648,7 +649,7 @@ export class GameEngine {
       ctx.setLineDash([]);
     }
     // beacon
-    if (this.spec.beacon) {
+    if (this.spec.beacon && (!this.spec.exitAfterKills || (this.spec.killTarget != null && this.kills >= this.spec.killTarget))) {
       const b = this.spec.beacon;
       const pulse = this.reducedMotion ? 1 : 1 + 0.15 * Math.sin(t * 4);
       ctx.strokeStyle = "#19d3c5";
@@ -663,7 +664,7 @@ export class GameEngine {
       ctx.fillStyle = "#ffd166";
       ctx.font = "24px 'Bebas Neue', sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("GOAL", b.x, b.y - b.r - 12);
+      ctx.fillText(this.spec.exitAfterKills ? "EXTRACT WHEN READY" : "GOAL", b.x, b.y - b.r - 12);
     }
     // safe zone
     if (this.spec.safeZone) {

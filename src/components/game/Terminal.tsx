@@ -47,6 +47,9 @@ export function Terminal({ repo, task, commitsAtOpen, onRepoChange, onAdvance, s
   const requirementsMet = task.requires.every((r) => done.has(r));
   const commitRequirementMet = !task.requireCommit || committedHere;
   const canAdvance = requirementsMet && commitRequirementMet;
+  const activeHint = task.hintSteps
+    ? ([...task.hintSteps].reverse().find((step) => !step.after || done.has(step.after))?.text ?? "")
+    : task.hint;
 
   function run(rawInput: string, resetConfirmed = false) {
     // Normalize smart dashes here too, so every entry point is safe.
@@ -153,10 +156,10 @@ export function Terminal({ repo, task, commitsAtOpen, onRepoChange, onAdvance, s
         </div>
         <div className="border-b border-border bg-card/60 px-4 py-3 text-sm">
           <p className="text-foreground">{task.briefing}</p>
-          {task.hint && (
+          {activeHint && (
             <p className="mt-2 font-mono text-terminal-green">
-              <span className="text-muted-foreground">Hint: </span>
-              {task.hint}
+              <span className="terminal-hint-label text-muted-foreground">Hint: </span>
+              {activeHint}
             </p>
           )}
           {task.help === "panel" && (

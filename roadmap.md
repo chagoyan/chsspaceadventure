@@ -16,11 +16,11 @@
 - [x] Clarify the first add-and-commit instructions and remove the terminal placeholder
 - [x] Keep the ship upright when flying left
 - [x] Spawn every required drone in Sector 2
-- [ ] Flash terminal hint three times on entry
-- [ ] Show complete ship state in the first git status output
-- [ ] Split first checkpoint and Secure Your Progress into progressive command hints
-- [ ] Clarify commit messages and hashes in KOMM's lessons
-- [ ] Give players a post-combat collection window after Sector 2
-- [ ] Add combat-focused Sectors 3 and 4 before the midpoint certificate
-- [ ] Renumber the later sectors and certificate milestones
+- [x] Flash terminal hint three times on entry
+- [x] Show complete ship state in the first git status output
+- [x] Split first checkpoint and Secure Your Progress into progressive command hints
+- [x] Clarify commit messages and hashes in KOMM's lessons
+- [x] Give players a post-combat collection window after Sector 2
+- [x] Add combat-focused Sectors 3 and 4 before the midpoint certificate
+- [x] Renumber the later sectors and certificate milestones
 - [ ] Verify the revised first-half flow and terminal guidance
