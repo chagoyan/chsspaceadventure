@@ -89,6 +89,11 @@ export class GameEngine {
   private hitFlash = 0;
   private thrusting = false;
   private mouseActive = false;
+  private bombs = 2;
+  private boostTimer = 0;
+  private boostCd = 0;
+  private shieldTimer = 0;
+  private shieldCd = 0;
 
   constructor(
     canvas: HTMLCanvasElement,
