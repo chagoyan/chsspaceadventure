@@ -21,8 +21,8 @@ interface Props {
   score: number;
   staged: boolean;
   commits: number;
-  kills?: number;
-  killTarget?: number;
+  kills?: number | undefined;
+  killTarget?: number | undefined;
 }
 
 export function HUD({ ship, objective, stageTitle, score, staged, commits, kills, killTarget }: Props) {
