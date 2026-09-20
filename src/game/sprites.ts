@@ -9,6 +9,8 @@ import fuelUrl from "../assets/game-art/fuel.png";
 import energyUrl from "../assets/game-art/energy.png";
 import ammoUrl from "../assets/game-art/ammo.png";
 import upgradeUrl from "../assets/game-art/upgrade.png";
+import impactUrl from "../assets/game-art/impact.png";
+import explosionUrl from "../assets/game-art/explosion.png";
 
 export interface Sprite {
   src: string;
@@ -28,7 +30,7 @@ function getImage(src: string): HTMLImageElement | null {
 }
 
 export function preloadSprites(): void {
-  for (const sprite of [SHIP, DRONE, BOSS, ...ASTEROIDS, ...Object.values(PICKUP_SPRITES)]) {
+  for (const sprite of [SHIP, DRONE, BOSS, IMPACT, EXPLOSION, ...ASTEROIDS, ...Object.values(PICKUP_SPRITES)]) {
     getImage(sprite.src);
   }
 }
@@ -56,6 +58,8 @@ export function drawSprite(
 export const SHIP: Sprite = { src: shipAsset.url, aspect: 873 / 450 };
 export const DRONE: Sprite = { src: droneUrl, aspect: 350 / 295 };
 export const BOSS: Sprite = { src: bossUrl, aspect: 1090 / 350 };
+export const IMPACT: Sprite = { src: impactUrl, aspect: 410 / 435 };
+export const EXPLOSION: Sprite = { src: explosionUrl, aspect: 620 / 540 };
 export const ASTEROIDS: [Sprite, Sprite, Sprite] = [
   { src: asteroid1Url, aspect: 415 / 355 },
   { src: asteroid2Url, aspect: 370 / 315 },

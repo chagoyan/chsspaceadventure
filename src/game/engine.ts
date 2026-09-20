@@ -1,7 +1,7 @@
 // Top-down arcade engine: movement, shooting, asteroids, drones, pickups,
 // nebula hazards, beacon goals, boss. Delta-time, frame-rate independent.
 import type { ShipState } from "./types";
-import { drawSprite, preloadSprites, SHIP, DRONE, BOSS, ASTEROIDS, PICKUP_SPRITES, type Sprite } from "./sprites";
+import { drawSprite, preloadSprites, SHIP, DRONE, BOSS, ASTEROIDS, IMPACT, EXPLOSION, PICKUP_SPRITES, type Sprite } from "./sprites";
 import { sfx } from "./audio";
 
 export const WORLD_W = 1280;
@@ -36,7 +36,7 @@ export interface EngineEvents {
 }
 
 interface Ent {
-  kind: "asteroid" | "drone" | "pickup" | "bullet" | "ebullet" | "boss" | "spark";
+  kind: "asteroid" | "drone" | "pickup" | "bullet" | "ebullet" | "boss" | "spark" | "effect";
   x: number;
   y: number;
   vx: number;
@@ -50,6 +50,7 @@ interface Ent {
   rotSpd?: number;
   life?: number;
   color?: string;
+  maxLife?: number;
 }
 
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
@@ -474,7 +475,7 @@ export class GameEngine {
           remove.add(e);
           this.applyPickup(e.pickup ?? "repair");
         }
-      } else if (e.kind === "spark") {
+      } else if (e.kind === "spark" || e.kind === "effect") {
         e.x += e.vx * dt;
         e.y += e.vy * dt;
         e.life = (e.life ?? 0) - dt;
@@ -551,6 +552,19 @@ export class GameEngine {
   }
 
   private burst(x: number, y: number, color: string, count: number) {
+    const duration = count >= 20 ? 0.55 : 0.3;
+    this.ents.push({
+      kind: "effect",
+      x,
+      y,
+      vx: 0,
+      vy: 0,
+      r: count >= 20 ? 78 : 38,
+      hp: 1,
+      life: duration,
+      maxLife: duration,
+      sprite: count >= 20 ? EXPLOSION : IMPACT,
+    });
     for (let i = 0; i < count; i++) {
       const angle = rand(0, Math.PI * 2);
       const speed = rand(70, 240);
@@ -683,6 +697,12 @@ export class GameEngine {
         ctx.fillStyle = e.color ?? "#ffd166";
         ctx.fillRect(e.x - e.r, e.y - e.r, e.r * 2, e.r * 2);
         ctx.globalAlpha = 1;
+      } else if (e.kind === "effect" && e.sprite) {
+        const progress = 1 - (e.life ?? 0) / (e.maxLife ?? 1);
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, 1 - progress);
+        drawSprite(ctx, e.sprite, e.x, e.y, e.r * (1.1 + progress * 1.3), progress * 0.18);
+        ctx.restore();
       }
     }
     // player ship
