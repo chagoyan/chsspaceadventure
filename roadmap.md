@@ -42,3 +42,4 @@
 
 - [x] Victory lap with confetti before the final certificate
 - [x] Checkpoint restore from View Git Log also moves the story step back
+- [x] Replace the View Git Log terminal with clickable checkpoint restores
