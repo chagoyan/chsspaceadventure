@@ -341,33 +341,34 @@ export function Game() {
   }
 
   if (mode === "log" && save) {
-    const recommendedTimelineCheckpoint = save.repo.commits.slice(0, -1).reduce<(typeof save.repo.commits)[number] | null>((best, commit) => {
+    const timelineSave = save;
+    const recommendedTimelineCheckpoint = timelineSave.repo.commits.slice(0, -1).reduce<(typeof timelineSave.repo.commits)[number] | null>((best, commit) => {
       if (!best) return commit;
       const score = commit.snapshot.ship.hull + commit.snapshot.ship.armor + commit.snapshot.ship.energy + commit.snapshot.ship.fuel + commit.snapshot.ship.ammo;
       const bestScore = best.snapshot.ship.hull + best.snapshot.ship.armor + best.snapshot.ship.energy + best.snapshot.ship.fuel + best.snapshot.ship.ammo;
       return score > bestScore ? commit : best;
     }, null);
     const selectedCheckpoint = selectedCheckpointHash
-      ? save.repo.commits.find((commit) => commit.hash === selectedCheckpointHash) ?? null
+      ? timelineSave.repo.commits.find((commit) => commit.hash === selectedCheckpointHash) ?? null
       : null;
 
     function startFromCheckpoint(hash: string) {
-      const index = save.repo.commits.findIndex((commit) => commit.hash === hash);
-      const checkpoint = index >= 0 ? save.repo.commits[index] : undefined;
+      const index = timelineSave.repo.commits.findIndex((commit) => commit.hash === hash);
+      const checkpoint = index >= 0 ? timelineSave.repo.commits[index] : undefined;
       if (!checkpoint) return;
       const target = stepById(checkpoint.snapshot.stepId);
-      const storyStep = target ? target.id : save.storyStep;
+      const storyStep = target ? target.id : timelineSave.storyStep;
       const repo: Repo = {
-        ...save.repo,
-        commits: save.repo.commits.slice(0, index + 1),
+        ...timelineSave.repo,
+        commits: timelineSave.repo.commits.slice(0, index + 1),
         working: cloneSnapshot(checkpoint.snapshot),
         staged: null,
       };
-      persist({ ...save, repo, storyStep });
+      persist({ ...timelineSave, repo, storyStep });
       setStepId(storyStep);
       setSelectedCheckpointHash(null);
       setNotice(`Restored checkpoint ${checkpoint.hash} — "${checkpoint.message}".`);
-      setMuted(save.settings.muted);
+      setMuted(timelineSave.settings.muted);
       startMusic(((Math.max(1, checkpoint.snapshot.stage) - 1) % 3) + 1);
       setMode("playing");
     }
@@ -381,8 +382,8 @@ export function Game() {
             <p className="mt-3 rounded border border-primary bg-card px-3 py-2 text-sm text-foreground">{notice}</p>
           )}
           <div className="mt-5 overflow-hidden rounded border border-border bg-card font-mono text-sm">
-            {save.repo.commits.length === 0 && <p className="text-muted-foreground">No checkpoints yet.</p>}
-            {[...save.repo.commits].reverse().map((c, i) => (
+            {timelineSave.repo.commits.length === 0 && <p className="p-4 text-muted-foreground">No checkpoints yet.</p>}
+            {[...timelineSave.repo.commits].reverse().map((c, i) => (
               <Button
                 key={c.hash}
                 type="button"
@@ -413,7 +414,7 @@ export function Game() {
                 Restore <span className="hash-flash font-mono text-terminal-green">{selectedCheckpoint.hash}</span>{" "}
                 “{selectedCheckpoint.message}” and continue from that mission?
               </p>
-              {selectedCheckpoint.hash !== save.repo.commits[save.repo.commits.length - 1]?.hash && (
+              {selectedCheckpoint.hash !== timelineSave.repo.commits[timelineSave.repo.commits.length - 1]?.hash && (
                 <p className="mt-3 text-xs text-muted-foreground">Later checkpoints will be removed from this timeline.</p>
               )}
               <div className="mt-5 flex justify-center gap-3">
