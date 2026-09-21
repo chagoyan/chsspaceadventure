@@ -346,6 +346,14 @@ export class GameEngine {
     this.spec.drain = on;
   }
 
+  /** Victory lap: clear all threats and make the ship untouchable while the player celebrates. */
+  celebrate(seconds = 12) {
+    this.spec.drain = false;
+    this.spec.nebulae = [];
+    this.ents = this.ents.filter((e) => e.kind === "pickup" || e.kind === "barrier" || e.kind === "effect");
+    this.invuln = seconds;
+  }
+
   private damage(amount: number) {
     if (this.invuln > 0 || this.shieldTimer > 0) return;
     let remaining = amount;

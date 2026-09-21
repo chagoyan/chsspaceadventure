@@ -39,3 +39,6 @@
 - [x] New control scheme: space thrust, left click fire, right click smart bomb, A boost, F force field; WASD/arrow movement removed
 - [x] Alarm sound on ALERT dialogue lines; music track varies by sector
 - [x] Animate a red two-frame ship thruster during the A-key speed boost
+
+- [x] Victory lap with confetti before the final certificate
+- [x] Checkpoint restore from View Git Log also moves the story step back

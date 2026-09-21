@@ -10,6 +10,7 @@ import { GameEngine, WORLD_W, WORLD_H, type EngineEvent } from "../game/engine";
 import { setMuted, startMusic, stopMusic, sfx } from "../game/audio";
 import { Terminal } from "./game/Terminal";
 import { Dialogue } from "./game/Dialogue";
+import { Confetti } from "./game/Confetti";
 import { HUD } from "./game/HUD";
 import { Menu } from "./game/Menu";
 import { CertificateView } from "../routes/certificate.$part";
@@ -28,6 +29,7 @@ export function Game() {
   const [hudScore, setHudScore] = useState(0);
   const [hudPower, setHudPower] = useState({ bombs: 2, shield: false, boostReady: true, shieldReady: true });
   const [controlsSeen, setControlsSeen] = useState(false);
+  const [victory, setVictory] = useState<number | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
   const navigate = useNavigate();
@@ -154,6 +156,18 @@ export function Game() {
     setNotice(null);
   }, [stepId]);
 
+  // Victory lap countdown after the final boss falls.
+  useEffect(() => {
+    if (victory == null) return;
+    if (victory <= 0) {
+      setVictory(null);
+      advance();
+      return;
+    }
+    const id = setTimeout(() => setVictory((v) => (v == null ? null : v - 1)), 1000);
+    return () => clearTimeout(id);
+  }, [victory, advance]);
+
   // ---- action step engine lifecycle ----
   const step = stepById(stepId);
   const showControls = mode === "playing" && stepId === "a_field" && !controlsSeen;
@@ -240,6 +254,12 @@ export function Game() {
     }
     if (e.type === "objective") {
       syncWorkingFromEngine(engine);
+      if (current.spec.boss) {
+        // Victory lap: celebrate and let the player fly before the certificate.
+        engine.celebrate(12);
+        setVictory(8);
+        return;
+      }
       advance();
       return;
     }
@@ -337,10 +357,27 @@ export function Game() {
       freeForm: true,
       recommendHealthyCheckpoint: true,
     };
+    // Moving the timeline here must also move the story back to that checkpoint's step,
+    // otherwise Continue resumes at a later mission with an older ship.
+    const onTimelineRepoChange = (repo: Repo) => {
+      setSave((s) => {
+        if (!s) return s;
+        const h = head(repo);
+        const target = h ? stepById(h.snapshot.stepId) : undefined;
+        const storyStep = target ? target.id : s.storyStep;
+        const next: SaveData = { ...s, repo, storyStep };
+        storeSave(next);
+        if (h) setNotice(`Timeline is now at ${h.hash} — "${h.message}". Continue Mission resumes from there.`);
+        return next;
+      });
+    };
     return (
       <div className="flex min-h-screen flex-col items-center bg-background p-6 text-foreground">
         <div className="w-full max-w-3xl">
           <h1 className="font-pixel text-sm text-primary">MISSION TIMELINE — git log --oneline</h1>
+          {notice && (
+            <p className="mt-3 rounded border border-primary bg-card px-3 py-2 text-sm text-foreground">{notice}</p>
+          )}
           <div className="mt-4 rounded border border-border bg-card p-4 font-mono text-sm">
             {save.repo.commits.length === 0 && <p className="text-muted-foreground">No checkpoints yet.</p>}
             {[...save.repo.commits].reverse().map((c, i) => (
@@ -358,8 +395,11 @@ export function Game() {
               repo={save.repo}
               task={timelineTask}
               commitsAtOpen={save.repo.commits.length}
-              onRepoChange={updateRepo}
-              onAdvance={() => setMode("menu")}
+              onRepoChange={onTimelineRepoChange}
+              onAdvance={() => {
+                setNotice(null);
+                setMode("menu");
+              }}
             />
           </div>
         </div>
@@ -398,6 +438,16 @@ export function Game() {
   // playing
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-background">
+      {victory != null && (
+        <>
+          <Confetti />
+          <div className="pointer-events-none fixed left-1/2 top-10 z-[60] -translate-x-1/2 text-center">
+            <p className="font-heading text-5xl text-reward drop-shadow">MERGE CONFLICT DESTROYED!</p>
+            <p className="mt-2 font-heading text-xl text-terminal-green">Victory lap — take the Void Gate in style.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Certificate in {victory}…</p>
+          </div>
+        </>
+      )}
       {visibleActionStep && (
         <div className="arcade-frame relative" style={{ width: "min(100vw, 1280px)" }}>
           <div className="relative w-full" style={{ aspectRatio: `${WORLD_W}/${WORLD_H}` }}>
