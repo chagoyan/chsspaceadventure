@@ -393,8 +393,11 @@ export function Game() {
               repo={save.repo}
               task={timelineTask}
               commitsAtOpen={save.repo.commits.length}
-              onRepoChange={updateRepo}
-              onAdvance={() => setMode("menu")}
+              onRepoChange={onTimelineRepoChange}
+              onAdvance={() => {
+                setNotice(null);
+                setMode("menu");
+              }}
             />
           </div>
         </div>
