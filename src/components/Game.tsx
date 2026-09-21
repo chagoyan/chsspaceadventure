@@ -355,10 +355,27 @@ export function Game() {
       freeForm: true,
       recommendHealthyCheckpoint: true,
     };
+    // Moving the timeline here must also move the story back to that checkpoint's step,
+    // otherwise Continue resumes at a later mission with an older ship.
+    const onTimelineRepoChange = (repo: Repo) => {
+      setSave((s) => {
+        if (!s) return s;
+        const h = head(repo);
+        const target = h ? stepById(h.snapshot.stepId) : undefined;
+        const storyStep = target ? target.id : s.storyStep;
+        const next: SaveData = { ...s, repo, storyStep };
+        storeSave(next);
+        if (h) setNotice(`Timeline is now at ${h.hash} — "${h.message}". Continue Mission resumes from there.`);
+        return next;
+      });
+    };
     return (
       <div className="flex min-h-screen flex-col items-center bg-background p-6 text-foreground">
         <div className="w-full max-w-3xl">
           <h1 className="font-pixel text-sm text-primary">MISSION TIMELINE — git log --oneline</h1>
+          {notice && (
+            <p className="mt-3 rounded border border-primary bg-card px-3 py-2 text-sm text-foreground">{notice}</p>
+          )}
           <div className="mt-4 rounded border border-border bg-card p-4 font-mono text-sm">
             {save.repo.commits.length === 0 && <p className="text-muted-foreground">No checkpoints yet.</p>}
             {[...save.repo.commits].reverse().map((c, i) => (
