@@ -10,6 +10,7 @@ import { GameEngine, WORLD_W, WORLD_H, type EngineEvent } from "../game/engine";
 import { setMuted, startMusic, stopMusic, sfx } from "../game/audio";
 import { Terminal } from "./game/Terminal";
 import { Dialogue } from "./game/Dialogue";
+import { Confetti } from "./game/Confetti";
 import { HUD } from "./game/HUD";
 import { Menu } from "./game/Menu";
 import { CertificateView } from "../routes/certificate.$part";
