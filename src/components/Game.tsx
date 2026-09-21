@@ -28,9 +28,15 @@ export function Game() {
   const [hudScore, setHudScore] = useState(0);
   const [hudPower, setHudPower] = useState({ bombs: 2, shield: false, boostReady: true, shieldReady: true });
   const [controlsSeen, setControlsSeen] = useState(false);
+  const [victory, setVictory] = useState<number | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
+  const victoryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
+
+  useEffect(() => () => {
+    if (victoryTimer.current) clearTimeout(victoryTimer.current);
+  }, []);
 
   // load save on mount
   useEffect(() => {
