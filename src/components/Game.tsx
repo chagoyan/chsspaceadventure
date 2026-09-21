@@ -436,6 +436,16 @@ export function Game() {
   // playing
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-background">
+      {victory != null && (
+        <>
+          <Confetti />
+          <div className="pointer-events-none fixed left-1/2 top-10 z-[60] -translate-x-1/2 text-center">
+            <p className="font-heading text-5xl text-reward drop-shadow">MERGE CONFLICT DESTROYED!</p>
+            <p className="mt-2 font-heading text-xl text-terminal-green">Victory lap — take the Void Gate in style.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Certificate in {victory}…</p>
+          </div>
+        </>
+      )}
       {visibleActionStep && (
         <div className="arcade-frame relative" style={{ width: "min(100vw, 1280px)" }}>
           <div className="relative w-full" style={{ aspectRatio: `${WORLD_W}/${WORLD_H}` }}>
