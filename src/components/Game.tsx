@@ -155,6 +155,18 @@ export function Game() {
     setNotice(null);
   }, [stepId]);
 
+  // Victory lap countdown after the final boss falls.
+  useEffect(() => {
+    if (victory == null) return;
+    if (victory <= 0) {
+      setVictory(null);
+      advance();
+      return;
+    }
+    const id = setTimeout(() => setVictory((v) => (v == null ? null : v - 1)), 1000);
+    return () => clearTimeout(id);
+  }, [victory, advance]);
+
   // ---- action step engine lifecycle ----
   const step = stepById(stepId);
   const showControls = mode === "playing" && stepId === "a_field" && !controlsSeen;
