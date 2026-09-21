@@ -23,6 +23,7 @@ export interface StageSpec {
   spawnUpgradeAtKills?: { id: string; kills: number };
   safeZone?: { x: number; y: number; r: number }; // terminal beacon
   exitAfterKills?: boolean; // keep the arena open for pickups, then leave through beacon
+  kamikaze?: boolean; // one invulnerable rammer that cripples (never destroys) the ship
 }
 
 export type EngineEvent =
@@ -55,6 +56,7 @@ interface Ent {
   life?: number;
   color?: string;
   maxLife?: number;
+  kamikaze?: boolean;
 }
 
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
@@ -143,6 +145,10 @@ export class GameEngine {
       });
     }
     for (let i = 0; i < (s.drones ?? 0); i++) this.spawnDrone();
+    if (s.kamikaze) {
+      // Invulnerable rammer: beelines to the ship and detonates on contact.
+      this.ents.push({ kind: "drone", x: WORLD_W - 120, y: WORLD_H / 2, vx: 0, vy: 0, r: 17, hp: Number.POSITIVE_INFINITY, kamikaze: true });
+    }
     if (s.boss) {
       this.ents.push({
         kind: "boss",
@@ -524,7 +530,7 @@ export class GameEngine {
           e.vx = ((e.x - this.px) / d) * push;
           e.vy = ((e.y - this.py) / d) * push;
         } else {
-          const speed = 64;
+          const speed = e.kamikaze ? 250 : 64;
           e.vx = ((this.px - e.x) / d) * speed;
           e.vy = ((this.py - e.y) / d) * speed;
         }
@@ -543,7 +549,7 @@ export class GameEngine {
           }
         }
         e.fireCd = (e.fireCd ?? 1) - dt;
-        if (e.fireCd <= 0 && d < 520) {
+        if (!e.kamikaze && e.fireCd <= 0 && d < 520) {
           e.fireCd = rand(2.4, 3.5);
           this.ents.push({
             kind: "ebullet",
@@ -556,8 +562,22 @@ export class GameEngine {
           });
         }
         if (d < e.r + 18 && !shielded) {
-          this.damage(9);
-          e.hp = 0;
+          if (e.kamikaze) {
+            // Kamikaze detonation: cripples every vital system but never destroys
+            // the ship — this damage is the reason the rewind lesson matters.
+            this.ship.hull = Math.max(1, Math.min(this.ship.hull, 14));
+            this.ship.armor = 0;
+            this.ship.fuel = Math.min(this.ship.fuel, 10);
+            this.ship.energy = Math.min(this.ship.energy, 30);
+            this.ship.ammo = Math.min(this.ship.ammo, 15);
+            this.hitFlash = 0.5;
+            sfx.explosion();
+            this.burst(e.x, e.y, "#ff6b6b", 26);
+            remove.add(e);
+          } else {
+            this.damage(9);
+            e.hp = 0;
+          }
         }
       } else if (e.kind === "boss") {
         this.updateBoss(e, dt);
@@ -578,6 +598,11 @@ export class GameEngine {
           if (t.kind !== "asteroid" && t.kind !== "drone" && t.kind !== "boss") continue;
           if (Math.hypot(e.x - t.x, e.y - t.y) < t.r + e.r) {
             remove.add(e);
+            if (t.kamikaze) {
+              // Cannot be killed — shots just spark off its hull.
+              this.burst(e.x, e.y, "#ff6b6b", 4);
+              break;
+            }
             t.hp -= 1;
             if (t.hp <= 0) {
               remove.add(t);
@@ -635,7 +660,7 @@ export class GameEngine {
 
     // Combat stages arrive in manageable waves until the full target is available.
     if (this.spec.mode === "combat" && this.spec.killTarget && this.kills < this.spec.killTarget) {
-      const activeDrones = this.ents.filter((e) => e.kind === "drone").length;
+      const activeDrones = this.ents.filter((e) => e.kind === "drone" && !e.kamikaze).length;
       const remaining = this.spec.killTarget - this.kills;
       const waveSize = Math.min(this.spec.drones ?? 1, remaining);
       for (let i = activeDrones; i < waveSize; i++) this.spawnDrone();
@@ -932,7 +957,17 @@ export class GameEngine {
       } else if (e.kind === "asteroid") {
         if (e.sprite) drawSprite(ctx, e.sprite, e.x, e.y, e.r * 2.45, e.rot ?? 0);
       } else if (e.kind === "drone") {
-        drawSprite(ctx, DRONE, e.x, e.y, 58, Math.atan2(this.py - e.y, this.px - e.x));
+        const droneAngle = Math.atan2(this.py - e.y, this.px - e.x);
+        if (e.kamikaze) {
+          const pulse = this.reducedMotion ? 0 : Math.sin(t * 10) * 5;
+          ctx.save();
+          ctx.shadowColor = "rgba(255,70,70,0.95)";
+          ctx.shadowBlur = 20;
+          drawSprite(ctx, DRONE, e.x, e.y, 64 + pulse, droneAngle);
+          ctx.restore();
+        } else {
+          drawSprite(ctx, DRONE, e.x, e.y, 58, droneAngle);
+        }
       } else if (e.kind === "boss") {
         drawSprite(ctx, BOSS, e.x, e.y, 178, Math.PI);
         // boss hp bar

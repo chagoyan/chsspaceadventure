@@ -20,7 +20,7 @@ export interface TerminalTask {
   briefing: string;
   help: HelpLevel;
   hint: string; // shown for full/partial
-  hintSteps?: { after?: "status" | "add"; text: string }[];
+  hintSteps?: { after?: "status" | "add" | "commit" | "log"; text: string }[];
   requires: ("init" | "status" | "add" | "commit" | "log" | "reset" | "revert")[];
   allowedCommands?: ("init" | "status" | "add" | "commit" | "log" | "reset" | "revert")[];
   advanceLabel: string;
@@ -399,9 +399,10 @@ export const STEPS: Step[] = [
     spec: {
       mode: "nebula",
       title: "Sector 7 — The Crimson Nebula",
-      objective: "Thread the nebula clouds and reach the beacon. Plasma clouds damage your hull!",
+      objective: "Thread the nebula clouds and reach the beacon. Plasma burns — and beware the red-glowing drone: it cannot be destroyed, only outrun.",
       asteroids: 2,
       drones: 6,
+      kamikaze: true,
       beacon: { x: 1180, y: 620, r: 46 },
       nebulae: [
         { x: 500, y: 200, r: 120 },
@@ -417,10 +418,15 @@ export const STEPS: Step[] = [
     id: "t_reset",
     task: {
       title: "Rewind to Safety (Optional but wise)",
-      briefing: "KOMM: That nebula chewed us up. Our hull is in bad shape for the final stretch. Use git log --oneline to find an earlier, healthier checkpoint, then move the timeline back with git reset --hard <hash>. Read the warning carefully before confirming.",
+      briefing: "KOMM: That kamikaze drone crippled us — every system is nearly empty, and the final stretch is ahead. First assess the damage with git status, then find an earlier, healthier checkpoint with git log --oneline, and move the timeline back with git reset --hard <hash>.",
       help: "partial",
-      hint: "git log --oneline, then git reset --hard <hash>",
-      requires: ["reset"],
+      hint: "",
+      hintSteps: [
+        { text: 'Type git status and press Enter to see how badly the ship was hurt.' },
+        { text: "Type git log --oneline and press Enter. Find an earlier, healthier checkpoint.", after: "status" },
+        { text: "Type git reset --hard <hash> using that healthier checkpoint's hash, then press Enter.", after: "log" },
+      ],
+      requires: ["status", "log", "reset"],
       allowedCommands: ["init", "status", "add", "commit", "log", "reset"],
       recommendHealthyCheckpoint: true,
       advanceLabel: "Fly On",
