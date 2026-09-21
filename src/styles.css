@@ -437,3 +437,28 @@ kbd,
     color: #1a3a6b !important;
   }
 }
+
+/* Victory confetti */
+.confetti-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  overflow: hidden;
+  pointer-events: none;
+}
+.confetti-piece {
+  position: absolute;
+  top: -12vh;
+  border-radius: 2px;
+  opacity: 0.95;
+  animation-name: confetti-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+@keyframes confetti-fall {
+  0% { transform: translateY(-10vh) rotate(0deg); }
+  100% { transform: translateY(110vh) rotate(720deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .confetti-piece { animation: none; display: none; }
+}
