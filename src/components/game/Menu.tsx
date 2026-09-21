@@ -42,8 +42,8 @@ export function Menu({ save, onNewGame, onContinue, onViewLog, onViewArchive, on
         <HeroPortrait />
       </div>
       <div className="text-center">
-        <h1 className="font-pixel text-3xl text-primary md:text-4xl">OSCAR'S</h1>
-        <h2 className="mt-2 font-pixel text-sm text-accent-foreground md:text-base">GIT SPACE ADVENTURE</h2>
+        <h1 className="font-pixel text-3xl text-primary drop-shadow-[0_2px_10px_color-mix(in_oklab,var(--color-primary)_40%,transparent)] md:text-4xl">OSCAR'S</h1>
+        <h2 className="mt-2 font-pixel text-sm text-accent drop-shadow-[0_2px_8px_color-mix(in_oklab,var(--color-accent)_35%,transparent)] md:text-base">GIT SPACE ADVENTURE</h2>
         <p className="mt-3 max-w-md text-sm text-muted-foreground">
           A top-down arcade mission where Oscar uses Git commands to track the ship's status, changes, and checkpoints.
         </p>
