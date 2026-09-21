@@ -5,7 +5,7 @@ import type { CertificateData, Repo, SaveData, ShipState } from "../game/types";
 import { freshRepo } from "../game/types";
 import { loadSave, storeSave, clearSave, makeVerificationCode } from "../game/save";
 import { cloneSnapshot, head } from "../game/git";
-import { STEPS, stepById, nextStepId, type ActionStep, type DialogueStep, type TerminalStep, type CertificateStep, type TerminalTask } from "../game/story";
+import { STEPS, stepById, nextStepId, type ActionStep, type DialogueStep, type TerminalStep, type CertificateStep } from "../game/story";
 import { GameEngine, WORLD_W, WORLD_H, type EngineEvent } from "../game/engine";
 import { setMuted, startMusic, stopMusic, sfx } from "../game/audio";
 import { Terminal } from "./game/Terminal";
@@ -30,6 +30,7 @@ export function Game() {
   const [hudPower, setHudPower] = useState({ bombs: 2, shield: false, boostReady: true, shieldReady: true });
   const [controlsSeen, setControlsSeen] = useState(false);
   const [victory, setVictory] = useState<number | null>(null);
+  const [selectedCheckpointHash, setSelectedCheckpointHash] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
   const navigate = useNavigate();
@@ -340,69 +341,89 @@ export function Game() {
   }
 
   if (mode === "log" && save) {
-    const recommendedTimelineCheckpoint = save.repo.commits.slice(0, -1).reduce<(typeof save.repo.commits)[number] | null>((best, commit) => {
+    const timelineSave = save;
+    const recommendedTimelineCheckpoint = timelineSave.repo.commits.slice(0, -1).reduce<(typeof timelineSave.repo.commits)[number] | null>((best, commit) => {
       if (!best) return commit;
       const score = commit.snapshot.ship.hull + commit.snapshot.ship.armor + commit.snapshot.ship.energy + commit.snapshot.ship.fuel + commit.snapshot.ship.ammo;
       const bestScore = best.snapshot.ship.hull + best.snapshot.ship.armor + best.snapshot.ship.energy + best.snapshot.ship.fuel + best.snapshot.ship.ammo;
       return score > bestScore ? commit : best;
     }, null);
-    const timelineTask: TerminalTask = {
-      title: "Checkpoint Navigator",
-      briefing: "Use git log --oneline to review checkpoints. To continue from an earlier one, type git reset --hard <hash> and confirm.",
-      help: "panel" as const,
-      hint: "git log --oneline",
-      requires: [],
-      allowedCommands: ["init", "status", "add", "commit", "log", "reset", "revert"],
-      advanceLabel: "Back to Main Menu",
-      freeForm: true,
-      recommendHealthyCheckpoint: true,
-    };
-    // Moving the timeline here must also move the story back to that checkpoint's step,
-    // otherwise Continue resumes at a later mission with an older ship.
-    const onTimelineRepoChange = (repo: Repo) => {
-      setSave((s) => {
-        if (!s) return s;
-        const h = head(repo);
-        const target = h ? stepById(h.snapshot.stepId) : undefined;
-        const storyStep = target ? target.id : s.storyStep;
-        const next: SaveData = { ...s, repo, storyStep };
-        storeSave(next);
-        if (h) setNotice(`Timeline is now at ${h.hash} — "${h.message}". Continue Mission resumes from there.`);
-        return next;
-      });
-    };
+    const selectedCheckpoint = selectedCheckpointHash
+      ? timelineSave.repo.commits.find((commit) => commit.hash === selectedCheckpointHash) ?? null
+      : null;
+
+    function startFromCheckpoint(hash: string) {
+      const index = timelineSave.repo.commits.findIndex((commit) => commit.hash === hash);
+      const checkpoint = index >= 0 ? timelineSave.repo.commits[index] : undefined;
+      if (!checkpoint) return;
+      const target = stepById(checkpoint.snapshot.stepId);
+      const storyStep = target ? target.id : timelineSave.storyStep;
+      const repo: Repo = {
+        ...timelineSave.repo,
+        commits: timelineSave.repo.commits.slice(0, index + 1),
+        working: cloneSnapshot(checkpoint.snapshot),
+        staged: null,
+      };
+      persist({ ...timelineSave, repo, storyStep });
+      setStepId(storyStep);
+      setSelectedCheckpointHash(null);
+      setNotice(`Restored checkpoint ${checkpoint.hash} — "${checkpoint.message}".`);
+      setMuted(timelineSave.settings.muted);
+      startMusic(((Math.max(1, checkpoint.snapshot.stage) - 1) % 3) + 1);
+      setMode("playing");
+    }
+
     return (
-      <div className="flex min-h-screen flex-col items-center bg-background p-6 text-foreground">
+      <div className="flex min-h-screen flex-col items-center bg-background p-4 text-foreground sm:p-6">
         <div className="w-full max-w-3xl">
-          <h1 className="font-pixel text-sm text-primary">MISSION TIMELINE — git log --oneline</h1>
+          <h1 className="font-heading text-3xl text-primary sm:text-4xl">MISSION TIMELINE</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Choose a checkpoint to restart the mission from that moment.</p>
           {notice && (
             <p className="mt-3 rounded border border-primary bg-card px-3 py-2 text-sm text-foreground">{notice}</p>
           )}
-          <div className="mt-4 rounded border border-border bg-card p-4 font-mono text-sm">
-            {save.repo.commits.length === 0 && <p className="text-muted-foreground">No checkpoints yet.</p>}
-            {[...save.repo.commits].reverse().map((c, i) => (
-              <div key={c.hash} className="py-1">
-                <span className={c.hash === recommendedTimelineCheckpoint?.hash ? "hash-recommended text-terminal-green" : "hash-flash text-terminal-green"}>{c.hash}</span>
-                {i === 0 && <span className="text-muted-foreground"> (HEAD -&gt; main)</span>}{" "}
-                <span className="text-foreground">{c.message}</span>
-                <span className="ml-2 text-xs text-muted-foreground">{new Date(c.timestamp).toLocaleString()}</span>
-              </div>
+          <div className="mt-5 overflow-hidden rounded border border-border bg-card font-mono text-sm">
+            {timelineSave.repo.commits.length === 0 && <p className="p-4 text-muted-foreground">No checkpoints yet.</p>}
+            {[...timelineSave.repo.commits].reverse().map((c, i) => (
+              <Button
+                key={c.hash}
+                type="button"
+                variant="ghost"
+                onClick={() => setSelectedCheckpointHash(c.hash)}
+                className="h-auto w-full justify-start rounded-none border-b border-border px-4 py-4 text-left last:border-b-0 hover:bg-accent/10"
+                aria-label={`Start from checkpoint ${c.hash}: ${c.message}`}
+              >
+                <span className="flex min-w-0 flex-1 flex-col items-start gap-1 sm:flex-row sm:items-baseline sm:gap-3">
+                  <span className={c.hash === recommendedTimelineCheckpoint?.hash ? "hash-recommended shrink-0 text-terminal-green" : "hash-flash shrink-0 text-terminal-green"}>{c.hash}</span>
+                  <span className="min-w-0 whitespace-normal text-foreground">{c.message}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground sm:ml-auto">{new Date(c.timestamp).toLocaleString()}</span>
+                </span>
+                {i === 0 && <span className="shrink-0 text-xs text-muted-foreground">CURRENT</span>}
+              </Button>
             ))}
           </div>
-          <div className="mt-5">
-            <Terminal
-              embedded
-              repo={save.repo}
-              task={timelineTask}
-              commitsAtOpen={save.repo.commits.length}
-              onRepoChange={onTimelineRepoChange}
-              onAdvance={() => {
-                setNotice(null);
-                setMode("menu");
-              }}
-            />
-          </div>
+          <Button type="button" variant="outline" className="mt-5" onClick={() => { setSelectedCheckpointHash(null); setNotice(null); setMode("menu"); }}>
+            Back to Main Menu
+          </Button>
         </div>
+
+        {selectedCheckpoint && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/85 p-4" role="dialog" aria-modal="true" aria-label="Confirm checkpoint">
+            <div className="arcade-panel w-full max-w-md p-6 text-center">
+              <p className="font-heading text-3xl text-primary">START HERE?</p>
+              <p className="mt-3 text-sm text-foreground">
+                Restore <span className="hash-flash font-mono text-terminal-green">{selectedCheckpoint.hash}</span>{" "}
+                “{selectedCheckpoint.message}” and continue from that mission?
+              </p>
+              {selectedCheckpoint.hash !== timelineSave.repo.commits[timelineSave.repo.commits.length - 1]?.hash && (
+                <p className="mt-3 text-xs text-muted-foreground">Later checkpoints will be removed from this timeline.</p>
+              )}
+              <div className="mt-5 flex justify-center gap-3">
+                <Button type="button" onClick={() => startFromCheckpoint(selectedCheckpoint.hash)}>Start from checkpoint</Button>
+                <Button type="button" variant="outline" onClick={() => setSelectedCheckpointHash(null)}>Cancel</Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
