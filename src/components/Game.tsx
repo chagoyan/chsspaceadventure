@@ -246,6 +246,11 @@ export function Game() {
     }
     if (e.type === "objective") {
       syncWorkingFromEngine(engine);
+      if (current.spec.boss) {
+        // Victory lap: celebrate and let the player fly before the certificate.
+        setVictory(8);
+        return;
+      }
       advance();
       return;
     }
