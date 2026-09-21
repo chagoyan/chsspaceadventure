@@ -31,12 +31,7 @@ export function Game() {
   const [victory, setVictory] = useState<number | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
-  const victoryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
-
-  useEffect(() => () => {
-    if (victoryTimer.current) clearTimeout(victoryTimer.current);
-  }, []);
 
   // load save on mount
   useEffect(() => {
