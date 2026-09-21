@@ -256,6 +256,7 @@ export function Game() {
       syncWorkingFromEngine(engine);
       if (current.spec.boss) {
         // Victory lap: celebrate and let the player fly before the certificate.
+        engine.celebrate(12);
         setVictory(8);
         return;
       }
