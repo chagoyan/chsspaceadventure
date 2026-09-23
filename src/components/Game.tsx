@@ -4,7 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import type { CertificateData, Repo, SaveData, ShipState } from "../game/types";
 import { freshRepo } from "../game/types";
 import { loadSave, storeSave, clearSave, makeVerificationCode } from "../game/save";
-import { cloneSnapshot, head } from "../game/git";
+import { cloneSnapshot, head, mergeOrphaned } from "../game/git";
 import { STEPS, stepById, nextStepId, type ActionStep, type DialogueStep, type TerminalStep, type CertificateStep } from "../game/story";
 import { GameEngine, WORLD_W, WORLD_H, type EngineEvent } from "../game/engine";
 import { setMuted, startMusic, stopMusic, sfx } from "../game/audio";
@@ -31,6 +31,7 @@ export function Game() {
   const [controlsSeen, setControlsSeen] = useState(false);
   const [victory, setVictory] = useState<number | null>(null);
   const [selectedCheckpointHash, setSelectedCheckpointHash] = useState<string | null>(null);
+  const [resetTargetHash, setResetTargetHash] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
   const navigate = useNavigate();
@@ -140,7 +141,10 @@ export function Game() {
   }
 
   const advance = useCallback(() => {
-    const next = nextStepId(stepId);
+    // Once the rewind lesson is done, a replayed run must not repeat it.
+    const skip = new Set(save?.flags?.["resetDone"] ? ["t_reset"] : []);
+    let next = nextStepId(stepId);
+    while (next && skip.has(next)) next = nextStepId(next);
     if (!next) {
       setMode("done");
       return;
@@ -155,7 +159,7 @@ export function Game() {
     });
     setDestroyed(null);
     setNotice(null);
-  }, [stepId]);
+  }, [stepId, save?.flags]);
 
   // Victory lap countdown after the final boss falls.
   useEffect(() => {
@@ -182,11 +186,20 @@ export function Game() {
     setHudKills(0);
     setHudScore(working.score);
     startMusic(((Math.max(1, working.stage) - 1) % 3) + 1);
+    // Sector 7 replay (after a reset): the rammer returns, but it can be shot down.
+    const replayingNebula = actionStep.id === "a_nebula" && !!save.flags?.["resetDone"];
+    const spec = replayingNebula
+      ? {
+          ...actionStep.spec,
+          kamikazeWeak: true,
+          objective: "Thread the nebula clouds and reach the beacon. The red rammer is back — this time your guns can bring it down.",
+        }
+      : actionStep.spec;
     const engine = new GameEngine(
       canvasRef.current,
       working.ship,
       working.score,
-      actionStep.spec,
+      spec,
       {
         onShip: (ship, extras) => {
           setHudShip(ship);
@@ -361,6 +374,7 @@ export function Game() {
       const repo: Repo = {
         ...timelineSave.repo,
         commits: timelineSave.repo.commits.slice(0, index + 1),
+        orphaned: mergeOrphaned(timelineSave.repo.orphaned, timelineSave.repo.commits.slice(index + 1)),
         working: cloneSnapshot(checkpoint.snapshot),
         staged: null,
       };
@@ -401,6 +415,20 @@ export function Game() {
               </Button>
             ))}
           </div>
+          {(timelineSave.repo.orphaned?.length ?? 0) > 0 && (
+            <div className="mt-6">
+              <p className="font-heading text-lg text-muted-foreground">NO LONGER IN THIS TIMELINE</p>
+              <p className="text-xs text-muted-foreground">These checkpoints existed before a reset. They are kept here for reference only.</p>
+              <div className="mt-2 overflow-hidden rounded border border-dashed border-border bg-card/40 font-mono text-sm opacity-50">
+                {timelineSave.repo.orphaned?.map((c) => (
+                  <div key={c.hash} className="flex flex-col gap-1 border-b border-border px-4 py-3 text-left line-through last:border-b-0 sm:flex-row sm:items-baseline sm:gap-3">
+                    <span className="shrink-0 text-muted-foreground">{c.hash}</span>
+                    <span className="min-w-0 text-muted-foreground">{c.message}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <Button type="button" variant="outline" className="mt-5" onClick={() => { setSelectedCheckpointHash(null); setNotice(null); setMode("menu"); }}>
             Back to Main Menu
           </Button>
@@ -566,7 +594,26 @@ export function Game() {
           task={(step as TerminalStep).task}
           commitsAtOpen={save.repo.commits.length}
           onRepoChange={updateRepo}
+          onReset={(hash) => setResetTargetHash(hash)}
           onAdvance={() => {
+            if (resetTargetHash) {
+              // A reset rewinds BOTH the ship and the mission: resume from the
+              // step right after the restored checkpoint and replay forward.
+              const target = save.repo.commits.find((c) => c.hash === resetTargetHash);
+              setResetTargetHash(null);
+              if (target) {
+                const back = nextStepId(target.snapshot.stepId) ?? target.snapshot.stepId;
+                const updated: SaveData = {
+                  ...save,
+                  storyStep: back,
+                  flags: { ...(save.flags ?? {}), resetDone: true },
+                };
+                persist(updated);
+                setStepId(back);
+                setNotice(`Timeline rewound to ${target.hash} — "${target.message}". Later checkpoints are no longer part of this timeline. Fly these missions again and make new checkpoints.`);
+                return;
+              }
+            }
             if (step.id === "t_turbocommit") {
               // Committing the Turbo Core also commits its hidden instability.
               setSave((s) => {

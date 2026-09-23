@@ -32,6 +32,7 @@ export interface Repo {
   working: GameSnapshot; // current live state
   staged: GameSnapshot | null; // prepared by `git add .`
   commits: Commit[];
+  orphaned?: Commit[]; // checkpoints dropped by a reset — kept for display only
 }
 
 export interface CertificateData {
@@ -54,6 +55,7 @@ export interface SaveData {
   playTimeSeconds: number;
   gameComplete: boolean;
   settings: { reducedMotion: boolean; muted: boolean };
+  flags?: Record<string, boolean>; // run-level progress flags (e.g. resetDone)
 }
 
 export const DEFAULT_SHIP: ShipState = {

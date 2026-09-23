@@ -24,6 +24,7 @@ export interface StageSpec {
   safeZone?: { x: number; y: number; r: number }; // terminal beacon
   exitAfterKills?: boolean; // keep the arena open for pickups, then leave through beacon
   kamikaze?: boolean; // one invulnerable rammer that cripples (never destroys) the ship
+  kamikazeWeak?: boolean; // second encounter: the same rammer appears but can be shot down
 }
 
 export type EngineEvent =
@@ -57,6 +58,7 @@ interface Ent {
   color?: string;
   maxLife?: number;
   kamikaze?: boolean;
+  weak?: boolean; // kamikaze variant that can be destroyed and only grazes the ship
 }
 
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
@@ -146,8 +148,20 @@ export class GameEngine {
     }
     for (let i = 0; i < (s.drones ?? 0); i++) this.spawnDrone();
     if (s.kamikaze) {
-      // Invulnerable rammer: beelines to the ship and detonates on contact.
-      this.ents.push({ kind: "drone", x: WORLD_W - 120, y: WORLD_H / 2, vx: 0, vy: 0, r: 17, hp: Number.POSITIVE_INFINITY, kamikaze: true });
+      // Rammer: beelines to the ship. Normally invulnerable and crippling; on a
+      // replayed run (after a reset) it shows up again but can be shot down.
+      const weak = !!s.kamikazeWeak;
+      this.ents.push({
+        kind: "drone",
+        x: WORLD_W - 120,
+        y: WORLD_H / 2,
+        vx: 0,
+        vy: 0,
+        r: 17,
+        hp: weak ? 6 : Number.POSITIVE_INFINITY,
+        kamikaze: true,
+        weak,
+      });
     }
     if (s.boss) {
       this.ents.push({
@@ -570,7 +584,14 @@ export class GameEngine {
           });
         }
         if (d < e.r + 18 && !shielded) {
-          if (e.kamikaze) {
+          if (e.kamikaze && e.weak) {
+            // Replay run: the same rammer, but the hit is survivable.
+            this.damage(14);
+            this.hitFlash = 0.35;
+            sfx.explosion();
+            this.burst(e.x, e.y, "#ff6b6b", 16);
+            remove.add(e);
+          } else if (e.kamikaze) {
             // Kamikaze detonation: cripples every vital system but never destroys
             // the ship — this damage is the reason the rewind lesson matters.
             this.ship.hull = Math.max(1, Math.min(this.ship.hull, 14));
@@ -606,7 +627,7 @@ export class GameEngine {
           if (t.kind !== "asteroid" && t.kind !== "drone" && t.kind !== "boss") continue;
           if (Math.hypot(e.x - t.x, e.y - t.y) < t.r + e.r) {
             remove.add(e);
-            if (t.kamikaze) {
+            if (t.kamikaze && !t.weak) {
               // Cannot be killed — shots just spark off its hull.
               this.burst(e.x, e.y, "#ff6b6b", 4);
               break;
