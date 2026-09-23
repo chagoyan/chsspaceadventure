@@ -466,6 +466,18 @@ function freshForRevert(repo: Repo): GameSnapshot {
   };
 }
 
+// Keep dropped checkpoints around (newest first) so the UI can gray them out.
+export function mergeOrphaned(existing: Commit[] | undefined, dropped: Commit[]): Commit[] {
+  const seen = new Set<string>();
+  const out: Commit[] = [];
+  for (const c of [...dropped, ...(existing ?? [])]) {
+    if (seen.has(c.hash)) continue;
+    seen.add(c.hash);
+    out.push(c);
+  }
+  return out.slice(0, 20);
+}
+
 // Apply the side effects an ExecResult requests. Returns a NEW repo (immutable-ish).
 export function applyResult(repo: Repo, result: ExecResult): Repo {
   const next: Repo = {
