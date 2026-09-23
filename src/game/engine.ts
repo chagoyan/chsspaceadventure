@@ -24,6 +24,7 @@ export interface StageSpec {
   safeZone?: { x: number; y: number; r: number }; // terminal beacon
   exitAfterKills?: boolean; // keep the arena open for pickups, then leave through beacon
   kamikaze?: boolean; // one invulnerable rammer that cripples (never destroys) the ship
+  kamikazeWeak?: boolean; // second encounter: the same rammer appears but can be shot down
 }
 
 export type EngineEvent =
