@@ -616,7 +616,13 @@ export function Game() {
               const target = save.repo.commits.find((c) => c.hash === resetTargetHash);
               setResetTargetHash(null);
               if (target) {
-                const back = nextStepId(target.snapshot.stepId) ?? target.snapshot.stepId;
+                // Checkpoints created in a terminal resume at the step after it;
+                // older saves stamped with a flight step replay that flight.
+                const origin = stepById(target.snapshot.stepId);
+                const back =
+                  origin && origin.kind === "terminal"
+                    ? nextStepId(origin.id) ?? origin.id
+                    : origin?.id ?? target.snapshot.stepId;
                 const updated: SaveData = {
                   ...save,
                   storyStep: back,
