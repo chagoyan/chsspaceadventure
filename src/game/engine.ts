@@ -584,7 +584,14 @@ export class GameEngine {
           });
         }
         if (d < e.r + 18 && !shielded) {
-          if (e.kamikaze) {
+          if (e.kamikaze && e.weak) {
+            // Replay run: the same rammer, but the hit is survivable.
+            this.damage(14);
+            this.hitFlash = 0.35;
+            sfx.explosion();
+            this.burst(e.x, e.y, "#ff6b6b", 16);
+            remove.add(e);
+          } else if (e.kamikaze) {
             // Kamikaze detonation: cripples every vital system but never destroys
             // the ship — this damage is the reason the rewind lesson matters.
             this.ship.hull = Math.max(1, Math.min(this.ship.hull, 14));
