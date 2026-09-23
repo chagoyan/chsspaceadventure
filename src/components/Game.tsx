@@ -370,7 +370,11 @@ export function Game() {
       const checkpoint = index >= 0 ? timelineSave.repo.commits[index] : undefined;
       if (!checkpoint) return;
       const target = stepById(checkpoint.snapshot.stepId);
-      const storyStep = target ? target.id : timelineSave.storyStep;
+      const storyStep = target
+        ? target.kind === "terminal"
+          ? nextStepId(target.id) ?? target.id
+          : target.id
+        : timelineSave.storyStep;
       const repo: Repo = {
         ...timelineSave.repo,
         commits: timelineSave.repo.commits.slice(0, index + 1),
