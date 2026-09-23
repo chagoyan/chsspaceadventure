@@ -75,6 +75,16 @@ export function Terminal({ repo, task, commitsAtOpen, onRepoChange, onAdvance, o
   function lessonBlock(raw: string): StatusLine[] | null {
     const command = commandFrom(raw);
     if (!command || task.freeForm) return null;
+    // Reset and revert stay available in EVERY lesson once checkpoints exist.
+    // Players are free to experiment with undoing history at any time — the
+    // consequences (rewound missions, new revert checkpoints) are the lesson.
+    if (command === "reset" || command === "revert") {
+      if (repo.commits.length > 0) return null;
+      return [
+        { text: `KOMM: There are no checkpoints to ${command} yet.`, kind: "info" },
+        { text: `Make one first: git add . then git commit -m "message".`, kind: "info" },
+      ];
+    }
     if (task.allowedCommands && !task.allowedCommands.includes(command)) {
       return [
         { text: `KOMM: We have not learned git ${command} yet.`, kind: "info" },
