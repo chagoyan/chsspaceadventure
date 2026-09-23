@@ -13,6 +13,7 @@ interface Props {
   commitsAtOpen: number;
   onRepoChange: (repo: Repo) => void;
   onAdvance: () => void;
+  onReset?: (hash: string) => void;
   onClose?: () => void;
   showHelpPanel?: boolean;
   embedded?: boolean;
