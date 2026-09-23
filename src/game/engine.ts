@@ -148,8 +148,20 @@ export class GameEngine {
     }
     for (let i = 0; i < (s.drones ?? 0); i++) this.spawnDrone();
     if (s.kamikaze) {
-      // Invulnerable rammer: beelines to the ship and detonates on contact.
-      this.ents.push({ kind: "drone", x: WORLD_W - 120, y: WORLD_H / 2, vx: 0, vy: 0, r: 17, hp: Number.POSITIVE_INFINITY, kamikaze: true });
+      // Rammer: beelines to the ship. Normally invulnerable and crippling; on a
+      // replayed run (after a reset) it shows up again but can be shot down.
+      const weak = !!s.kamikazeWeak;
+      this.ents.push({
+        kind: "drone",
+        x: WORLD_W - 120,
+        y: WORLD_H / 2,
+        vx: 0,
+        vy: 0,
+        r: 17,
+        hp: weak ? 6 : Number.POSITIVE_INFINITY,
+        kamikaze: true,
+        weak,
+      });
     }
     if (s.boss) {
       this.ents.push({
