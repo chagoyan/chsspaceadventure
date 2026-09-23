@@ -644,7 +644,7 @@ export function Game() {
                 const updated: SaveData = {
                   ...save,
                   storyStep: back,
-                  flags: { ...(save.flags ?? {}), resetDone: true },
+                  flags: { ...(save.flags ?? {}), resetDone: true, [`lessonDone:${step.id}`]: true },
                 };
                 persist(updated);
                 setStepId(back);
@@ -672,6 +672,10 @@ export function Game() {
                 return;
               }
               setNotice("Corruption reversed! The harmful checkpoint remains in history, undone by a new one. That's git revert.");
+            }
+            // Mark this lesson as learned so replays after a rewind run free-form.
+            if (!save.flags?.[`lessonDone:${step.id}`]) {
+              persist({ ...save, flags: { ...(save.flags ?? {}), [`lessonDone:${step.id}`]: true } });
             }
             advance();
           }}
