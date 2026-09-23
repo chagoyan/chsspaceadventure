@@ -55,6 +55,7 @@ export interface SaveData {
   playTimeSeconds: number;
   gameComplete: boolean;
   settings: { reducedMotion: boolean; muted: boolean };
+  flags?: Record<string, boolean>; // run-level progress flags (e.g. resetDone)
 }
 
 export const DEFAULT_SHIP: ShipState = {
