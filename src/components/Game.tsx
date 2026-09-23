@@ -595,7 +595,22 @@ export function Game() {
         <Terminal
           key={step.id}
           repo={save.repo}
-          task={(step as TerminalStep).task}
+          task={(() => {
+            const t = (step as TerminalStep).task;
+            // After a rewind the player replays missions, but a lesson they
+            // already completed should not re-teach from scratch: replay it
+            // free-form (no step-by-step hints), still requiring its commands.
+            if (!save.flags?.[`lessonDone:${step.id}`]) return t;
+            return {
+              ...t,
+              freeForm: true,
+              allowedCommands: undefined,
+              hintSteps: undefined,
+              help: "panel" as const,
+              briefing:
+                "KOMM: You already know this drill — a rewind erases the checkpoints, not what you learned. Run the commands again to make a fresh checkpoint, then continue.",
+            };
+          })()}
           commitsAtOpen={save.repo.commits.length}
           onRepoChange={(repo) => {
             // Stamp checkpoints with the terminal step that created them so a
