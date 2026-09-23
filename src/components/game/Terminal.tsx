@@ -141,7 +141,10 @@ export function Terminal({ repo, task, commitsAtOpen, onRepoChange, onAdvance, o
         sfx.commit();
       }
       if (successfulLog) setDone((d) => new Set(d).add("log"));
-      if (result.didReset) setDone((d) => new Set(d).add("reset"));
+      if (result.didReset) {
+        setDone((d) => new Set(d).add("reset"));
+        onReset?.(result.didReset.hash);
+      }
       if (result.didRevert) setDone((d) => new Set(d).add("revert"));
       if (result.didInit || result.didStage || result.commit || result.didReset || result.didRevert) {
         onRepoChange(applyResult(repo, result));
@@ -192,6 +195,7 @@ export function Terminal({ repo, task, commitsAtOpen, onRepoChange, onAdvance, o
       if (result.didReset) {
         setDone((d) => new Set(d).add("reset"));
         onRepoChange(applyResult(repo, result));
+        onReset?.(result.didReset.hash);
         sfx.commit();
       }
       setHistory((h) => [
