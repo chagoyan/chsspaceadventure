@@ -111,10 +111,12 @@ function TeacherPage() {
         <h1 className="mt-4 font-pixel text-lg text-primary">TEACHER CONCEPT MAP</h1>
         <p className="mt-3 text-sm text-muted-foreground">
           Oscar's Git Space Adventure teaches the working-tree → staging → commit → history → reversal
-          model through arcade gameplay. Each mechanic below maps to the Git concept it builds.
-          Students type Git commands in a simulated ship terminal; no Git installation is required.
-          Scope intentionally excludes branches, remotes, and merging (Version 1).
+          model through arcade gameplay across 11 sectors. Students type Git commands in a simulated
+          ship terminal; no Git installation is required. Each lesson only accepts the commands taught
+          so far, and guided steps appear one at a time. Scope intentionally excludes branches,
+          remotes, and merging (Version 1).
         </p>
+
         <div className="mt-6 overflow-x-auto rounded-lg border border-border">
           <table className="w-full text-left text-sm">
             <thead className="bg-card font-pixel text-[9px] text-muted-foreground">
