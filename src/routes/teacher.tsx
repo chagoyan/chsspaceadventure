@@ -119,22 +119,27 @@ function TeacherPage() {
           <table className="w-full text-left text-sm">
             <thead className="bg-card font-pixel text-[9px] text-muted-foreground">
               <tr>
-                <th className="p-3">GAME MECHANIC</th>
+                <th className="p-3">WHERE IT HAPPENS</th>
                 <th className="p-3">REAL GIT CONCEPT</th>
                 <th className="p-3">COMMAND</th>
+                <th className="p-3">BEFORE</th>
+                <th className="p-3">AFTER / VISIBLE EFFECT</th>
               </tr>
             </thead>
             <tbody>
               {MAP.map((row) => (
-                <tr key={row.mechanic} className="border-t border-border align-top">
-                  <td className="p-3 text-foreground">{row.mechanic}</td>
+                <tr key={row.where} className="border-t border-border align-top">
+                  <td className="p-3 text-foreground">{row.where}</td>
                   <td className="p-3 text-muted-foreground">{row.concept}</td>
-                  <td className="whitespace-nowrap p-3 font-mono text-xs text-terminal-green">{row.commands}</td>
+                  <td className="p-3 font-mono text-xs text-terminal-green">{row.commands}</td>
+                  <td className="p-3 text-muted-foreground">{row.before}</td>
+                  <td className="p-3 text-foreground">{row.after}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+
         <p className="mt-6 text-xs text-muted-foreground">
           Certificates are generated locally in the student's browser as classroom completion
           evidence. They are not cryptographically or server verified. Progress persists in
