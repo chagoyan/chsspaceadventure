@@ -5,13 +5,8 @@ import { clearSave } from "../../game/save";
 import { Link } from "@tanstack/react-router";
 import { Volume2, VolumeX } from "lucide-react";
 import oscarToad from "../../assets/oscar-toad.png.asset.json";
-import shipAsset from "../../assets/voyage-ship.png.asset.json";
-
-function HeroPortrait() {
-  return (
-    <img src={oscarToad.url} alt="Oscar the horned toad in a CHS spacesuit" className="h-48 w-auto object-contain drop-shadow-[0_0_18px_color-mix(in_oklab,var(--color-primary)_30%,transparent)]" />
-  );
-}
+import shipAsset from "../../assets/oscar-round-ship.png";
+import { Button } from "../ui/button";
 
 interface Props {
   save: SaveData | null;
@@ -32,40 +27,42 @@ export function Menu({ save, onNewGame, onContinue, onViewLog, onViewArchive, on
   const latest = save?.repo.commits[save.repo.commits.length - 1];
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center gap-5 overflow-hidden bg-background p-6">
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background px-5 py-8 sm:px-8">
       <div className="stars-bg" aria-hidden />
-      <button type="button" onClick={onToggleSound} className="absolute right-5 top-5 z-10 rounded-full border border-border bg-card p-3 text-accent hover:bg-secondary" aria-label={muted ? "Turn music and sound on" : "Turn music and sound off"} title={muted ? "Sound off" : "Sound on"}>
-        {muted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
-      </button>
-      <div className="relative z-0 flex h-52 w-full max-w-2xl items-center justify-center">
-        <img src={shipAsset.url} alt="Oscar's illustrated spacecraft" className="absolute h-auto w-[min(84vw,34rem)] opacity-30" />
-        <HeroPortrait />
-      </div>
-      <div className="text-center">
-        <h1 className="font-pixel text-3xl text-primary drop-shadow-[0_2px_10px_color-mix(in_oklab,var(--color-primary)_40%,transparent)] md:text-4xl">OSCAR'S</h1>
-        <h2 className="mt-2 font-pixel text-sm text-accent drop-shadow-[0_2px_8px_color-mix(in_oklab,var(--color-accent)_35%,transparent)] md:text-base">GIT SPACE ADVENTURE</h2>
-        <p className="mt-3 max-w-md text-sm text-muted-foreground">
-          A top-down arcade mission where Oscar uses Git commands to track the ship's status, changes, and checkpoints.
+      <main className="relative z-10 flex w-full max-w-2xl flex-col items-center text-center">
+        <img
+          src={shipAsset}
+          alt="Oscar piloting his round spacecraft"
+          className="h-auto w-[min(78vw,22rem)] object-contain drop-shadow-[0_0_30px_color-mix(in_oklab,var(--color-primary)_28%,transparent)]"
+        />
+
+        <p className="mt-3 font-pixel text-sm tracking-[0.28em] text-terminal-green sm:text-base">
+          KOMM GIT TRAINING · MISSION TWO
         </p>
-      </div>
+        <h1 className="mt-2 font-pixel text-5xl leading-none text-primary drop-shadow-[0_3px_12px_color-mix(in_oklab,var(--color-primary)_38%,transparent)] sm:text-7xl">
+          GIT SPACE ADVENTURE
+        </h1>
+        <p className="mt-5 max-w-lg text-base text-muted-foreground">
+          Learn to use KOMM's Git terminal commands to track changes, create checkpoints, and keep Oscar's ship flying.
+        </p>
 
       {!save && (
         <form
-          className="flex w-full max-w-sm flex-col gap-3"
+          className="mt-8 flex w-full max-w-md flex-col gap-3"
           onSubmit={(e) => {
             e.preventDefault();
             if (name.trim().length >= 2) onNewGame(name.trim());
           }}
         >
-          <label className="text-sm font-medium text-foreground" htmlFor="pilot-name">
-            Pilot's full name <span className="text-muted-foreground">(goes on your certificates — check spelling!)</span>
+          <label className="font-pixel text-lg tracking-[0.08em] text-terminal-green" htmlFor="pilot-name">
+            PLAYER NAME
           </label>
           <input
             id="pilot-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="rounded border border-input bg-card px-3 py-2 text-foreground focus:outline-2 focus:outline-ring"
-            placeholder="e.g. Ada Lovelace"
+            className="h-12 border border-primary/60 bg-background px-4 text-center text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-ring"
+            placeholder="Enter your full name"
             autoComplete="name"
           />
           {name.trim().length >= 2 && (
@@ -73,80 +70,95 @@ export function Menu({ save, onNewGame, onContinue, onViewLog, onViewArchive, on
               Certificates will read: <span className="font-bold text-foreground">{name.trim()}</span>
             </p>
           )}
-          <button
+          <Button
             type="submit"
             disabled={name.trim().length < 2}
-            className="rounded bg-primary px-4 py-3 font-pixel text-xs text-primary-foreground hover:opacity-90 disabled:opacity-40"
+            size="lg"
+            className="mt-1 h-13 font-pixel text-xl"
           >
-            START NEW MISSION
-          </button>
+            START MISSION TWO
+          </Button>
         </form>
       )}
 
       {save && (
-        <div className="flex w-full max-w-sm flex-col gap-2">
-          <p className="text-center text-sm text-muted-foreground">
-            Welcome back, <span className="font-bold text-foreground">{save.studentName}</span>
-            {latest && (
-              <>
-                <br />
-                Latest checkpoint: <span className="hash-flash font-mono text-terminal-green">{latest.hash}</span> "{latest.message}"
-              </>
-            )}
-          </p>
-          <button type="button" onClick={onContinue} className="rounded bg-primary px-4 py-3 font-pixel text-xs text-primary-foreground hover:opacity-90">
-            CONTINUE FROM LATEST COMMIT
-          </button>
-          <button type="button" onClick={onViewLog} className="rounded border border-border bg-card px-4 py-2 text-sm text-foreground hover:bg-accent">
-            View Git Log ({save.repo.commits.length} checkpoint{save.repo.commits.length === 1 ? "" : "s"})
-          </button>
-          {save.certificates.length > 0 && (
-            <button type="button" onClick={onViewArchive} className="rounded border border-border bg-card px-4 py-2 text-sm text-foreground hover:bg-accent">
-              Certificate Archive ({save.certificates.length})
-            </button>
+        <div className="mt-8 flex w-full max-w-md flex-col items-center gap-3">
+          <p className="font-pixel text-lg tracking-[0.08em] text-terminal-green">PLAYER NAME</p>
+          <div className="flex h-12 w-full items-center justify-center border border-primary/60 bg-background px-4 text-foreground">
+            {save.studentName}
+          </div>
+          <div className="mt-1 grid w-full grid-cols-2 gap-3 sm:grid-cols-[1.25fr_1fr_auto]">
+            <Button type="button" onClick={onContinue} size="lg" className="h-13 font-pixel text-xl">
+              CONTINUE
+            </Button>
+            <Button type="button" onClick={() => setConfirmOver(true)} variant="outline" size="lg" className="h-13 font-pixel text-xl">
+              START OVER
+            </Button>
+            <Button type="button" onClick={onToggleSound} variant="ghost" size="lg" className="col-span-2 h-13 font-pixel text-lg text-foreground sm:col-span-1" aria-label={muted ? "Turn music and sound on" : "Turn music and sound off"}>
+              {muted ? <VolumeX /> : <Volume2 />}
+              {muted ? "SOUND OFF" : "SOUND ON"}
+            </Button>
+          </div>
+          {latest && (
+            <p className="text-xs text-muted-foreground">
+              Saved at <span className="font-mono text-foreground">{latest.message}</span>
+            </p>
           )}
-          {!confirmOver ? (
-            <button type="button" onClick={() => setConfirmOver(true)} className="rounded border border-border px-4 py-2 text-sm text-muted-foreground hover:bg-accent">
-              Start Over (keep name & certificates)
-            </button>
-          ) : (
+          <Button type="button" onClick={onViewLog} variant="outline" className="mt-2 w-full">
+            View Git Log ({save.repo.commits.length} checkpoint{save.repo.commits.length === 1 ? "" : "s"})
+          </Button>
+          {save.certificates.length > 0 && (
+            <Button type="button" onClick={onViewArchive} variant="outline" className="w-full">
+              Certificate Archive ({save.certificates.length})
+            </Button>
+          )}
+          {confirmOver && (
             <div className="rounded border border-destructive bg-destructive/10 p-3 text-sm">
               <p className="text-foreground">Restart the mission from the beginning? Your checkpoint history will be lost.</p>
               <div className="mt-2 flex gap-2">
-                <button type="button" onClick={onStartOver} className="rounded bg-destructive px-3 py-1.5 font-bold text-destructive-foreground">Yes, start over</button>
-                <button type="button" onClick={() => setConfirmOver(false)} className="rounded border border-border px-3 py-1.5">Cancel</button>
+                <Button type="button" onClick={onStartOver} variant="destructive" size="sm">Yes, start over</Button>
+                <Button type="button" onClick={() => setConfirmOver(false)} variant="outline" size="sm">Cancel</Button>
               </div>
             </div>
           )}
           {!confirmReset ? (
-            <button type="button" onClick={() => setConfirmReset(true)} className="rounded px-4 py-2 text-xs text-muted-foreground hover:text-destructive">
+            <Button type="button" onClick={() => setConfirmReset(true)} variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-destructive">
               Reset ALL progress…
-            </button>
+            </Button>
           ) : (
             <div className="rounded border-2 border-destructive bg-destructive/10 p-3 text-sm">
               <p className="font-bold text-destructive">This erases EVERYTHING on this browser:</p>
               <p className="mt-1 text-foreground">mission progress, checkpoint history, your pilot name, and ALL locally stored certificates.</p>
               <div className="mt-2 flex gap-2">
-                <button
+                <Button
                   type="button"
                   onClick={() => {
                     clearSave();
                     onResetAll();
                   }}
-                  className="rounded bg-destructive px-3 py-1.5 font-bold text-destructive-foreground"
+                  variant="destructive"
+                  size="sm"
                 >
                   Erase everything
-                </button>
-                <button type="button" onClick={() => setConfirmReset(false)} className="rounded border border-border px-3 py-1.5">Cancel</button>
+                </Button>
+                <Button type="button" onClick={() => setConfirmReset(false)} variant="outline" size="sm">Cancel</Button>
               </div>
             </div>
           )}
         </div>
       )}
 
-      <Link to="/teacher" className="text-xs text-muted-foreground underline-offset-2 hover:underline">
-        Teacher? View the concept map →
-      </Link>
+        <div className="mt-7 flex max-w-md items-center gap-4 text-left">
+          <img src={oscarToad.url} alt="Oscar the horned toad" className="h-16 w-16 shrink-0 object-contain" />
+          <p className="text-sm text-foreground">
+            “I'm Oscar. KOMM runs the Git training; you keep us flying.”
+          </p>
+        </div>
+
+        <Link to="/teacher" className="mt-5 text-xs text-muted-foreground underline-offset-2 hover:underline">
+          Teacher? View the concept map →
+        </Link>
+      </main>
     </div>
   );
 }
