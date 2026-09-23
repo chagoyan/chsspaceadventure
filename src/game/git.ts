@@ -484,7 +484,9 @@ export function applyResult(repo: Repo, result: ExecResult): Repo {
   if (result.didReset) {
     const target = findCommit(next, result.didReset.hash)!;
     const idx = next.commits.findIndex((c) => c.hash === target.hash);
+    const dropped = next.commits.slice(idx + 1);
     next.commits = next.commits.slice(0, idx + 1);
+    next.orphaned = mergeOrphaned(repo.orphaned, dropped);
     next.working = cloneSnapshot(target.snapshot);
     next.staged = null;
   }
