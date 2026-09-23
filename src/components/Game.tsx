@@ -370,7 +370,11 @@ export function Game() {
       const checkpoint = index >= 0 ? timelineSave.repo.commits[index] : undefined;
       if (!checkpoint) return;
       const target = stepById(checkpoint.snapshot.stepId);
-      const storyStep = target ? target.id : timelineSave.storyStep;
+      const storyStep = target
+        ? target.kind === "terminal"
+          ? nextStepId(target.id) ?? target.id
+          : target.id
+        : timelineSave.storyStep;
       const repo: Repo = {
         ...timelineSave.repo,
         commits: timelineSave.repo.commits.slice(0, index + 1),
@@ -593,7 +597,21 @@ export function Game() {
           repo={save.repo}
           task={(step as TerminalStep).task}
           commitsAtOpen={save.repo.commits.length}
-          onRepoChange={updateRepo}
+          onRepoChange={(repo) => {
+            // Stamp checkpoints with the terminal step that created them so a
+            // later reset knows exactly where in the mission to resume.
+            const stamped: Repo = {
+              ...repo,
+              working: { ...cloneSnapshot(repo.working), stepId },
+              staged: repo.staged ? { ...cloneSnapshot(repo.staged), stepId } : repo.staged,
+              commits: repo.commits.map((c, i) =>
+                i === repo.commits.length - 1 && c.snapshot.stepId !== stepId && repo.commits.length > save.repo.commits.length
+                  ? { ...c, snapshot: { ...cloneSnapshot(c.snapshot), stepId } }
+                  : c,
+              ),
+            };
+            updateRepo(stamped);
+          }}
           onReset={(hash) => setResetTargetHash(hash)}
           onAdvance={() => {
             if (resetTargetHash) {
@@ -602,7 +620,13 @@ export function Game() {
               const target = save.repo.commits.find((c) => c.hash === resetTargetHash);
               setResetTargetHash(null);
               if (target) {
-                const back = nextStepId(target.snapshot.stepId) ?? target.snapshot.stepId;
+                // Checkpoints created in a terminal resume at the step after it;
+                // older saves stamped with a flight step replay that flight.
+                const origin = stepById(target.snapshot.stepId);
+                const back =
+                  origin && origin.kind === "terminal"
+                    ? nextStepId(origin.id) ?? origin.id
+                    : origin?.id ?? target.snapshot.stepId;
                 const updated: SaveData = {
                   ...save,
                   storyStep: back,
