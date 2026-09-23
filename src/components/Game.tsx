@@ -601,11 +601,10 @@ export function Game() {
             // already completed should not re-teach from scratch: replay it
             // free-form (no step-by-step hints), still requiring its commands.
             if (!save.flags?.[`lessonDone:${step.id}`]) return t;
+            const { allowedCommands: _ac, hintSteps: _hs, ...rest } = t;
             return {
-              ...t,
+              ...rest,
               freeForm: true,
-              allowedCommands: undefined,
-              hintSteps: undefined,
               help: "panel" as const,
               briefing:
                 "KOMM: You already know this drill — a rewind erases the checkpoints, not what you learned. Run the commands again to make a fresh checkpoint, then continue.",
