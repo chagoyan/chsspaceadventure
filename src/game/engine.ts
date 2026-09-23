@@ -627,7 +627,7 @@ export class GameEngine {
           if (t.kind !== "asteroid" && t.kind !== "drone" && t.kind !== "boss") continue;
           if (Math.hypot(e.x - t.x, e.y - t.y) < t.r + e.r) {
             remove.add(e);
-            if (t.kamikaze) {
+            if (t.kamikaze && !t.weak) {
               // Cannot be killed — shots just spark off its hull.
               this.burst(e.x, e.y, "#ff6b6b", 4);
               break;
