@@ -4,7 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import type { CertificateData, Repo, SaveData, ShipState } from "../game/types";
 import { freshRepo } from "../game/types";
 import { loadSave, storeSave, clearSave, makeVerificationCode } from "../game/save";
-import { cloneSnapshot, head } from "../game/git";
+import { cloneSnapshot, head, mergeOrphaned } from "../game/git";
 import { STEPS, stepById, nextStepId, type ActionStep, type DialogueStep, type TerminalStep, type CertificateStep } from "../game/story";
 import { GameEngine, WORLD_W, WORLD_H, type EngineEvent } from "../game/engine";
 import { setMuted, startMusic, stopMusic, sfx } from "../game/audio";
@@ -374,6 +374,7 @@ export function Game() {
       const repo: Repo = {
         ...timelineSave.repo,
         commits: timelineSave.repo.commits.slice(0, index + 1),
+        orphaned: mergeOrphaned(timelineSave.repo.orphaned, timelineSave.repo.commits.slice(index + 1)),
         working: cloneSnapshot(checkpoint.snapshot),
         staged: null,
       };
@@ -414,6 +415,20 @@ export function Game() {
               </Button>
             ))}
           </div>
+          {(timelineSave.repo.orphaned?.length ?? 0) > 0 && (
+            <div className="mt-6">
+              <p className="font-heading text-lg text-muted-foreground">NO LONGER IN THIS TIMELINE</p>
+              <p className="text-xs text-muted-foreground">These checkpoints existed before a reset. They are kept here for reference only.</p>
+              <div className="mt-2 overflow-hidden rounded border border-dashed border-border bg-card/40 font-mono text-sm opacity-50">
+                {timelineSave.repo.orphaned?.map((c) => (
+                  <div key={c.hash} className="flex flex-col gap-1 border-b border-border px-4 py-3 text-left line-through last:border-b-0 sm:flex-row sm:items-baseline sm:gap-3">
+                    <span className="shrink-0 text-muted-foreground">{c.hash}</span>
+                    <span className="min-w-0 text-muted-foreground">{c.message}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <Button type="button" variant="outline" className="mt-5" onClick={() => { setSelectedCheckpointHash(null); setNotice(null); setMode("menu"); }}>
             Back to Main Menu
           </Button>
