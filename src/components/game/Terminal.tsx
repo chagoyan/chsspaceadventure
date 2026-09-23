@@ -50,7 +50,9 @@ export function Terminal({ repo, task, commitsAtOpen, onRepoChange, onAdvance, o
 
   const requirementsMet = task.requires.every((r) => done.has(r));
   const commitRequirementMet = !task.requireCommit || committedHere;
-  const canAdvance = requirementsMet && commitRequirementMet;
+  // A completed reset always unlocks the advance button — the game rewinds the
+  // mission to the restored checkpoint, so the current lesson no longer applies.
+  const canAdvance = (requirementsMet && commitRequirementMet) || done.has("reset");
   const recommendedCheckpoint = task.recommendHealthyCheckpoint
     ? repo.commits.slice(0, -1).reduce<(typeof repo.commits)[number] | null>((best, commit) => {
         if (!best) return commit;
