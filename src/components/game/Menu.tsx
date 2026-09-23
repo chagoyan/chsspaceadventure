@@ -5,7 +5,7 @@ import { clearSave } from "../../game/save";
 import { Link } from "@tanstack/react-router";
 import { Volume2, VolumeX } from "lucide-react";
 import oscarToad from "../../assets/oscar-toad.png.asset.json";
-import shipAsset from "../../assets/oscar-round-ship.png";
+import shipAsset from "../../assets/space-explorer-title-ship.png";
 import { Button } from "../ui/button";
 
 interface Props {
