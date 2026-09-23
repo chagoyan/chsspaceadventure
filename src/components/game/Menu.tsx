@@ -40,7 +40,7 @@ export function Menu({ save, onNewGame, onContinue, onViewLog, onViewArchive, on
           KOMM GIT TRAINING · MISSION TWO
         </p>
         <h1 className="mt-2 font-pixel text-5xl leading-none text-primary drop-shadow-[0_3px_12px_color-mix(in_oklab,var(--color-primary)_38%,transparent)] sm:text-7xl">
-          GIT SPACE ADVENTURE
+          SPACE ADVENTURE
         </h1>
         <p className="mt-5 max-w-lg text-base text-muted-foreground">
           Learn to use KOMM's Git terminal commands to track changes, create checkpoints, and keep Oscar's ship flying.
