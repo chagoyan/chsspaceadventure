@@ -58,6 +58,7 @@ interface Ent {
   color?: string;
   maxLife?: number;
   kamikaze?: boolean;
+  weak?: boolean; // kamikaze variant that can be destroyed and only grazes the ship
 }
 
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
