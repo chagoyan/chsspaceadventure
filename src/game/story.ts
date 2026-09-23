@@ -418,7 +418,7 @@ export const STEPS: Step[] = [
     id: "t_reset",
     task: {
       title: "Rewind to Safety (Optional but wise)",
-      briefing: "KOMM: That kamikaze drone crippled us — every system is nearly empty, and the final stretch is ahead. First assess the damage with git status, then find an earlier, healthier checkpoint with git log --oneline, and move the timeline back with git reset --hard <hash>.",
+      briefing: "KOMM: That kamikaze drone crippled us — every system is nearly empty, and the final stretch is ahead. First assess the damage with git status, then find an earlier, healthier checkpoint with git log --oneline, and move the timeline back with git reset --hard <hash>. Careful: reset takes the whole mission back to that moment, so we will have to fly those sectors again and make new checkpoints as we go.",
       help: "partial",
       hint: "",
       hintSteps: [
@@ -429,7 +429,7 @@ export const STEPS: Step[] = [
       requires: ["status", "log", "reset"],
       allowedCommands: ["init", "status", "add", "commit", "log", "reset"],
       recommendHealthyCheckpoint: true,
-      advanceLabel: "Fly On",
+      advanceLabel: "Fly the Timeline Again",
     },
   },
   {
