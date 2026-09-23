@@ -595,7 +595,21 @@ export function Game() {
         <Terminal
           key={step.id}
           repo={save.repo}
-          task={(step as TerminalStep).task}
+          task={(() => {
+            const t = (step as TerminalStep).task;
+            // After a rewind the player replays missions, but a lesson they
+            // already completed should not re-teach from scratch: replay it
+            // free-form (no step-by-step hints), still requiring its commands.
+            if (!save.flags?.[`lessonDone:${step.id}`]) return t;
+            const { allowedCommands: _ac, hintSteps: _hs, ...rest } = t;
+            return {
+              ...rest,
+              freeForm: true,
+              help: "panel" as const,
+              briefing:
+                "KOMM: You already know this drill — a rewind erases the checkpoints, not what you learned. Run the commands again to make a fresh checkpoint, then continue.",
+            };
+          })()}
           commitsAtOpen={save.repo.commits.length}
           onRepoChange={(repo) => {
             // Stamp checkpoints with the terminal step that created them so a
@@ -630,7 +644,7 @@ export function Game() {
                 const updated: SaveData = {
                   ...save,
                   storyStep: back,
-                  flags: { ...(save.flags ?? {}), resetDone: true },
+                  flags: { ...(save.flags ?? {}), resetDone: true, [`lessonDone:${step.id}`]: true },
                 };
                 persist(updated);
                 setStepId(back);
@@ -658,6 +672,10 @@ export function Game() {
                 return;
               }
               setNotice("Corruption reversed! The harmful checkpoint remains in history, undone by a new one. That's git revert.");
+            }
+            // Mark this lesson as learned so replays after a rewind run free-form.
+            if (!save.flags?.[`lessonDone:${step.id}`]) {
+              persist({ ...save, flags: { ...(save.flags ?? {}), [`lessonDone:${step.id}`]: true } });
             }
             advance();
           }}
