@@ -25,7 +25,7 @@ interface PendingReset {
   input: string;
 }
 
-export function Terminal({ repo, task, commitsAtOpen, onRepoChange, onAdvance, showHelpPanel, embedded = false }: Props) {
+export function Terminal({ repo, task, commitsAtOpen, onRepoChange, onAdvance, onReset, showHelpPanel, embedded = false }: Props) {
   const [history, setHistory] = useState<StatusLine[]>([
     { text: "GIT SHIP TERMINAL v3.0.26 — timeline control online", kind: "info" },
     { text: `Mission: ${task.title}`, kind: "info" },
