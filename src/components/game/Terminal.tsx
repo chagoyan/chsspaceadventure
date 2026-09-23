@@ -50,7 +50,9 @@ export function Terminal({ repo, task, commitsAtOpen, onRepoChange, onAdvance, o
 
   const requirementsMet = task.requires.every((r) => done.has(r));
   const commitRequirementMet = !task.requireCommit || committedHere;
-  const canAdvance = requirementsMet && commitRequirementMet;
+  // A completed reset always unlocks the advance button — the game rewinds the
+  // mission to the restored checkpoint, so the current lesson no longer applies.
+  const canAdvance = (requirementsMet && commitRequirementMet) || done.has("reset");
   const recommendedCheckpoint = task.recommendHealthyCheckpoint
     ? repo.commits.slice(0, -1).reduce<(typeof repo.commits)[number] | null>((best, commit) => {
         if (!best) return commit;
@@ -75,6 +77,16 @@ export function Terminal({ repo, task, commitsAtOpen, onRepoChange, onAdvance, o
   function lessonBlock(raw: string): StatusLine[] | null {
     const command = commandFrom(raw);
     if (!command || task.freeForm) return null;
+    // Reset and revert stay available in EVERY lesson once checkpoints exist.
+    // Players are free to experiment with undoing history at any time — the
+    // consequences (rewound missions, new revert checkpoints) are the lesson.
+    if (command === "reset" || command === "revert") {
+      if (repo.commits.length > 0) return null;
+      return [
+        { text: `KOMM: There are no checkpoints to ${command} yet.`, kind: "info" },
+        { text: `Make one first: git add . then git commit -m "message".`, kind: "info" },
+      ];
+    }
     if (task.allowedCommands && !task.allowedCommands.includes(command)) {
       return [
         { text: `KOMM: We have not learned git ${command} yet.`, kind: "info" },
