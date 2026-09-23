@@ -14,53 +14,92 @@ export const Route = createFileRoute("/teacher")({
   component: TeacherPage,
 });
 
-const MAP: { mechanic: string; concept: string; commands: string }[] = [
+const MAP: {
+  where: string;
+  concept: string;
+  commands: string;
+  before: string;
+  after: string;
+}[] = [
   {
-    mechanic: "Mission initialization before launch",
+    where: "Before launch — \"Initialize Mission Tracking\" terminal",
     concept: "A repository must be initialized before anything is tracked. init alone saves nothing.",
     commands: "git init",
+    before: "Nothing is tracked; status, add and commit are all rejected by the terminal.",
+    after: "Tracking begins and Sector 1 (The Shatter Field) unlocks. No checkpoint exists yet — a crash here restarts the mission.",
   },
   {
-    mechanic: "Ship damage, fuel use, ammo use, collected supplies",
+    where: "After Sector 1 — \"Run Ship Diagnostics\" terminal (status only)",
     concept: "Changes in the working directory — visible to status but not yet protected.",
     commands: "git status",
+    before: "Asteroid damage, fuel burn and ammo use have altered the ship since launch.",
+    after: "Full ship condition prints (hull, armor, energy, fuel, ammo, upgrades, score). Values that changed are highlighted in a warning color. add and commit are blocked here — they have not been taught yet.",
   },
   {
-    mechanic: "Staging the ship's configuration at the terminal",
-    concept: "Preparing changes for the next commit. Staging is not saving; staged work is still lost on destruction.",
+    where: "After the Supply Cache — \"Create Your First Checkpoint\" terminal",
+    concept: "Staging prepares changes for the next commit. Staging is not saving; staged work is still lost on destruction.",
     commands: "git add .",
+    before: "Repairs and supplies collected in Sector 1 are unprotected working changes.",
+    after: "The same stats print in the normal color and are listed as staged. The checkpoint still does not exist until the commit runs.",
   },
   {
-    mechanic: "Checkpoints that survive ship destruction",
+    where: "Same terminal, third guided step (status → add → commit)",
     concept: "Commits are permanent snapshots with meaningful messages describing what changed.",
     commands: 'git commit -m "..."',
+    before: "Changes are staged only; the timeline has zero checkpoints.",
+    after: "The first checkpoint is created with a 7-character hash. Crashes now restore here instead of restarting. Lazy messages (\"stuff\", \"update\") are rejected.",
   },
   {
-    mechanic: "The mission timeline screen / terminal history",
+    where: "Sectors 2, 5, 6, 8, 9, 10 — one checkpoint terminal after each mission",
+    concept: "Repeating the inspect → stage → commit cycle; assistance fades from full hints to a hints button to none.",
+    commands: 'git status → git add . → git commit -m "..."',
+    before: "A sector has just been cleared with new damage, supplies or an upgrade.",
+    after: "History grows to the several checkpoints later lessons depend on. \"Checkpoint Before the Gate\" (after Sector 10) offers no hints at all.",
+  },
+  {
+    where: "After Sector 6 — \"Review Your Timeline\" terminal",
     concept: "Readable commit history with short hashes, most recent first.",
     commands: "git log --oneline",
+    before: "Students have made several checkpoints but have never seen them listed.",
+    after: "Each checkpoint prints hash + message; the hashes flash, and only now does KOMM explain what a hash is and how to copy it for <hash> commands.",
   },
   {
-    mechanic: "Ship destroyed → restore at most recent checkpoint; staged-but-uncommitted upgrades lost",
-    concept: "Only committed work is recoverable. Working/staged changes are ephemeral.",
+    where: "Any sector — ship destroyed",
+    concept: "Only committed work is recoverable. Working and staged changes are ephemeral.",
     commands: "(demonstrated consequence)",
+    before: "Upgrades or supplies collected since the last commit, possibly staged.",
+    after: "The ship is restored to the most recent checkpoint's exact snapshot; everything gained since is gone. With no commits at all, the mission restarts.",
   },
   {
-    mechanic: "Rewinding the nebula sector to an earlier checkpoint",
+    where: "Sector 7, The Crimson Nebula → \"Rewind to Safety\" terminal",
     concept: "reset --hard moves HEAD to an earlier commit, discarding later commits and all uncommitted changes. Requires explicit confirmation.",
-    commands: "git reset --hard <hash>",
+    commands: "git status → git log --oneline → git reset --hard <hash>",
+    before: "An indestructible red kamikaze drone rams the ship, crippling hull, armor, fuel, energy and ammo to near zero. The ship survives but cannot finish the run.",
+    after: "Students diagnose the damage, read the history, and pick an earlier healthy checkpoint (the recommended one keeps flashing). After a confirmation dialog, the ship's stats are restored to that snapshot and later checkpoints are discarded — then Nebula's Edge is winnable.",
   },
   {
-    mechanic: "Turbo Core corruption reversed by a NEW checkpoint that undoes that one change",
+    where: "Sector 8 Turbo Core → Sector 10 corruption → \"Reverse the Corruption\" terminal",
     concept: "revert adds a new commit that inverts a selected commit. History is preserved, not erased.",
     commands: "git revert <hash>",
+    before: "The Turbo Core upgrade is collected in Sector 8 and committed in \"Lock In the Upgrade\" — its hidden firmware instability is committed with it. Two sectors later, energy drains uncontrollably and reset would throw away everything since.",
+    after: "Reverting the Turbo Core checkpoint adds a NEW checkpoint that removes the upgrade, stops the drain, and leaves the harmful checkpoint visible in history. The lesson only completes if the correct hash was chosen.",
   },
   {
-    mechanic: "Part 1 / Part 2 printable certificates with verification evidence",
+    where: "Main menu — \"View Git Log\" checkpoint screen",
+    concept: "Reading history outside a lesson and moving the timeline to a chosen point.",
+    commands: "(click a checkpoint hash)",
+    before: "A saved game with several checkpoints.",
+    after: "Clicking a hash restores that ship snapshot AND resumes at the mission that checkpoint belongs to.",
+  },
+  {
+    where: "After Sector 4 (Part 1) and after Sector 11 (Part 2)",
     concept: "Gradable deliverables: demonstrated commands, commit hashes, timestamps, play time.",
     commands: "—",
+    before: "Part 1 follows the init/status/add/commit block; Part 2 follows the Void Gate boss fight.",
+    after: "A printable certificate lists the commands demonstrated, the last checkpoint hashes with messages, and total play time.",
   },
 ];
+
 
 function TeacherPage() {
   return (
