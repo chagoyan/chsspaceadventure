@@ -31,6 +31,7 @@ export function Game() {
   const [controlsSeen, setControlsSeen] = useState(false);
   const [victory, setVictory] = useState<number | null>(null);
   const [selectedCheckpointHash, setSelectedCheckpointHash] = useState<string | null>(null);
+  const [resetTargetHash, setResetTargetHash] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
   const navigate = useNavigate();
@@ -140,7 +141,10 @@ export function Game() {
   }
 
   const advance = useCallback(() => {
-    const next = nextStepId(stepId);
+    // Once the rewind lesson is done, a replayed run must not repeat it.
+    const skip = new Set(save?.flags?.["resetDone"] ? ["t_reset"] : []);
+    let next = nextStepId(stepId);
+    while (next && skip.has(next)) next = nextStepId(next);
     if (!next) {
       setMode("done");
       return;
@@ -155,7 +159,7 @@ export function Game() {
     });
     setDestroyed(null);
     setNotice(null);
-  }, [stepId]);
+  }, [stepId, save?.flags]);
 
   // Victory lap countdown after the final boss falls.
   useEffect(() => {
@@ -182,11 +186,20 @@ export function Game() {
     setHudKills(0);
     setHudScore(working.score);
     startMusic(((Math.max(1, working.stage) - 1) % 3) + 1);
+    // Sector 7 replay (after a reset): the rammer returns, but it can be shot down.
+    const replayingNebula = actionStep.id === "a_nebula" && !!save.flags?.["resetDone"];
+    const spec = replayingNebula
+      ? {
+          ...actionStep.spec,
+          kamikazeWeak: true,
+          objective: "Thread the nebula clouds and reach the beacon. The red rammer is back — this time your guns can bring it down.",
+        }
+      : actionStep.spec;
     const engine = new GameEngine(
       canvasRef.current,
       working.ship,
       working.score,
-      actionStep.spec,
+      spec,
       {
         onShip: (ship, extras) => {
           setHudShip(ship);
@@ -566,7 +579,26 @@ export function Game() {
           task={(step as TerminalStep).task}
           commitsAtOpen={save.repo.commits.length}
           onRepoChange={updateRepo}
+          onReset={(hash) => setResetTargetHash(hash)}
           onAdvance={() => {
+            if (resetTargetHash) {
+              // A reset rewinds BOTH the ship and the mission: resume from the
+              // step right after the restored checkpoint and replay forward.
+              const target = save.repo.commits.find((c) => c.hash === resetTargetHash);
+              setResetTargetHash(null);
+              if (target) {
+                const back = nextStepId(target.snapshot.stepId) ?? target.snapshot.stepId;
+                const updated: SaveData = {
+                  ...save,
+                  storyStep: back,
+                  flags: { ...(save.flags ?? {}), resetDone: true },
+                };
+                persist(updated);
+                setStepId(back);
+                setNotice(`Timeline rewound to ${target.hash} — "${target.message}". Later checkpoints are no longer part of this timeline. Fly these missions again and make new checkpoints.`);
+                return;
+              }
+            }
             if (step.id === "t_turbocommit") {
               // Committing the Turbo Core also commits its hidden instability.
               setSave((s) => {
