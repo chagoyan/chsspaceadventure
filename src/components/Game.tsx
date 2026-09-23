@@ -593,7 +593,21 @@ export function Game() {
           repo={save.repo}
           task={(step as TerminalStep).task}
           commitsAtOpen={save.repo.commits.length}
-          onRepoChange={updateRepo}
+          onRepoChange={(repo) => {
+            // Stamp checkpoints with the terminal step that created them so a
+            // later reset knows exactly where in the mission to resume.
+            const stamped: Repo = {
+              ...repo,
+              working: { ...cloneSnapshot(repo.working), stepId },
+              staged: repo.staged ? { ...cloneSnapshot(repo.staged), stepId } : repo.staged,
+              commits: repo.commits.map((c, i) =>
+                i === repo.commits.length - 1 && c.snapshot.stepId !== stepId && repo.commits.length > save.repo.commits.length
+                  ? { ...c, snapshot: { ...cloneSnapshot(c.snapshot), stepId } }
+                  : c,
+              ),
+            };
+            updateRepo(stamped);
+          }}
           onReset={(hash) => setResetTargetHash(hash)}
           onAdvance={() => {
             if (resetTargetHash) {
