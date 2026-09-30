@@ -1101,6 +1101,12 @@ export class GameEngine {
       ctx.fill();
       ctx.restore();
     }
+    if (this.spec.chronoEcho) {
+      // Cool chrono tint over the whole sector while history is being rewritten.
+      const pulse = this.reducedMotion ? 0.05 : 0.05 + 0.03 * Math.sin(t * 1.6);
+      ctx.fillStyle = `rgba(80,200,255,${pulse})`;
+      ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+    }
     if (this.spec.drain) {
       // corruption glitch overlay
       ctx.fillStyle = `rgba(255,60,90,${0.04 + 0.05 * Math.abs(Math.sin(t * 7))})`;
