@@ -289,23 +289,27 @@ export function Game() {
       advance();
       return;
     }
+    if (e.type === "rammerDown") {
+      // Destroying the rammer closes the loop: timeline effects stop immediately.
+      setSave((s) => {
+        if (!s) return s;
+        const next: SaveData = { ...s, flags: { ...(s.flags ?? {}), timelineRewound: false } };
+        storeSave(next);
+        return next;
+      });
+      sfx.commit();
+      setParadox(4);
+      setNotice(
+        'KOMM: Rammer destroyed — chronal readings are flat and the active timeline is stable. Oscar: We rewrote our own fate! Let\'s ride this one out to the beacon.',
+      );
+      return;
+    }
     if (e.type === "objective") {
       syncWorkingFromEngine(engine);
       if (current.spec.boss) {
         // Victory lap: celebrate and let the player fly before the certificate.
         engine.celebrate(12);
         setVictory(8);
-        return;
-      }
-      // Surviving the Crimson Nebula a second time ends the rewound timeline.
-      if (current.id === "a_nebula" && save?.flags?.["timelineRewound"]) {
-        setSave((s) => {
-          if (!s) return s;
-          const next: SaveData = { ...s, flags: { ...(s.flags ?? {}), timelineRewound: false } };
-          storeSave(next);
-          return next;
-        });
-        setParadox(3);
         return;
       }
       advance();
