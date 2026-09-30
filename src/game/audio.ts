@@ -116,4 +116,12 @@ export const sfx = {
     beep(700, 0.15, "square", 0.05, -200);
     setTimeout(() => beep(700, 0.15, "square", 0.05, -200), 250);
   },
+  // Tachyon rewind: reversed, descending warble plus a settling hum.
+  timeRewind: () => {
+    for (let i = 0; i < 9; i++) {
+      setTimeout(() => beep(300 + i * 130, 0.16, "sawtooth", 0.045, 520), i * 110);
+    }
+    setTimeout(() => beep(1400, 0.5, "triangle", 0.05, -1200), 1000);
+    setTimeout(() => beep(120, 0.9, "sine", 0.06, 40), 1500);
+  },
 };
