@@ -738,20 +738,38 @@ export function Game() {
         />
       )}
 
-      {step?.kind === "certificate" && save && (
-        <CertificateScreen part={(step as CertificateStep).part} cert={awardCertificate((step as CertificateStep).part)} onContinue={advance} onPrint={() => navigate({ to: "/certificate/$part", params: { part: String((step as CertificateStep).part) } })} />
-      )}
+      {step?.kind === "certificate" && save && (() => {
+        const certPart = (step as CertificateStep).part;
+        const cert = awardCertificate(certPart);
+        return (
+          <CertificateScreen
+            part={certPart}
+            cert={cert}
+            onContinue={advance}
+            onPrint={() => navigate({ to: "/certificate/$part", params: { part: certSlug(certPart, cert?.pass ?? 1) } })}
+          />
+        );
+      })()}
     </div>
   );
 }
 
+export function certSlug(part: 1 | 2, pass: 1 | 2) {
+  return part === 1 && pass === 2 ? "1b" : String(part);
+}
+
 function CertificateScreen({ part, cert, onContinue, onPrint }: { part: 1 | 2; cert: CertificateData | null; onContinue: () => void; onPrint: () => void }) {
   if (!cert) return null;
+  const passTwo = (cert.pass ?? 1) === 2;
   return (
     <div className="fixed inset-0 z-40 overflow-auto bg-background p-4 md:p-8">
       <div className="mx-auto mb-4 flex max-w-3xl flex-wrap items-center gap-2">
         <p className="flex-1 font-pixel text-[10px] text-terminal-green">
-          {part === 1 ? "PART 1 COMPLETE — CERTIFICATE EARNED" : "MISSION COMPLETE — FINAL CERTIFICATE EARNED"}
+          {part === 1
+            ? passTwo
+              ? "TIMELINE RESET — PASS II CERTIFICATE EARNED"
+              : "PART 1 COMPLETE — CERTIFICATE EARNED"
+            : "MISSION COMPLETE — FINAL CERTIFICATE EARNED"}
         </p>
         <button type="button" onClick={onPrint} className="rounded bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">
           Print Certificate
