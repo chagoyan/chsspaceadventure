@@ -27,13 +27,19 @@ interface Props {
   shield?: boolean;
   boostReady?: boolean;
   shieldReady?: boolean;
+  temporal?: boolean;
 }
 
-export function HUD({ ship, objective, stageTitle, score, staged, commits, kills, killTarget, bombs = 0, shield = false, boostReady = true, shieldReady = true }: Props) {
+export function HUD({ ship, objective, stageTitle, score, staged, commits, kills, killTarget, bombs = 0, shield = false, boostReady = true, shieldReady = true, temporal = false }: Props) {
   return (
     <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-3 md:p-5">
       <div className="flex items-start justify-between gap-4">
         <div className="arcade-panel p-3">
+          {temporal && (
+            <div className="chrono-badge mb-2 inline-block rounded px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest">
+              ⟲ Timeline re-entry · rewriting history
+            </div>
+          )}
           <div className="mb-2 font-heading text-xl leading-none text-primary">{stageTitle}</div>
           <div className="flex flex-col gap-1.5">
             <Bar label="HULL" value={ship.hull} tone="hull" />
