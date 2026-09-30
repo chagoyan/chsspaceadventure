@@ -100,13 +100,14 @@ export function CertificateView({ cert }: { cert: CertificateData }) {
 
 function CertificatePage() {
   const { part } = Route.useParams();
-  const partNum = part === "2" ? 2 : 1;
+  const partNum: 1 | 2 = part === "2" ? 2 : 1;
+  const passNum: 1 | 2 = part === "1b" ? 2 : 1;
   const [cert, setCert] = useState<CertificateData | null | undefined>(undefined);
 
   useEffect(() => {
     const save = loadSave();
-    setCert(save?.certificates.find((c) => c.part === partNum) ?? null);
-  }, [partNum]);
+    setCert(save?.certificates.find((c) => c.part === partNum && (c.pass ?? 1) === passNum) ?? null);
+  }, [partNum, passNum]);
 
   if (cert === undefined) return null;
   if (cert === null) {
