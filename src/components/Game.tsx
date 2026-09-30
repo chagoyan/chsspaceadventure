@@ -190,13 +190,17 @@ export function Game() {
     startMusic(((Math.max(1, working.stage) - 1) % 3) + 1);
     // Sector 7 replay (after a reset): the rammer returns, but it can be shot down.
     const replayingNebula = actionStep.id === "a_nebula" && !!save.flags?.["resetDone"];
-    const spec = replayingNebula
-      ? {
-          ...actionStep.spec,
-          kamikazeWeak: true,
-          objective: "Thread the nebula clouds and reach the beacon. The red rammer is back — this time your guns can bring it down.",
-        }
-      : actionStep.spec;
+    const rewound = !!save.flags?.["timelineRewound"];
+    const spec = {
+      ...actionStep.spec,
+      ...(rewound ? { chronoEcho: true } : {}),
+      ...(replayingNebula
+        ? {
+            kamikazeWeak: true,
+            objective: "Temporal convergence — the red rammer returns, but this time your guns can bring it down. Reach the beacon.",
+          }
+        : {}),
+    };
     const engine = new GameEngine(
       canvasRef.current,
       working.ship,
