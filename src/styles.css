@@ -455,6 +455,33 @@ kbd,
   padding: 0 1.5rem 0.5rem;
 }
 
+/* Timeline Reset — Pass II midpoint certificate */
+.cert-border-pass2 {
+  position: relative;
+  border-color: rgb(90, 220, 255);
+  box-shadow: 0 0 28px rgba(90, 220, 255, 0.22);
+}
+
+.cert-stamp {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  border: 2px solid rgba(90, 220, 255, 0.85);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  transform: rotate(-6deg);
+  background: rgba(90, 220, 255, 0.1);
+  color: rgb(140, 230, 255);
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.5rem;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-align: right;
+}
+
 .evidence-panel {
   margin-top: 1rem;
   border: 1px dashed var(--color-border);
