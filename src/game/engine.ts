@@ -96,6 +96,7 @@ export class GameEngine {
   private upgradeSpawned = false;
   private reducedMotion: boolean;
   private hitFlash = 0;
+  private echoTrail: { x: number; y: number; a: number; f: boolean }[] = [];
   private thrusting = false;
   private mouseActive = false;
   private bombs = 2;
