@@ -37,6 +37,7 @@ export interface Repo {
 
 export interface CertificateData {
   part: 1 | 2;
+  pass?: 1 | 2; // 2 = earned again after a `git reset --hard` rewind ("Timeline Reset — Pass II")
   studentName: string;
   completedAt: number;
   verificationCode: string;
