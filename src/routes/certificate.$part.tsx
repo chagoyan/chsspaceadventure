@@ -32,14 +32,28 @@ function fmtTime(s: number) {
 }
 
 export function CertificateView({ cert }: { cert: CertificateData }) {
-  const title = cert.part === 1 ? "Part 1 — Midpoint Certificate" : "Part 2 — Final Completion Certificate";
+  const passTwo = cert.part === 1 && (cert.pass ?? 1) === 2;
+  const title =
+    cert.part === 1
+      ? passTwo
+        ? "Part 1 — Midpoint Certificate (Timeline Reset — Pass II)"
+        : "Part 1 — Midpoint Certificate"
+      : "Part 2 — Final Completion Certificate";
   const achievement =
     cert.part === 1
-      ? "has mastered the checkpoint workflow — inspecting ship state with git status, staging changes with git add ., and recording protected checkpoints with git commit -m."
+      ? passTwo
+        ? "has mastered the checkpoint workflow and demonstrated timeline resilience — rewinding the active timeline with git reset --hard, re-flying the erased missions, and locking in a fresh midpoint checkpoint on Pass II."
+        : "has mastered the checkpoint workflow — inspecting ship state with git status, staging changes with git add ., and recording protected checkpoints with git commit -m."
       : "has completed the full mission — demonstrating checkpoint history (git log --oneline), timeline rewind (git reset --hard), and safe reversal (git revert) under reduced assistance.";
   return (
     <div className="certificate-sheet">
-      <div className="cert-border">
+      <div className={passTwo ? "cert-border cert-border-pass2" : "cert-border"}>
+        {passTwo && (
+          <div className="cert-stamp">
+            <span>⟲ TIMELINE RESET · PASS II</span>
+            <span>IRON RING RE-CLEARED</span>
+          </div>
+        )}
         <p className="font-pixel text-[10px] tracking-widest text-muted-foreground">OSCAR'S GIT SPACE ADVENTURE</p>
         <h1 className="mt-2 font-pixel text-xl text-primary">{title}</h1>
         <p className="mt-6 text-sm text-muted-foreground">This certifies that</p>
