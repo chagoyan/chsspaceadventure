@@ -410,7 +410,6 @@ export const STEPS: Step[] = [
         { x: 950, y: 240, r: 110 },
         { x: 400, y: 560, r: 90 },
       ],
-      safeZone: { x: 640, y: 120, r: 60 },
     },
   },
   {

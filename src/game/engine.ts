@@ -32,6 +32,7 @@ export type EngineEvent =
   | { type: "destroyed" }
   | { type: "objective" }
   | { type: "upgrade"; id: string }
+  | { type: "rammerDown" }
   | { type: "safeZone" };
 
 export interface EngineEvents {
@@ -333,6 +334,12 @@ export class GameEngine {
       this.ents.splice(this.ents.indexOf(target), 1);
       sfx.explosion();
       this.burst(target.x, target.y, "#f45b69", 12);
+      if (target.kamikaze && target.weak) {
+        this.burst(target.x, target.y, "#5adcff", 26);
+        this.spec.chronoEcho = false;
+        this.echoTrail.length = 0;
+        this.events.onEvent({ type: "rammerDown" });
+      }
       if (target.kind === "drone") {
         this.kills++;
         this.score += 100;
@@ -669,6 +676,13 @@ export class GameEngine {
               remove.add(t);
               sfx.explosion();
               this.burst(t.x, t.y, t.kind === "boss" ? "#ffd166" : "#f45b69", t.kind === "boss" ? 24 : 12);
+              if (t.kamikaze && t.weak) {
+                // The rammer that caused the catastrophe is gone: the timeline stabilises now.
+                this.burst(t.x, t.y, "#5adcff", 26);
+                this.spec.chronoEcho = false;
+                this.echoTrail.length = 0;
+                this.events.onEvent({ type: "rammerDown" });
+              }
               if (t.kind === "drone") {
                 this.kills++;
                 this.score += 100;
