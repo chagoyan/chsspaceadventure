@@ -59,6 +59,7 @@ interface Ent {
   maxLife?: number;
   kamikaze?: boolean;
   weak?: boolean; // kamikaze variant that can be destroyed and only grazes the ship
+  dmg?: number;
 }
 
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
@@ -310,6 +311,31 @@ export class GameEngine {
     this.bombs -= 1;
     sfx.explosion();
     this.burst(this.px, this.py, "#ffd166", 24);
+    // Match Space Explorer's point-blank shockwave: nearby ordinary drones and
+    // asteroids are destroyed immediately, with normal scoring and drops.
+    const BLAST_R = 170;
+    const BLAST_DMG = 4;
+    const blastKilled: Ent[] = [];
+    for (const target of this.ents) {
+      if (target.kind !== "asteroid" && target.kind !== "drone") continue;
+      if (target.kamikaze && !target.weak) continue;
+      if (Math.hypot(target.x - this.px, target.y - this.py) > BLAST_R + target.r) continue;
+      target.hp -= BLAST_DMG;
+      this.burst(target.x, target.y, "#ffd166", 10);
+      if (target.hp <= 0) blastKilled.push(target);
+    }
+    for (const target of blastKilled) {
+      this.ents.splice(this.ents.indexOf(target), 1);
+      sfx.explosion();
+      this.burst(target.x, target.y, "#f45b69", 12);
+      if (target.kind === "drone") {
+        this.kills++;
+        this.score += 100;
+      } else {
+        this.score += 25;
+      }
+      if (Math.random() < 0.4) this.dropPickup(target.x, target.y);
+    }
     for (let i = 0; i < 24; i++) {
       const a = (i / 24) * Math.PI * 2;
       this.ents.push({
@@ -320,6 +346,7 @@ export class GameEngine {
         vy: Math.sin(a) * 620,
         r: 5,
         hp: 1,
+        dmg: 3,
       });
     }
   }
@@ -632,7 +659,7 @@ export class GameEngine {
               this.burst(e.x, e.y, "#ff6b6b", 4);
               break;
             }
-            t.hp -= 1;
+            t.hp -= e.dmg ?? 1;
             if (t.hp <= 0) {
               remove.add(t);
               sfx.explosion();
@@ -1038,8 +1065,9 @@ export class GameEngine {
     // player ship
     const blink = this.invuln > 0 && Math.floor(t * 12) % 2 === 0;
     if (!blink) {
-      const boostFrame = this.reducedMotion ? 0 : Math.floor(t * 12) % SHIP_BOOST.length;
-      const shipSprite = this.boostTimer > 0 ? SHIP_BOOST[boostFrame] ?? SHIP_BOOST[0] : SHIP;
+      const flameRate = this.boostTimer > 0 ? 16 : 10;
+      const boostFrame = this.reducedMotion ? 0 : Math.floor(t * flameRate) % SHIP_BOOST.length;
+      const shipSprite = this.thrusting ? SHIP_BOOST[boostFrame] ?? SHIP_BOOST[0] : SHIP;
       drawSprite(ctx, shipSprite, this.px, this.py, 112, this.shipAngle, this.shipFlipped);
     }
     if (this.shieldTimer > 0) {

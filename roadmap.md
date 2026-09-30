@@ -43,3 +43,5 @@
 - [x] Victory lap with confetti before the final certificate
 - [x] Checkpoint restore from View Git Log also moves the story step back
 - [x] Replace the View Git Log terminal with clickable checkpoint restores
+- [x] Match Space Explorer's 170px smart-bomb shockwave and 3-damage outer ring
+- [x] Match Space Explorer's two-frame thrust animation at 10 fps and 16 fps during boost
