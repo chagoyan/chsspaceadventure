@@ -340,21 +340,28 @@ export function Game() {
   // ---- certificate awarding ----
   function awardCertificate(part: 1 | 2): CertificateData | null {
     if (!save) return null;
-    const existing = save.certificates.find((c) => c.part === part);
+    // A midpoint re-earned after a `git reset --hard` rewind is a distinct "Pass II" certificate.
+    const pass: 1 | 2 = part === 1 && save.flags?.["resetDone"] ? 2 : 1;
+    const existing = save.certificates.find((c) => c.part === part && (c.pass ?? 1) === pass);
     if (existing) return existing;
     const commands =
       part === 1
-        ? ["git init", "git status", "git add .", 'git commit -m "..."']
+        ? pass === 2
+          ? ["git init", "git status", "git add .", 'git commit -m "..."', "git log --oneline", "git reset --hard <hash>"]
+          : ["git init", "git status", "git add .", 'git commit -m "..."']
         : ["git init", "git status", "git add .", 'git commit -m "..."', "git log --oneline", "git reset --hard <hash>", "git revert <hash>"];
     const cert: CertificateData = {
       part,
+      pass,
       studentName: save.studentName,
       completedAt: Date.now(),
-      verificationCode: makeVerificationCode(save.studentName + part, Date.now()),
+      verificationCode: makeVerificationCode(save.studentName + part + pass, Date.now()),
       commandsDemonstrated: commands,
       milestone:
         part === 1
-          ? "Sector 4 cleared — The Iron Ring (midpoint)"
+          ? pass === 2
+            ? "Sector 4 re-cleared after a timeline reset — The Iron Ring (midpoint, Pass II)"
+            : "Sector 4 cleared — The Iron Ring (midpoint)"
           : "Sector 11 cleared — MERGE CONFLICT destroyed, Void Gate reached",
       commitEvidence: save.repo.commits.slice(-6).map((c) => ({ hash: c.hash, message: c.message })),
       playTimeSeconds: save.playTimeSeconds,
@@ -496,7 +503,7 @@ export function Game() {
   }
 
   if ((mode === "archive" || (step?.kind === "archive" && mode === "playing")) && save) {
-    return <ArchiveScreen save={save} onBack={() => (save.gameComplete ? setMode("done") : setMode("menu"))} onView={(p) => navigate({ to: "/certificate/$part", params: { part: String(p) } })} />;
+    return <ArchiveScreen save={save} onBack={() => (save.gameComplete ? setMode("done") : setMode("menu"))} onView={(slug) => navigate({ to: "/certificate/$part", params: { part: slug } })} />;
   }
 
   if (mode === "done") {
@@ -731,20 +738,38 @@ export function Game() {
         />
       )}
 
-      {step?.kind === "certificate" && save && (
-        <CertificateScreen part={(step as CertificateStep).part} cert={awardCertificate((step as CertificateStep).part)} onContinue={advance} onPrint={() => navigate({ to: "/certificate/$part", params: { part: String((step as CertificateStep).part) } })} />
-      )}
+      {step?.kind === "certificate" && save && (() => {
+        const certPart = (step as CertificateStep).part;
+        const cert = awardCertificate(certPart);
+        return (
+          <CertificateScreen
+            part={certPart}
+            cert={cert}
+            onContinue={advance}
+            onPrint={() => navigate({ to: "/certificate/$part", params: { part: certSlug(certPart, cert?.pass ?? 1) } })}
+          />
+        );
+      })()}
     </div>
   );
 }
 
+export function certSlug(part: 1 | 2, pass: 1 | 2) {
+  return part === 1 && pass === 2 ? "1b" : String(part);
+}
+
 function CertificateScreen({ part, cert, onContinue, onPrint }: { part: 1 | 2; cert: CertificateData | null; onContinue: () => void; onPrint: () => void }) {
   if (!cert) return null;
+  const passTwo = (cert.pass ?? 1) === 2;
   return (
     <div className="fixed inset-0 z-40 overflow-auto bg-background p-4 md:p-8">
       <div className="mx-auto mb-4 flex max-w-3xl flex-wrap items-center gap-2">
         <p className="flex-1 font-pixel text-[10px] text-terminal-green">
-          {part === 1 ? "PART 1 COMPLETE — CERTIFICATE EARNED" : "MISSION COMPLETE — FINAL CERTIFICATE EARNED"}
+          {part === 1
+            ? passTwo
+              ? "TIMELINE RESET — PASS II CERTIFICATE EARNED"
+              : "PART 1 COMPLETE — CERTIFICATE EARNED"
+            : "MISSION COMPLETE — FINAL CERTIFICATE EARNED"}
         </p>
         <button type="button" onClick={onPrint} className="rounded bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">
           Print Certificate
@@ -763,21 +788,27 @@ function CertificateScreen({ part, cert, onContinue, onPrint }: { part: 1 | 2; c
   );
 }
 
-function ArchiveScreen({ save, onBack, onView }: { save: SaveData; onBack: () => void; onView: (part: 1 | 2) => void }) {
+function ArchiveScreen({ save, onBack, onView }: { save: SaveData; onBack: () => void; onView: (slug: string) => void }) {
+  const slots: { part: 1 | 2; pass: 1 | 2; label: string }[] = [
+    { part: 1, pass: 1, label: "PART 1 — MIDPOINT" },
+    { part: 1, pass: 2, label: "PART 1 — MIDPOINT · TIMELINE RESET — PASS II" },
+    { part: 2, pass: 1, label: "PART 2 — FINAL COMPLETION" },
+  ];
   return (
     <div className="flex min-h-screen flex-col items-center bg-background p-6 text-foreground">
       <div className="w-full max-w-2xl">
         <h1 className="font-pixel text-sm text-primary">CERTIFICATE ARCHIVE</h1>
         <p className="mt-2 text-sm text-muted-foreground">Every certificate you earn stays saved here — reopen and print any time.</p>
         <div className="mt-6 flex flex-col gap-4">
-          {([1, 2] as const).map((p) => {
-            const cert = save.certificates.find((c) => c.part === p);
+          {slots.map((slot) => {
+            const cert = save.certificates.find((c) => c.part === slot.part && (c.pass ?? 1) === slot.pass);
+            // The Pass II slot only appears once it has actually been earned.
+            if (!cert && slot.pass === 2) return null;
+            const slug = certSlug(slot.part, slot.pass);
             return (
-              <div key={p} className="flex items-center justify-between rounded-lg border border-border bg-card p-4">
+              <div key={slug} className="flex items-center justify-between rounded-lg border border-border bg-card p-4">
                 <div>
-                  <div className="font-pixel text-[10px] text-foreground">
-                    {p === 1 ? "PART 1 — MIDPOINT" : "PART 2 — FINAL COMPLETION"}
-                  </div>
+                  <div className="font-pixel text-[10px] text-foreground">{slot.label}</div>
                   {cert ? (
                     <div className="mt-1 text-xs text-muted-foreground">
                       Earned {new Date(cert.completedAt).toLocaleDateString()} · Code {cert.verificationCode}
@@ -788,10 +819,10 @@ function ArchiveScreen({ save, onBack, onView }: { save: SaveData; onBack: () =>
                 </div>
                 {cert && (
                   <div className="flex gap-2">
-                    <button type="button" onClick={() => onView(p)} className="rounded bg-primary px-3 py-1.5 text-sm font-bold text-primary-foreground">
+                    <button type="button" onClick={() => onView(slug)} className="rounded bg-primary px-3 py-1.5 text-sm font-bold text-primary-foreground">
                       View
                     </button>
-                    <button type="button" onClick={() => onView(p)} className="rounded border border-border px-3 py-1.5 text-sm hover:bg-accent">
+                    <button type="button" onClick={() => onView(slug)} className="rounded border border-border px-3 py-1.5 text-sm hover:bg-accent">
                       Print
                     </button>
                   </div>
