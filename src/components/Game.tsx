@@ -503,7 +503,7 @@ export function Game() {
   }
 
   if ((mode === "archive" || (step?.kind === "archive" && mode === "playing")) && save) {
-    return <ArchiveScreen save={save} onBack={() => (save.gameComplete ? setMode("done") : setMode("menu"))} onView={(p) => navigate({ to: "/certificate/$part", params: { part: String(p) } })} />;
+    return <ArchiveScreen save={save} onBack={() => (save.gameComplete ? setMode("done") : setMode("menu"))} onView={(slug) => navigate({ to: "/certificate/$part", params: { part: slug } })} />;
   }
 
   if (mode === "done") {
