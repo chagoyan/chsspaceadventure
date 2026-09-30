@@ -164,12 +164,11 @@ export function Game() {
     setNotice(null);
   }, [stepId, save?.flags]);
 
-  // "Paradox averted" banner after the rewound Crimson Nebula is survived.
+  // "Paradox averted" banner shown the moment the red rammer is destroyed.
   useEffect(() => {
     if (paradox == null) return;
     if (paradox <= 0) {
       setParadox(null);
-      advance();
       return;
     }
     const id = setTimeout(() => setParadox((p) => (p == null ? null : p - 1)), 1000);

@@ -334,6 +334,12 @@ export class GameEngine {
       this.ents.splice(this.ents.indexOf(target), 1);
       sfx.explosion();
       this.burst(target.x, target.y, "#f45b69", 12);
+      if (target.kamikaze && target.weak) {
+        this.burst(target.x, target.y, "#5adcff", 26);
+        this.spec.chronoEcho = false;
+        this.echoTrail.length = 0;
+        this.events.onEvent({ type: "rammerDown" });
+      }
       if (target.kind === "drone") {
         this.kills++;
         this.score += 100;
