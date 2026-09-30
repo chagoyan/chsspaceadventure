@@ -45,3 +45,4 @@
 - [x] Replace the View Git Log terminal with clickable checkpoint restores
 - [x] Match Space Explorer's 170px smart-bomb shockwave and 3-damage outer ring
 - [x] Match Space Explorer's two-frame thrust animation at 10 fps and 16 fps during boost
+- [x] Time-travel rewind: chrono warp overlay, ghost echoes + tint, HUD re-entry badge, paradox-averted payoff

@@ -11,6 +11,7 @@ import { setMuted, startMusic, stopMusic, sfx } from "../game/audio";
 import { Terminal } from "./game/Terminal";
 import { Dialogue } from "./game/Dialogue";
 import { Confetti } from "./game/Confetti";
+import { ChronoWarp } from "./game/ChronoWarp";
 import { HUD } from "./game/HUD";
 import { Menu } from "./game/Menu";
 import { CertificateView } from "../routes/certificate.$part";
@@ -32,6 +33,8 @@ export function Game() {
   const [victory, setVictory] = useState<number | null>(null);
   const [selectedCheckpointHash, setSelectedCheckpointHash] = useState<string | null>(null);
   const [resetTargetHash, setResetTargetHash] = useState<string | null>(null);
+  const [warp, setWarp] = useState<{ hash: string; message: string } | null>(null);
+  const [paradox, setParadox] = useState<number | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
   const navigate = useNavigate();
@@ -161,6 +164,19 @@ export function Game() {
     setNotice(null);
   }, [stepId, save?.flags]);
 
+  // "Paradox averted" banner after the rewound Crimson Nebula is survived.
+  useEffect(() => {
+    if (paradox == null) return;
+    if (paradox <= 0) {
+      setParadox(null);
+      advance();
+      return;
+    }
+    const id = setTimeout(() => setParadox((p) => (p == null ? null : p - 1)), 1000);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paradox]);
+
   // Victory lap countdown after the final boss falls.
   useEffect(() => {
     if (victory == null) return;
@@ -178,6 +194,10 @@ export function Game() {
   const showControls = mode === "playing" && stepId === "a_field" && !controlsSeen;
   const actionStep = mode === "playing" && step?.kind === "action" && !destroyed && !showControls ? (step as ActionStep) : null;
   const visibleActionStep = mode === "playing" && step?.kind === "action" ? (step as ActionStep) : null;
+  const visibleObjective =
+    visibleActionStep?.id === "a_nebula" && save?.flags?.["resetDone"]
+      ? "Temporal convergence — the red rammer returns, but this time your guns can bring it down. Reach the beacon."
+      : visibleActionStep?.spec.objective ?? "";
 
   useEffect(() => {
     if (!actionStep || !canvasRef.current || !save) return;
@@ -188,13 +208,17 @@ export function Game() {
     startMusic(((Math.max(1, working.stage) - 1) % 3) + 1);
     // Sector 7 replay (after a reset): the rammer returns, but it can be shot down.
     const replayingNebula = actionStep.id === "a_nebula" && !!save.flags?.["resetDone"];
-    const spec = replayingNebula
-      ? {
-          ...actionStep.spec,
-          kamikazeWeak: true,
-          objective: "Thread the nebula clouds and reach the beacon. The red rammer is back — this time your guns can bring it down.",
-        }
-      : actionStep.spec;
+    const rewound = !!save.flags?.["timelineRewound"];
+    const spec = {
+      ...actionStep.spec,
+      ...(rewound ? { chronoEcho: true } : {}),
+      ...(replayingNebula
+        ? {
+            kamikazeWeak: true,
+            objective: "Temporal convergence — the red rammer returns, but this time your guns can bring it down. Reach the beacon.",
+          }
+        : {}),
+    };
     const engine = new GameEngine(
       canvasRef.current,
       working.ship,
@@ -272,6 +296,17 @@ export function Game() {
         // Victory lap: celebrate and let the player fly before the certificate.
         engine.celebrate(12);
         setVictory(8);
+        return;
+      }
+      // Surviving the Crimson Nebula a second time ends the rewound timeline.
+      if (current.id === "a_nebula" && save?.flags?.["timelineRewound"]) {
+        setSave((s) => {
+          if (!s) return s;
+          const next: SaveData = { ...s, flags: { ...(s.flags ?? {}), timelineRewound: false } };
+          storeSave(next);
+          return next;
+        });
+        setParadox(3);
         return;
       }
       advance();
@@ -491,6 +526,13 @@ export function Game() {
   // playing
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-background">
+      {warp && <ChronoWarp hash={warp.hash} message={warp.message} onDone={() => setWarp(null)} />}
+      {paradox != null && (
+        <div className="pointer-events-none fixed left-1/2 top-10 z-[60] -translate-x-1/2 text-center">
+          <p className="font-heading text-5xl text-terminal-green drop-shadow">TIMELINE SECURED · PARADOX AVERTED!</p>
+          <p className="mt-2 font-heading text-xl text-reward">Oscar rewrote his own fate.</p>
+        </div>
+      )}
       {victory != null && (
         <>
           <Confetti />
@@ -508,7 +550,7 @@ export function Game() {
             {hudShip && (
               <HUD
                 ship={hudShip}
-                objective={visibleActionStep.spec.objective}
+                objective={visibleObjective}
                 stageTitle={visibleActionStep.spec.title}
                 score={hudScore}
                 staged={save?.repo.staged != null}
@@ -519,6 +561,7 @@ export function Game() {
                 shield={hudPower.shield}
                 boostReady={hudPower.boostReady}
                 shieldReady={hudPower.shieldReady}
+                temporal={!!save?.flags?.["timelineRewound"]}
               />
             )}
           </div>
@@ -644,11 +687,17 @@ export function Game() {
                 const updated: SaveData = {
                   ...save,
                   storyStep: back,
-                  flags: { ...(save.flags ?? {}), resetDone: true, [`lessonDone:${step.id}`]: true },
+                  flags: { ...(save.flags ?? {}), resetDone: true, timelineRewound: true, [`lessonDone:${step.id}`]: true },
                 };
                 persist(updated);
                 setStepId(back);
-                setNotice(`Timeline rewound to ${target.hash} — "${target.message}". Later checkpoints are no longer part of this timeline. Fly these missions again and make new checkpoints.`);
+                sfx.timeRewind();
+                setWarp({ hash: target.hash, message: target.message });
+                setNotice(
+                  `KOMM: Tachyon rewind complete — we are back at ${target.hash}, "${target.message}". Every checkpoint after it has dissolved. ` +
+                    `Oscar: My whiskers are still buzzing... but wait, we've flown these sectors before. We know what's coming! ` +
+                    `Fly them again and make new checkpoints as you go.`,
+                );
                 return;
               }
             }

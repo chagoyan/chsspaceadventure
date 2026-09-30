@@ -25,6 +25,7 @@ export interface StageSpec {
   exitAfterKills?: boolean; // keep the arena open for pickups, then leave through beacon
   kamikaze?: boolean; // one invulnerable rammer that cripples (never destroys) the ship
   kamikazeWeak?: boolean; // second encounter: the same rammer appears but can be shot down
+  chronoEcho?: boolean; // flying a rewound timeline: ghost after-images + temporal tint
 }
 
 export type EngineEvent =
@@ -95,6 +96,7 @@ export class GameEngine {
   private upgradeSpawned = false;
   private reducedMotion: boolean;
   private hitFlash = 0;
+  private echoTrail: { x: number; y: number; a: number; f: boolean }[] = [];
   private thrusting = false;
   private mouseActive = false;
   private bombs = 2;
@@ -1064,6 +1066,24 @@ export class GameEngine {
     }
     // player ship
     const blink = this.invuln > 0 && Math.floor(t * 12) % 2 === 0;
+    if (this.spec.chronoEcho) {
+      // Temporal after-images: the ship is flying through a rewritten past.
+      this.echoTrail.push({ x: this.px, y: this.py, a: this.shipAngle, f: this.shipFlipped });
+      while (this.echoTrail.length > 18) this.echoTrail.shift();
+      if (!this.reducedMotion) {
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        for (let i = 0; i < 3; i++) {
+          const ghost = this.echoTrail[this.echoTrail.length - 1 - (i + 1) * 5];
+          if (!ghost) continue;
+          ctx.globalAlpha = 0.22 - i * 0.06;
+          ctx.shadowColor = "rgba(90,220,255,0.9)";
+          ctx.shadowBlur = 24;
+          drawSprite(ctx, SHIP, ghost.x, ghost.y, 112, ghost.a, ghost.f);
+        }
+        ctx.restore();
+      }
+    }
     if (!blink) {
       const flameRate = this.boostTimer > 0 ? 16 : 10;
       const boostFrame = this.reducedMotion ? 0 : Math.floor(t * flameRate) % SHIP_BOOST.length;
@@ -1080,6 +1100,12 @@ export class GameEngine {
       ctx.fillStyle = "rgba(25,211,197,0.12)";
       ctx.fill();
       ctx.restore();
+    }
+    if (this.spec.chronoEcho) {
+      // Cool chrono tint over the whole sector while history is being rewritten.
+      const pulse = this.reducedMotion ? 0.05 : 0.05 + 0.03 * Math.sin(t * 1.6);
+      ctx.fillStyle = `rgba(80,200,255,${pulse})`;
+      ctx.fillRect(0, 0, WORLD_W, WORLD_H);
     }
     if (this.spec.drain) {
       // corruption glitch overlay
