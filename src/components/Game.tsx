@@ -674,11 +674,17 @@ export function Game() {
                 const updated: SaveData = {
                   ...save,
                   storyStep: back,
-                  flags: { ...(save.flags ?? {}), resetDone: true, [`lessonDone:${step.id}`]: true },
+                  flags: { ...(save.flags ?? {}), resetDone: true, timelineRewound: true, [`lessonDone:${step.id}`]: true },
                 };
                 persist(updated);
                 setStepId(back);
-                setNotice(`Timeline rewound to ${target.hash} — "${target.message}". Later checkpoints are no longer part of this timeline. Fly these missions again and make new checkpoints.`);
+                sfx.timeRewind();
+                setWarp({ hash: target.hash, message: target.message });
+                setNotice(
+                  `KOMM: Tachyon rewind complete — we are back at ${target.hash}, "${target.message}". Every checkpoint after it has dissolved. ` +
+                    `Oscar: My whiskers are still buzzing... but wait, we've flown these sectors before. We know what's coming! ` +
+                    `Fly them again and make new checkpoints as you go.`,
+                );
                 return;
               }
             }
