@@ -163,6 +163,19 @@ export function Game() {
     setNotice(null);
   }, [stepId, save?.flags]);
 
+  // "Paradox averted" banner after the rewound Crimson Nebula is survived.
+  useEffect(() => {
+    if (paradox == null) return;
+    if (paradox <= 0) {
+      setParadox(null);
+      advance();
+      return;
+    }
+    const id = setTimeout(() => setParadox((p) => (p == null ? null : p - 1)), 1000);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paradox]);
+
   // Victory lap countdown after the final boss falls.
   useEffect(() => {
     if (victory == null) return;
