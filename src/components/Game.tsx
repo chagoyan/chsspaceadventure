@@ -549,6 +549,7 @@ export function Game() {
                 shield={hudPower.shield}
                 boostReady={hudPower.boostReady}
                 shieldReady={hudPower.shieldReady}
+                temporal={!!save?.flags?.["timelineRewound"]}
               />
             )}
           </div>
