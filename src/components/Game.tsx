@@ -194,6 +194,10 @@ export function Game() {
   const showControls = mode === "playing" && stepId === "a_field" && !controlsSeen;
   const actionStep = mode === "playing" && step?.kind === "action" && !destroyed && !showControls ? (step as ActionStep) : null;
   const visibleActionStep = mode === "playing" && step?.kind === "action" ? (step as ActionStep) : null;
+  const visibleObjective =
+    visibleActionStep?.id === "a_nebula" && save?.flags?.["resetDone"]
+      ? "Temporal convergence — the red rammer returns, but this time your guns can bring it down. Reach the beacon."
+      : visibleActionStep?.spec.objective ?? "";
 
   useEffect(() => {
     if (!actionStep || !canvasRef.current || !save) return;
