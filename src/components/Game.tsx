@@ -280,6 +280,17 @@ export function Game() {
         setVictory(8);
         return;
       }
+      // Surviving the Crimson Nebula a second time ends the rewound timeline.
+      if (current.id === "a_nebula" && save?.flags?.["timelineRewound"]) {
+        setSave((s) => {
+          if (!s) return s;
+          const next: SaveData = { ...s, flags: { ...(s.flags ?? {}), timelineRewound: false } };
+          storeSave(next);
+          return next;
+        });
+        setParadox(3);
+        return;
+      }
       advance();
       return;
     }
