@@ -256,6 +256,7 @@ export class GameEngine {
     this.keys.add(key);
   };
   private keyUp = (e: KeyboardEvent) => this.keys.delete(e.key.toLowerCase());
+  private clearKeys = () => this.keys.clear();
   private mouseMove = (e: MouseEvent) => {
     const rect = (e.target as HTMLCanvasElement).getBoundingClientRect();
     this.mouse.x = ((e.clientX - rect.left) / rect.width) * WORLD_W;
@@ -275,6 +276,7 @@ export class GameEngine {
   private attach() {
     window.addEventListener("keydown", this.keyDown);
     window.addEventListener("keyup", this.keyUp);
+    window.addEventListener("blur", this.clearKeys);
     const canvas = this.ctx.canvas;
     canvas.addEventListener("mousemove", this.mouseMove);
     canvas.addEventListener("mousedown", this.mouseDown);
@@ -286,6 +288,7 @@ export class GameEngine {
     this.stop();
     window.removeEventListener("keydown", this.keyDown);
     window.removeEventListener("keyup", this.keyUp);
+    window.removeEventListener("blur", this.clearKeys);
     const canvas = this.ctx.canvas;
     canvas.removeEventListener("mousemove", this.mouseMove);
     canvas.removeEventListener("mousedown", this.mouseDown);
@@ -457,7 +460,7 @@ export class GameEngine {
     this.shieldCd = Math.max(0, this.shieldCd - dt);
     const boosting = this.boostTimer > 0 && s.fuel > 0;
     // Empty tank never soft-locks the player: reserve thrusters still limp along.
-    const ACCEL = s.fuel <= 0 ? 320 : boosting ? 2100 : 900;
+    const ACCEL = s.fuel <= 0 ? 650 : boosting ? 2100 : 900;
     const mouseAngle = this.mouseActive
       ? Math.atan2(this.mouse.y - this.py, this.mouse.x - this.px)
       : null;
@@ -473,7 +476,7 @@ export class GameEngine {
     if (thrusting) {
       this.pvx += Math.cos(headingAngle) * ACCEL * dt;
       this.pvy += Math.sin(headingAngle) * ACCEL * dt;
-      s.fuel = Math.max(0, s.fuel - (boosting ? 5 : 2.2) * dt);
+      s.fuel = Math.max(0, s.fuel - (boosting ? 4 : 1.2) * dt);
     }
     // exp damping
     const damp = Math.exp(-3.2 * dt);
