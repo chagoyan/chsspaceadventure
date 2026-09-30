@@ -340,21 +340,28 @@ export function Game() {
   // ---- certificate awarding ----
   function awardCertificate(part: 1 | 2): CertificateData | null {
     if (!save) return null;
-    const existing = save.certificates.find((c) => c.part === part);
+    // A midpoint re-earned after a `git reset --hard` rewind is a distinct "Pass II" certificate.
+    const pass: 1 | 2 = part === 1 && save.flags?.["resetDone"] ? 2 : 1;
+    const existing = save.certificates.find((c) => c.part === part && (c.pass ?? 1) === pass);
     if (existing) return existing;
     const commands =
       part === 1
-        ? ["git init", "git status", "git add .", 'git commit -m "..."']
+        ? pass === 2
+          ? ["git init", "git status", "git add .", 'git commit -m "..."', "git log --oneline", "git reset --hard <hash>"]
+          : ["git init", "git status", "git add .", 'git commit -m "..."']
         : ["git init", "git status", "git add .", 'git commit -m "..."', "git log --oneline", "git reset --hard <hash>", "git revert <hash>"];
     const cert: CertificateData = {
       part,
+      pass,
       studentName: save.studentName,
       completedAt: Date.now(),
-      verificationCode: makeVerificationCode(save.studentName + part, Date.now()),
+      verificationCode: makeVerificationCode(save.studentName + part + pass, Date.now()),
       commandsDemonstrated: commands,
       milestone:
         part === 1
-          ? "Sector 4 cleared — The Iron Ring (midpoint)"
+          ? pass === 2
+            ? "Sector 4 re-cleared after a timeline reset — The Iron Ring (midpoint, Pass II)"
+            : "Sector 4 cleared — The Iron Ring (midpoint)"
           : "Sector 11 cleared — MERGE CONFLICT destroyed, Void Gate reached",
       commitEvidence: save.repo.commits.slice(-6).map((c) => ({ hash: c.hash, message: c.message })),
       playTimeSeconds: save.playTimeSeconds,
