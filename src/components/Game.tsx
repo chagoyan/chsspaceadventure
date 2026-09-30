@@ -550,7 +550,7 @@ export function Game() {
             {hudShip && (
               <HUD
                 ship={hudShip}
-                objective={visibleActionStep.spec.objective}
+                objective={visibleObjective}
                 stageTitle={visibleActionStep.spec.title}
                 score={hudScore}
                 staged={save?.repo.staged != null}
