@@ -501,6 +501,16 @@ kbd,
     border-color: #1a3a6b;
     background: white;
   }
+  .cert-border-pass2 {
+    border-color: #0b6a84;
+    box-shadow: none;
+  }
+  .cert-stamp,
+  .cert-stamp span {
+    color: #0b6a84 !important;
+    border-color: #0b6a84;
+    background: white;
+  }
   .cert-name,
   .certificate-sheet,
   .certificate-sheet p,
