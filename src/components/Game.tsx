@@ -788,21 +788,27 @@ function CertificateScreen({ part, cert, onContinue, onPrint }: { part: 1 | 2; c
   );
 }
 
-function ArchiveScreen({ save, onBack, onView }: { save: SaveData; onBack: () => void; onView: (part: 1 | 2) => void }) {
+function ArchiveScreen({ save, onBack, onView }: { save: SaveData; onBack: () => void; onView: (slug: string) => void }) {
+  const slots: { part: 1 | 2; pass: 1 | 2; label: string }[] = [
+    { part: 1, pass: 1, label: "PART 1 — MIDPOINT" },
+    { part: 1, pass: 2, label: "PART 1 — MIDPOINT · TIMELINE RESET — PASS II" },
+    { part: 2, pass: 1, label: "PART 2 — FINAL COMPLETION" },
+  ];
   return (
     <div className="flex min-h-screen flex-col items-center bg-background p-6 text-foreground">
       <div className="w-full max-w-2xl">
         <h1 className="font-pixel text-sm text-primary">CERTIFICATE ARCHIVE</h1>
         <p className="mt-2 text-sm text-muted-foreground">Every certificate you earn stays saved here — reopen and print any time.</p>
         <div className="mt-6 flex flex-col gap-4">
-          {([1, 2] as const).map((p) => {
-            const cert = save.certificates.find((c) => c.part === p);
+          {slots.map((slot) => {
+            const cert = save.certificates.find((c) => c.part === slot.part && (c.pass ?? 1) === slot.pass);
+            // The Pass II slot only appears once it has actually been earned.
+            if (!cert && slot.pass === 2) return null;
+            const slug = certSlug(slot.part, slot.pass);
             return (
-              <div key={p} className="flex items-center justify-between rounded-lg border border-border bg-card p-4">
+              <div key={slug} className="flex items-center justify-between rounded-lg border border-border bg-card p-4">
                 <div>
-                  <div className="font-pixel text-[10px] text-foreground">
-                    {p === 1 ? "PART 1 — MIDPOINT" : "PART 2 — FINAL COMPLETION"}
-                  </div>
+                  <div className="font-pixel text-[10px] text-foreground">{slot.label}</div>
                   {cert ? (
                     <div className="mt-1 text-xs text-muted-foreground">
                       Earned {new Date(cert.completedAt).toLocaleDateString()} · Code {cert.verificationCode}
@@ -813,10 +819,10 @@ function ArchiveScreen({ save, onBack, onView }: { save: SaveData; onBack: () =>
                 </div>
                 {cert && (
                   <div className="flex gap-2">
-                    <button type="button" onClick={() => onView(p)} className="rounded bg-primary px-3 py-1.5 text-sm font-bold text-primary-foreground">
+                    <button type="button" onClick={() => onView(slug)} className="rounded bg-primary px-3 py-1.5 text-sm font-bold text-primary-foreground">
                       View
                     </button>
-                    <button type="button" onClick={() => onView(p)} className="rounded border border-border px-3 py-1.5 text-sm hover:bg-accent">
+                    <button type="button" onClick={() => onView(slug)} className="rounded border border-border px-3 py-1.5 text-sm hover:bg-accent">
                       Print
                     </button>
                   </div>
