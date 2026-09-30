@@ -521,6 +521,13 @@ export function Game() {
   // playing
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-background">
+      {warp && <ChronoWarp hash={warp.hash} message={warp.message} onDone={() => setWarp(null)} />}
+      {paradox != null && (
+        <div className="pointer-events-none fixed left-1/2 top-10 z-[60] -translate-x-1/2 text-center">
+          <p className="font-heading text-5xl text-terminal-green drop-shadow">TIMELINE SECURED · PARADOX AVERTED!</p>
+          <p className="mt-2 font-heading text-xl text-reward">Oscar rewrote his own fate.</p>
+        </div>
+      )}
       {victory != null && (
         <>
           <Confetti />
