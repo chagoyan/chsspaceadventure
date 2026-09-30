@@ -32,6 +32,8 @@ export function Game() {
   const [victory, setVictory] = useState<number | null>(null);
   const [selectedCheckpointHash, setSelectedCheckpointHash] = useState<string | null>(null);
   const [resetTargetHash, setResetTargetHash] = useState<string | null>(null);
+  const [warp, setWarp] = useState<{ hash: string; message: string } | null>(null);
+  const [paradox, setParadox] = useState<number | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
   const navigate = useNavigate();
