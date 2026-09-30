@@ -1065,6 +1065,24 @@ export class GameEngine {
     }
     // player ship
     const blink = this.invuln > 0 && Math.floor(t * 12) % 2 === 0;
+    if (this.spec.chronoEcho) {
+      // Temporal after-images: the ship is flying through a rewritten past.
+      this.echoTrail.push({ x: this.px, y: this.py, a: this.shipAngle, f: this.shipFlipped });
+      while (this.echoTrail.length > 18) this.echoTrail.shift();
+      if (!this.reducedMotion) {
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        for (let i = 0; i < 3; i++) {
+          const ghost = this.echoTrail[this.echoTrail.length - 1 - (i + 1) * 5];
+          if (!ghost) continue;
+          ctx.globalAlpha = 0.22 - i * 0.06;
+          ctx.shadowColor = "rgba(90,220,255,0.9)";
+          ctx.shadowBlur = 24;
+          drawSprite(ctx, SHIP, ghost.x, ghost.y, 112, ghost.a, ghost.f);
+        }
+        ctx.restore();
+      }
+    }
     if (!blink) {
       const flameRate = this.boostTimer > 0 ? 16 : 10;
       const boostFrame = this.reducedMotion ? 0 : Math.floor(t * flameRate) % SHIP_BOOST.length;
