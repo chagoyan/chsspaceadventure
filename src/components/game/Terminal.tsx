@@ -140,7 +140,18 @@ export function Terminal({ repo, task, commitsAtOpen, onRepoChange, onAdvance, o
     const resultLines = successfulLog
       ? result.lines.map((l) => ({ ...l, hashFlash: /^[0-9a-f]{7}\s/.test(l.text) }))
       : result.lines;
-    const newLines = [echo, ...resultLines, ...explanationLines];
+    const example = task.commitExample ?? "Repaired hull and refueled";
+    const isCommit = raw.trim().startsWith("git commit");
+    const tipLines: StatusLine[] =
+      result.ok && result.didStage
+        ? [
+            { text: "KOMM Tip: Describe what changed. Any clear message works!", kind: "clean" },
+            { text: `Example: git commit -m "${example}"`, kind: "clean" },
+          ]
+        : !result.ok && isCommit && task.commitExample
+          ? [{ text: `KOMM: For this sector, try: git commit -m "${example}"`, kind: "clean" }]
+          : [];
+    const newLines = [echo, ...resultLines, ...explanationLines, ...tipLines];
 
     if (result.ok) {
       if (result.didInit) setDone((d) => new Set(d).add("init"));
