@@ -28,6 +28,7 @@ export interface TerminalTask {
   freeForm?: boolean; // optional terminal, no required commands
   logExplanation?: string[]; // shown only after a successful git log
   recommendHealthyCheckpoint?: boolean; // keep the best earlier checkpoint highlighted after log
+  commitExample?: string; // sector-specific example shown after git add . and on a rejected message
 }
 
 export interface TerminalStep {
@@ -159,6 +160,7 @@ export const STEPS: Step[] = [
     id: "t_commit",
     task: {
       title: "Create Your First Checkpoint",
+      commitExample: "Initial checkpoint after Shatter Field",
       briefing: "KOMM: Creating a checkpoint is a three-step process. Inspect the ship, prepare its changes, then save the checkpoint. Complete each command and I will show you the next one.",
       help: "full",
       hint: "",
@@ -212,6 +214,7 @@ export const STEPS: Step[] = [
     id: "t_stage2",
     task: {
       title: "Secure Your Progress",
+      commitExample: "Secured Drone Hive supplies",
       briefing: "KOMM: Securing progress is one three-step process. Complete each command and I will reveal the next one.",
       help: "partial",
       hint: "",
@@ -317,6 +320,7 @@ export const STEPS: Step[] = [
     id: "t_ember_commit",
     task: {
       title: "Log the Salvage Run",
+      commitExample: "Salvaged fuel and ammo in Ember Belt",
       briefing: "KOMM: New supplies are aboard. Inspect, stage, and commit so this haul is protected.",
       help: "none",
       hint: "",
@@ -358,6 +362,7 @@ export const STEPS: Step[] = [
     id: "t_reef_commit",
     task: {
       title: "Checkpoint the Reef",
+      commitExample: "Cleared enemy patrol at Static Reef",
       briefing: "KOMM: Another checkpoint, pilot. Inspect, stage, commit — a clear message helps you find this moment later.",
       help: "none",
       hint: "",
@@ -479,6 +484,7 @@ export const STEPS: Step[] = [
     id: "t_turbocommit",
     task: {
       title: "Lock In the Upgrade",
+      commitExample: "Installed Turbo Core generator",
       briefing: "KOMM: The Turbo Core is installed and purring. Protect this progress. Inspect, stage, commit.",
       help: "panel",
       hint: "",
@@ -519,6 +525,7 @@ export const STEPS: Step[] = [
     id: "t_drift_commit",
     task: {
       title: "Checkpoint the Drift",
+      commitExample: "Navigated the Ion Drift safely",
       briefing: "KOMM: Another clean run. Inspect, stage, commit — keep the history rich, it may save us soon.",
       help: "panel",
       hint: "",
@@ -560,6 +567,7 @@ export const STEPS: Step[] = [
     id: "t_patrol_commit",
     task: {
       title: "Checkpoint Before the Gate",
+      commitExample: "Cleared Cinder Patrol before Void Gate",
       briefing: "KOMM: One more checkpoint before the Void Gate. Inspect, stage, commit.",
       help: "none",
       hint: "",
@@ -623,6 +631,7 @@ export const STEPS: Step[] = [
     id: "t_final",
     task: {
       title: "Pre-Battle Check (Recommended)",
+      commitExample: "Pre-battle systems fully charged",
       briefing: "KOMM: Final preparations, pilot. Use whatever commands you judge wise. The help panel is available if you need a reminder.",
       help: "panel",
       hint: "",
